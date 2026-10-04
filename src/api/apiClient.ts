@@ -1,4 +1,5 @@
-const API_ORIGIN = 'https://localsewa.com';
+export const API_ORIGIN = 'https://localsewa.com';
+
 const DEFAULT_TIMEOUT_MS = 30000;
 const RETRYABLE_STATUS = new Set([502, 503, 504]);
 
@@ -35,13 +36,6 @@ function isObject(
   );
 }
 
-/**
- * Hostinger/PHP-compatible API routing.
- *
- * /api/auth/login
- * becomes
- * https://localsewa.com/api/index.php?route=auth%2Flogin
- */
 export function buildBackendUrl(path: string): string {
   if (
     !path.startsWith('/api/') ||
@@ -62,6 +56,7 @@ export function buildBackendUrl(path: string): string {
       .filter(Boolean)
       .some(part => {
         const key = part.split('=')[0] ?? '';
+
         try {
           return decodeURIComponent(key) === 'route';
         } catch {
@@ -72,7 +67,8 @@ export function buildBackendUrl(path: string): string {
     throw new Error('The route parameter is reserved.');
   }
 
-  const encodedRoute = encodeURIComponent(route.slice(5));
+  const encodedRoute =
+    encodeURIComponent(route.slice(5));
 
   return `${API_ORIGIN}/api/index.php?route=${encodedRoute}${
     query ? `&${query}` : ''
@@ -95,23 +91,31 @@ export async function apiRequest<T>(
   } = options;
 
   const url = buildBackendUrl(path);
-  const headers = new Headers(suppliedHeaders);
+  const headers =
+    new Headers(suppliedHeaders);
 
   headers.set('Accept', 'application/json');
-
-  // Auth is explicit. Never inherit a caller supplied bearer token.
   headers.delete('Authorization');
 
   if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+    headers.set(
+      'Authorization',
+      `Bearer ${token}`,
+    );
   }
 
   const isForm =
     typeof FormData !== 'undefined' &&
     body instanceof FormData;
 
-  if (body !== undefined && !isForm) {
-    headers.set('Content-Type', 'application/json');
+  if (
+    body !== undefined &&
+    !isForm
+  ) {
+    headers.set(
+      'Content-Type',
+      'application/json',
+    );
   }
 
   if (isForm) {
@@ -125,14 +129,24 @@ export async function apiRequest<T>(
         ? (body as FormData)
         : JSON.stringify(body);
 
-  const isGet = method.toUpperCase() === 'GET';
-  const attempts = isGet && retryGet ? 2 : 1;
+  const isGet =
+    method.toUpperCase() === 'GET';
+  const attempts =
+    isGet && retryGet ? 2 : 1;
 
-  for (let attempt = 0; attempt < attempts; attempt += 1) {
-    const controller = new AbortController();
+  for (
+    let attempt = 0;
+    attempt < attempts;
+    attempt += 1
+  ) {
+    const controller =
+      new AbortController();
+
     let timedOut = false;
 
-    const abortFromCaller = () => controller.abort();
+    const abortFromCaller = () =>
+      controller.abort();
+
     callerSignal?.addEventListener(
       'abort',
       abortFromCaller,
@@ -157,17 +171,23 @@ export async function apiRequest<T>(
         credentials: 'omit',
       });
 
-      const raw = await response.text();
+      const raw =
+        await response.text();
 
       let data: unknown = null;
+
       try {
-        data = raw ? JSON.parse(raw) : null;
+        data = raw
+          ? JSON.parse(raw)
+          : null;
       } catch {
         data = null;
       }
 
       if (
-        RETRYABLE_STATUS.has(response.status) &&
+        RETRYABLE_STATUS.has(
+          response.status,
+        ) &&
         attempt + 1 < attempts
       ) {
         continue;
@@ -180,7 +200,8 @@ export async function apiRequest<T>(
       ) {
         const message =
           isObject(data) &&
-          typeof data.message === 'string'
+          typeof data.message ===
+            'string'
             ? data.message
             : response.ok
               ? 'Server returned an unexpected response. Please try again.'
@@ -189,7 +210,8 @@ export async function apiRequest<T>(
         throw new ApiError(
           message,
           response.status,
-          isObject(data) && isObject(data.details)
+          isObject(data) &&
+          isObject(data.details)
             ? data.details
             : {},
         );
@@ -209,7 +231,10 @@ export async function apiRequest<T>(
         throw error;
       }
 
-      if (attempt + 1 < attempts) {
+      if (
+        attempt + 1 <
+        attempts
+      ) {
         continue;
       }
 
@@ -220,6 +245,7 @@ export async function apiRequest<T>(
       );
     } finally {
       clearTimeout(timer);
+
       callerSignal?.removeEventListener(
         'abort',
         abortFromCaller,
@@ -232,7 +258,9 @@ export async function apiRequest<T>(
   );
 }
 
-export function errorMessage(error: unknown): string {
+export function errorMessage(
+  error: unknown,
+): string {
   return error instanceof Error
     ? error.message
     : 'Something went wrong. Please try again.';

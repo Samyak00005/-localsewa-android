@@ -16,7 +16,7 @@ import {
 } from '../screens/shared';
 import {useAppTheme} from '../theme';
 import {AuthNavigator} from './AuthNavigator';
-import {CustomerTabs} from './CustomerTabs';
+import {CustomerNavigator} from './CustomerNavigator';
 import {ProviderTabs} from './ProviderTabs';
 import {linking} from './linking';
 import {RootStackParamList} from './types';
@@ -56,11 +56,13 @@ export function RootNavigator(): React.JSX.Element {
     colors: {
       ...DefaultTheme.colors,
       primary: theme.colors.primary,
-      background: theme.colors.background,
+      background:
+        theme.colors.background,
       card: theme.colors.surface,
       text: theme.colors.text,
       border: theme.colors.border,
-      notification: theme.colors.error,
+      notification:
+        theme.colors.error,
     },
   };
 
@@ -82,7 +84,7 @@ export function RootNavigator(): React.JSX.Element {
         ) : area === 'customer' ? (
           <RootStack.Screen
             name="Customer"
-            component={CustomerTabs}
+            component={CustomerNavigator}
           />
         ) : (
           <RootStack.Screen

@@ -1,3 +1,7 @@
+import type {
+  NavigatorScreenParams,
+} from '@react-navigation/native';
+
 export type RootStackParamList = {
   Auth: undefined;
   Customer: undefined;
@@ -25,6 +29,24 @@ export type AuthStackParamList = {
   ForgotPassword: undefined;
   ResetPassword: {
     identifier?: string;
+  };
+};
+
+export type CustomerStackParamList = {
+  CustomerTabs:
+    | NavigatorScreenParams<CustomerTabParamList>
+    | undefined;
+  ProviderDetails: {
+    providerId: string;
+  };
+  BookingRequest: {
+    providerId: string;
+  };
+  BookingDetails: {
+    bookingId: number;
+  };
+  BookingReview: {
+    bookingId: number;
   };
 };
 
