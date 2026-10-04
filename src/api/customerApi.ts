@@ -1,5 +1,9 @@
-import {apiRequest} from './apiClient';
-import {parseProvider} from './providerApi';
+import {
+  apiRequest,
+} from './apiClient';
+import {
+  parseProvider,
+} from './providerApi';
 import {Provider} from '../types/provider';
 
 type ApiRecord =
@@ -27,5 +31,37 @@ export const customerApi = {
               Boolean(provider.id),
           )
       : [];
+  },
+
+  async saveProvider(
+    providerRef: string,
+    token: string,
+  ): Promise<void> {
+    await apiRequest(
+      '/api/saved',
+      {
+        method: 'POST',
+        token,
+        body: {
+          provider_ref:
+            providerRef,
+        },
+      },
+    );
+  },
+
+  async removeSavedProvider(
+    providerRef: string,
+    token: string,
+  ): Promise<void> {
+    await apiRequest(
+      `/api/saved/${encodeURIComponent(
+        providerRef,
+      )}`,
+      {
+        method: 'DELETE',
+        token,
+      },
+    );
   },
 };

@@ -1,306 +1,1189 @@
-import React, {useMemo, useState} from 'react';
-import {Pressable, ScrollView, StyleSheet, View} from 'react-native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
-
-import {errorMessage} from '../../api/apiClient';
-import {AppIcon, iconSize} from '../../components/icons';
+import React, {
+  useMemo,
+  useState,
+} from 'react';
 import {
-  ProviderCard,
+  Alert,
+  Keyboard,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
+import {
+  NativeStackNavigationProp,
+} from '@react-navigation/native-stack';
+import {
+  BottomTabScreenProps,
+} from '@react-navigation/bottom-tabs';
+
+import {
+  errorMessage,
+} from '../../api/apiClient';
+import {
+  AppIcon,
+  iconSize,
+} from '../../components/icons';
+import {
+  EmergencyServiceCard,
+  HomeProviderCard,
+  HomeReviewCard,
+  HomeServiceCard,
   ProviderListSkeleton,
-  SectionHeader,
 } from '../../components/customer';
 import {
   AlertBanner,
   AppText,
-  Badge,
   Button,
   Card,
-  Input,
+  Skeleton,
 } from '../../components/ui';
-import {useCategories, useProviders} from '../../hooks/useCustomerData';
-import {useNotifications} from '../../hooks/useNotifications';
+import {
+  useAuth,
+} from '../../auth';
+import {
+  useCustomerProfile,
+} from '../../hooks/useAccount';
+import {
+  useCategories,
+  useProviders,
+  useRemoveSavedProvider,
+  useSavedProviders,
+  useSaveProvider,
+} from '../../hooks/useCustomerData';
+import {
+  useHomeReviews,
+} from '../../hooks/useHomeReviews';
 import {
   CustomerStackParamList,
   CustomerTabParamList,
 } from '../../navigation/types';
-import {layout, radius, spacing, useAppTheme} from '../../theme';
+import {
+  ServiceCategory,
+} from '../../types/category';
+import {
+  Provider,
+} from '../../types/provider';
+import {
+  layout,
+  radius,
+  shadows,
+  spacing,
+  useAppTheme,
+} from '../../theme';
 
-type Props = BottomTabScreenProps<
-  CustomerTabParamList,
-  'CustomerHome'
->;
+type Props =
+  BottomTabScreenProps<
+    CustomerTabParamList,
+    'CustomerHome'
+  >;
+
+const POPULAR_ORDER = [
+  'Electrician',
+  'Home Cleaning',
+  'Dance Teacher',
+  'Developer',
+  'Plumber',
+  'Carpenter',
+];
 
 export function CustomerHomeScreen({
   navigation,
 }: Props): React.JSX.Element {
-  const {theme} = useAppTheme();
-  const [search, setSearch] = useState('');
+  const {theme} =
+    useAppTheme();
 
-  const {
-    data: providers = [],
-    isLoading,
-    error,
-    refetch,
-    isRefetching,
-  } = useProviders();
-
-  const {data: categories = []} = useCategories();
-  const {data: notifications} = useNotifications();
+  const {user} =
+    useAuth();
 
   const stack =
     navigation.getParent<
       NativeStackNavigationProp<CustomerStackParamList>
     >();
 
-  const filteredProviders = useMemo(() => {
-    const query = search.trim().toLowerCase();
+  const {
+    data: profile,
+  } = useCustomerProfile();
 
-    const source = [...providers].sort(
-      (a, b) =>
-        Number(b.available) -
-          Number(a.available) ||
-        (b.rating ?? 0) -
-          (a.rating ?? 0),
+  const [search, setSearch] =
+    useState('');
+
+  const [
+    savingRef,
+    setSavingRef,
+  ] =
+    useState<string | null>(
+      null,
     );
 
-    if (!query) {
-      return source.slice(0, 6);
+  const latitude =
+    profile?.latitude ??
+    null;
+
+  const longitude =
+    profile?.longitude ??
+    null;
+
+  const {
+    data: providers = [],
+    isLoading:
+      providersLoading,
+    error:
+      providersError,
+    refetch:
+      refetchProviders,
+    isRefetching:
+      providersRefetching,
+  } = useProviders({
+    latitude,
+    longitude,
+    limit: 150,
+  });
+
+  const {
+    data: categories = [],
+  } = useCategories();
+
+  const {
+    data: savedProviders = [],
+  } =
+    useSavedProviders();
+
+  const saveProvider =
+    useSaveProvider();
+
+  const removeSaved =
+    useRemoveSavedProvider();
+
+  const {
+    data: reviews = [],
+    isLoading:
+      reviewsLoading,
+  } = useHomeReviews();
+
+  const locationLabel =
+    profile?.location ??
+    user?.location ??
+    'Set your service location';
+
+  const savedIds =
+    useMemo(
+      () =>
+        new Set(
+          savedProviders.map(
+            item =>
+              item.id,
+          ),
+        ),
+      [savedProviders],
+    );
+
+  const popularServices =
+    useMemo(
+      () =>
+        choosePopularServices(
+          categories,
+          providers,
+        ),
+      [
+        categories,
+        providers,
+      ],
+    );
+
+  const visibleProviders =
+    useMemo(() => {
+      const query =
+        search
+          .trim()
+          .toLowerCase();
+
+      const sorted =
+        [...providers].sort(
+          (a, b) =>
+            Number(
+              b.available,
+            ) -
+              Number(
+                a.available,
+              ) ||
+            Number(
+              b.verified,
+            ) -
+              Number(
+                a.verified,
+              ) ||
+            (b.rating ?? 0) -
+              (a.rating ?? 0),
+        );
+
+      if (!query) {
+        return sorted.slice(
+          0,
+          4,
+        );
+      }
+
+      return sorted
+        .filter(provider =>
+          [
+            provider.name,
+            provider.category,
+            provider.location,
+            ...provider.services.map(
+              service =>
+                service.name,
+            ),
+          ].some(value =>
+            value
+              .toLowerCase()
+              .includes(
+                query,
+              ),
+          ),
+        )
+        .slice(0, 20);
+    }, [
+      providers,
+      search,
+    ]);
+
+  const searchActive =
+    Boolean(
+      search.trim(),
+    );
+
+  function openProvider(
+    providerId: string,
+  ) {
+    stack?.navigate(
+      'ProviderDetails',
+      {providerId},
+    );
+  }
+
+  function bookProvider(
+    providerId: string,
+  ) {
+    stack?.navigate(
+      'BookingRequest',
+      {providerId},
+    );
+  }
+
+  function openLocation() {
+    stack?.navigate(
+      'DefaultLocation',
+    );
+  }
+
+  async function toggleSaved(
+    provider: Provider,
+  ) {
+    if (savingRef) {
+      return;
     }
 
-    return source
-      .filter(provider =>
-        [
-          provider.name,
-          provider.category,
-          provider.location,
-        ].some(value =>
-          value.toLowerCase().includes(query),
-        ),
-      )
-      .slice(0, 20);
-  }, [providers, search]);
+    setSavingRef(
+      provider.id,
+    );
 
-  function openProvider(providerId: string) {
-    stack?.navigate('ProviderDetails', {providerId});
+    try {
+      if (
+        savedIds.has(
+          provider.id,
+        )
+      ) {
+        await removeSaved.mutateAsync(
+          provider.id,
+        );
+      } else {
+        await saveProvider.mutateAsync(
+          provider.id,
+        );
+      }
+    } catch (
+      mutationError
+    ) {
+      Alert.alert(
+        'Saved providers',
+        errorMessage(
+          mutationError,
+        ),
+      );
+    } finally {
+      setSavingRef(null);
+    }
   }
 
   return (
     <ScrollView
-      style={{backgroundColor: theme.colors.background}}
-      contentContainerStyle={styles.content}
+      style={{
+        backgroundColor:
+          theme.colors.background,
+      }}
+      contentContainerStyle={
+        styles.content
+      }
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled">
-      <View
-        style={[
-          styles.hero,
-          {backgroundColor: theme.colors.primary},
-        ]}>
-        <View style={styles.heroTop}>
-          <Badge>LOCALSEWA</Badge>
+      <View style={styles.hero}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Change service location"
+          onPress={
+            openLocation
+          }
+          style={({pressed}) => [
+            styles.locationPill,
+            {
+              opacity:
+                pressed
+                  ? 0.85
+                  : 1,
+            },
+          ]}>
+          <AppIcon
+            name="mapPin"
+            size={
+              iconSize.xs
+            }
+            color="#FFFFFF"
+          />
 
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Notifications"
-            onPress={() => stack?.navigate('Notifications')}
-            style={({pressed}) => [
-              styles.notificationButton,
-              {
-                backgroundColor: '#FFFFFF',
-                opacity: pressed ? 0.88 : 1,
-              },
-            ]}>
-            <View>
-              <AppIcon
-                name="bell"
-                size={iconSize.sm}
-                color={theme.colors.primary}
-              />
+          <AppText
+            variant="label"
+            color="#FFFFFF"
+            numberOfLines={1}
+            style={
+              styles.locationText
+            }>
+            {locationLabel}
+          </AppText>
 
-              {(notifications?.unreadCount ?? 0) > 0 ? (
-                <View
-                  style={[
-                    styles.unreadBadge,
-                    {backgroundColor: theme.colors.error},
-                  ]}>
-                  <AppText variant="overline" color="#FFFFFF">
-                    {Math.min(99, notifications?.unreadCount ?? 0)}
-                  </AppText>
-                </View>
-              ) : null}
-            </View>
-          </Pressable>
-        </View>
+          <AppIcon
+            name="chevronDown"
+            size={
+              iconSize.xs
+            }
+            color="#FFFFFF"
+          />
+        </Pressable>
 
-        <AppText variant="h1" color="#FFFFFF" style={styles.heroTitle}>
-          Trusted help, close to home.
+        <AppText
+          variant="display"
+          color="#FFFFFF"
+          style={
+            styles.heroTitle
+          }>
+          Local services,{'\n'}without the hassle.
         </AppText>
 
-        <AppText variant="body" color="#E7F6ED" style={styles.heroText}>
-          Find available local professionals and compare real service
-          providers in one place.
+        <View
+          style={
+            styles.trustLine
+          }>
+          <AppIcon
+            name="zap"
+            size={14}
+            color="#FFFFFF"
+          />
+
+          <AppText
+            variant="overline"
+            color="#FFFFFF">
+            TRUSTED HELP, CLOSE TO HOME
+          </AppText>
+        </View>
+
+        <AppText
+          variant="body"
+          color="#ECFFF4"
+          style={
+            styles.heroDescription
+          }>
+          Compare local professionals, request a service and manage every
+          booking from one simple place.
         </AppText>
 
         <View
           style={[
-            styles.searchWrap,
-            {backgroundColor: theme.colors.surface},
+            styles.searchBar,
+            shadows.md,
           ]}>
-          <Input
-            placeholder="Search provider, service or area"
+          <AppIcon
+            name="search"
+            size={
+              iconSize.sm
+            }
+            color="#667A70"
+          />
+
+          <TextInput
             value={search}
-            onChangeText={setSearch}
-            autoCorrect={false}
+            onChangeText={
+              setSearch
+            }
+            placeholder="What service do you need?"
+            placeholderTextColor="#879A90"
             returnKeyType="search"
+            autoCorrect={false}
+            style={styles.searchInput}
+            onSubmitEditing={() =>
+              Keyboard.dismiss()
+            }
+          />
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Search services"
+            onPress={() =>
+              Keyboard.dismiss()
+            }
+            style={({pressed}) => [
+              styles.searchButton,
+              {
+                opacity:
+                  pressed
+                    ? 0.82
+                    : 1,
+              },
+            ]}>
+            <AppIcon
+              name="search"
+              size={
+                iconSize.sm
+              }
+              color="#FFFFFF"
+            />
+          </Pressable>
+        </View>
+
+        <View
+          style={
+            styles.benefits
+          }>
+          <Benefit
+            label="Private booking chat"
+          />
+          <Benefit
+            label="Local profiles"
+          />
+          <Benefit
+            label="Simple booking"
           />
         </View>
       </View>
 
-      <View style={styles.section}>
-        <SectionHeader
-          title="Popular services"
-          subtitle="Active Localsewa service categories."
-          actionLabel="See all"
-          onAction={() => navigation.navigate('CustomerServices')}
-        />
+      {!searchActive ? (
+        <>
+          <View
+            style={[
+              styles.popularShell,
+              {
+                backgroundColor:
+                  theme.colors.surface,
+              },
+            ]}>
+            <SectionHeading
+              title="Popular services"
+              subtitle="Quick access to the most requested local services"
+              action="See all"
+              onPress={() =>
+                navigation.navigate(
+                  'CustomerServices',
+                )
+              }
+            />
 
-        <View style={styles.chips}>
-          {categories.slice(0, 10).map(category => (
-            <Pressable
-              key={category.id}
-              accessibilityRole="button"
-              onPress={() => setSearch(category.name)}
-              style={[
-                styles.chip,
-                {backgroundColor: theme.colors.secondary},
-              ]}>
-              <AppText variant="label" color={theme.colors.primary}>
-                {category.name}
-              </AppText>
-            </Pressable>
-          ))}
+            <View
+              style={
+                styles.serviceGrid
+              }>
+              {popularServices.map(
+                item => (
+                  <HomeServiceCard
+                    key={
+                      item.id
+                    }
+                    name={
+                      item.name
+                    }
+                    providerCount={
+                      item.providerCount
+                    }
+                    onPress={() =>
+                      setSearch(
+                        item.name,
+                      )
+                    }
+                  />
+                ),
+              )}
+            </View>
+          </View>
+
+          <View
+            style={
+              styles.emergencyWrap
+            }>
+            <EmergencyServiceCard
+              onPress={() =>
+                navigation.navigate(
+                  'CustomerServices',
+                )
+              }
+            />
+          </View>
+        </>
+      ) : null}
+
+      <View
+        style={
+          styles.providersSection
+        }>
+        <View
+          style={
+            styles.locationOverline
+          }>
+          <AppIcon
+            name="mapPin"
+            size={12}
+            color={
+              theme.colors.accent
+            }
+          />
+
+          <AppText
+            variant="overline"
+            color={
+              theme.colors.accent
+            }
+            numberOfLines={2}
+            style={
+              styles.locationOverlineText
+            }>
+            {locationLabel.toUpperCase()}
+          </AppText>
         </View>
-      </View>
 
-      <View style={styles.section}>
-        <SectionHeader
-          title={search.trim() ? 'Search results' : 'Providers to explore'}
+        <SectionHeading
+          title={
+            searchActive
+              ? 'Search results'
+              : 'Services near you'
+          }
           subtitle={
-            search.trim()
-              ? `${filteredProviders.length} matching providers`
-              : 'Available providers are shown first.'
+            searchActive
+              ? `${visibleProviders.length} matching providers`
+              : 'Browse local providers and send a booking request'
+          }
+          action="See all"
+          onPress={() =>
+            navigation.navigate(
+              'CustomerServices',
+            )
           }
         />
 
-        <View style={styles.providerList}>
-          {isLoading ? (
+        <View
+          style={
+            styles.providerList
+          }>
+          {providersLoading ? (
             <ProviderListSkeleton />
-          ) : error ? (
+          ) : providersError ? (
             <>
               <AlertBanner variant="error">
-                {errorMessage(error)}
+                {errorMessage(
+                  providersError,
+                )}
               </AlertBanner>
 
               <Button
                 label="Retry"
-                loading={isRefetching}
-                onPress={() => refetch()}
+                loading={
+                  providersRefetching
+                }
+                onPress={() =>
+                  refetchProviders()
+                }
                 fullWidth
               />
             </>
-          ) : filteredProviders.length ? (
-            filteredProviders.map(provider => (
-              <ProviderCard
-                key={provider.id}
-                provider={provider}
-                onPress={() => openProvider(provider.id)}
-              />
-            ))
+          ) : visibleProviders.length ? (
+            visibleProviders.map(
+              provider => (
+                <HomeProviderCard
+                  key={
+                    provider.id
+                  }
+                  provider={
+                    provider
+                  }
+                  saved={
+                    savedIds.has(
+                      provider.id,
+                    )
+                  }
+                  saving={
+                    savingRef ===
+                    provider.id
+                  }
+                  onDetails={() =>
+                    openProvider(
+                      provider.id,
+                    )
+                  }
+                  onToggleSaved={() =>
+                    toggleSaved(
+                      provider,
+                    )
+                  }
+                  onBook={() =>
+                    bookProvider(
+                      provider.id,
+                    )
+                  }
+                />
+              ),
+            )
           ) : (
             <Card>
-              <AppText variant="title">No matches found</AppText>
+              <AppText variant="title">
+                No matching providers
+              </AppText>
+
               <AppText
                 variant="bodySmall"
                 muted
-                style={styles.emptyText}>
-                Try another service, provider name or area.
+                style={
+                  styles.emptyText
+                }>
+                Try a different service, provider name or area.
               </AppText>
             </Card>
           )}
         </View>
       </View>
+
+      {!searchActive &&
+      (
+        reviewsLoading ||
+        reviews.length > 0
+      ) ? (
+        <View
+          style={
+            styles.reviewsSection
+          }>
+          <AppText
+            variant="overline"
+            color={
+              theme.colors.accent
+            }>
+            REAL CUSTOMER REVIEWS
+          </AppText>
+
+          <AppText
+            variant="h2"
+            style={
+              styles.reviewsTitle
+            }>
+            What customers are saying
+          </AppText>
+
+          {reviewsLoading ? (
+            <View
+              style={
+                styles.reviewSkeletons
+              }>
+              <Skeleton
+                width={216}
+                height={176}
+                radiusValue={
+                  radius.xl
+                }
+              />
+
+              <Skeleton
+                width={216}
+                height={176}
+                radiusValue={
+                  radius.xl
+                }
+              />
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={
+                styles.reviewTrack
+              }>
+              {reviews.map(
+                review => (
+                  <HomeReviewCard
+                    key={
+                      review.id
+                    }
+                    review={
+                      review
+                    }
+                  />
+                ),
+              )}
+            </ScrollView>
+          )}
+        </View>
+      ) : null}
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  content: {
-    paddingBottom: spacing[12],
-  },
-  hero: {
-    paddingHorizontal: layout.screenHorizontal,
-    paddingTop: spacing[7],
-    paddingBottom: spacing[6],
-  },
-  heroTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing[3],
-  },
-  notificationButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  unreadBadge: {
-    position: 'absolute',
-    top: -9,
-    right: -11,
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
-    paddingHorizontal: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  heroTitle: {
-    marginTop: spacing[4],
-    maxWidth: 330,
-  },
-  heroText: {
-    marginTop: spacing[2],
-    maxWidth: 340,
-  },
-  searchWrap: {
-    marginTop: spacing[5],
-    borderRadius: radius.lg,
-    padding: spacing[2],
-  },
-  section: {
-    paddingHorizontal: layout.screenHorizontal,
-    marginTop: spacing[8],
-  },
-  chips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing[2],
-    marginTop: spacing[4],
-  },
-  chip: {
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[2],
-  },
-  providerList: {
-    gap: spacing[3],
-    marginTop: spacing[4],
-  },
-  emptyText: {
-    marginTop: spacing[2],
-  },
-});
+function Benefit({
+  label,
+}: {
+  label: string;
+}): React.JSX.Element {
+  return (
+    <View
+      style={
+        styles.benefit
+      }>
+      <AppIcon
+        name="checkCircle"
+        size={12}
+        color="#D9FFE8"
+      />
+
+      <AppText
+        variant="caption"
+        color="#F2FFF7"
+        numberOfLines={1}>
+        {label}
+      </AppText>
+    </View>
+  );
+}
+
+function SectionHeading({
+  title,
+  subtitle,
+  action,
+  onPress,
+}: {
+  title: string;
+  subtitle: string;
+  action?: string;
+  onPress?: () => void;
+}): React.JSX.Element {
+  const {theme} =
+    useAppTheme();
+
+  return (
+    <View
+      style={
+        styles.sectionHeading
+      }>
+      <View
+        style={
+          styles.sectionHeadingCopy
+        }>
+        <AppText variant="h2">
+          {title}
+        </AppText>
+
+        <AppText
+          variant="caption"
+          muted
+          style={
+            styles.sectionSubtitle
+          }>
+          {subtitle}
+        </AppText>
+      </View>
+
+      {action &&
+      onPress ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={onPress}
+          style={({pressed}) => [
+            styles.seeAll,
+            {
+              opacity:
+                pressed
+                  ? 0.7
+                  : 1,
+            },
+          ]}>
+          <AppText
+            variant="label"
+            color={
+              theme.colors.primary
+            }>
+            {action}
+          </AppText>
+
+          <AppIcon
+            name="arrowRight"
+            size={
+              iconSize.xs
+            }
+            color={
+              theme.colors.primary
+            }
+          />
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+type PopularService =
+  ServiceCategory & {
+    providerCount: number;
+  };
+
+function choosePopularServices(
+  categories: ServiceCategory[],
+  providers: Provider[],
+): PopularService[] {
+  const providerCountByCategory =
+    new Map<
+      string,
+      number
+    >();
+
+  providers.forEach(
+    provider => {
+      const key =
+        provider.category
+          .trim()
+          .toLowerCase();
+
+      providerCountByCategory.set(
+        key,
+        (
+          providerCountByCategory.get(
+            key,
+          ) ?? 0
+        ) + 1,
+      );
+    },
+  );
+
+  const source =
+    categories.length
+      ? categories
+      : Array.from(
+          new Set(
+            providers.map(
+              provider =>
+                provider.category,
+            ),
+          ),
+        ).map(
+          (
+            name,
+            index,
+          ) => ({
+            id:
+              900000 +
+              index,
+            slug: name
+              .toLowerCase()
+              .replace(
+                /[^a-z0-9]+/g,
+                '-',
+              )
+              .replace(
+                /^-|-$/g,
+                '',
+              ),
+            name,
+          }),
+        );
+
+  const ordered =
+    [...source].sort(
+      (a, b) => {
+        const aIndex =
+          POPULAR_ORDER.findIndex(
+            value =>
+              value.toLowerCase() ===
+              a.name.toLowerCase(),
+          );
+
+        const bIndex =
+          POPULAR_ORDER.findIndex(
+            value =>
+              value.toLowerCase() ===
+              b.name.toLowerCase(),
+          );
+
+        if (
+          aIndex !== -1 ||
+          bIndex !== -1
+        ) {
+          return (
+            (aIndex === -1
+              ? 999
+              : aIndex) -
+            (bIndex === -1
+              ? 999
+              : bIndex)
+          );
+        }
+
+        const countA =
+          providerCountByCategory.get(
+            a.name
+              .toLowerCase(),
+          ) ?? 0;
+
+        const countB =
+          providerCountByCategory.get(
+            b.name
+              .toLowerCase(),
+          ) ?? 0;
+
+        return (
+          countB -
+          countA
+        );
+      },
+    );
+
+  return ordered
+    .slice(0, 6)
+    .map(category => ({
+      ...category,
+      providerCount:
+        providerCountByCategory.get(
+          category.name
+            .trim()
+            .toLowerCase(),
+        ) ?? 0,
+    }));
+}
+
+const styles =
+  StyleSheet.create({
+    content: {
+      paddingBottom:
+        spacing[12],
+    },
+    hero: {
+      backgroundColor:
+        '#18A35B',
+      paddingHorizontal:
+        layout.screenHorizontal,
+      paddingTop:
+        spacing[4],
+      paddingBottom:
+        spacing[10],
+    },
+    locationPill: {
+      alignSelf:
+        'flex-start',
+      maxWidth: '88%',
+      minHeight: 36,
+      borderRadius:
+        radius.pill,
+      paddingHorizontal:
+        spacing[3],
+      backgroundColor:
+        'rgba(0,84,46,0.26)',
+      borderWidth: 1,
+      borderColor:
+        'rgba(255,255,255,0.20)',
+      flexDirection: 'row',
+      alignItems:
+        'center',
+      gap: spacing[2],
+    },
+    locationText: {
+      flexShrink: 1,
+    },
+    heroTitle: {
+      marginTop:
+        spacing[6],
+      fontSize: 34,
+      lineHeight: 37,
+      letterSpacing: -0.5,
+    },
+    trustLine: {
+      marginTop:
+        spacing[3],
+      flexDirection: 'row',
+      alignItems:
+        'center',
+      gap: spacing[2],
+    },
+    heroDescription: {
+      marginTop:
+        spacing[5],
+      maxWidth: 340,
+    },
+    searchBar: {
+      minHeight: 58,
+      marginTop:
+        spacing[5],
+      borderRadius:
+        radius.pill,
+      backgroundColor:
+        '#FFFFFF',
+      paddingLeft:
+        spacing[4],
+      paddingRight: 6,
+      flexDirection: 'row',
+      alignItems:
+        'center',
+      gap: spacing[2],
+    },
+    searchInput: {
+      flex: 1,
+      minHeight: 52,
+      color: '#102018',
+      fontSize: 15,
+      paddingVertical: 0,
+    },
+    searchButton: {
+      width: 46,
+      height: 46,
+      borderRadius: 23,
+      backgroundColor:
+        '#15A153',
+      alignItems:
+        'center',
+      justifyContent:
+        'center',
+    },
+    benefits: {
+      marginTop:
+        spacing[4],
+      flexDirection: 'row',
+      justifyContent:
+        'space-between',
+      gap: spacing[2],
+    },
+    benefit: {
+      flexDirection: 'row',
+      alignItems:
+        'center',
+      gap: 3,
+      flexShrink: 1,
+    },
+    popularShell: {
+      marginTop: -22,
+      marginHorizontal:
+        spacing[3],
+      borderRadius:
+        radius.sheet,
+      paddingHorizontal:
+        spacing[4],
+      paddingTop:
+        spacing[5],
+      paddingBottom:
+        spacing[5],
+      ...shadows.md,
+    },
+    sectionHeading: {
+      flexDirection: 'row',
+      alignItems:
+        'flex-start',
+      gap: spacing[3],
+    },
+    sectionHeadingCopy: {
+      flex: 1,
+    },
+    sectionSubtitle: {
+      marginTop:
+        spacing[1],
+    },
+    seeAll: {
+      minHeight: 40,
+      flexDirection: 'row',
+      alignItems:
+        'center',
+      justifyContent:
+        'center',
+      gap: spacing[1],
+    },
+    serviceGrid: {
+      marginTop:
+        spacing[4],
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent:
+        'space-between',
+      gap: spacing[3],
+    },
+    emergencyWrap: {
+      paddingHorizontal:
+        layout.screenHorizontal,
+      marginTop:
+        spacing[6],
+    },
+    providersSection: {
+      paddingHorizontal:
+        layout.screenHorizontal,
+      paddingTop:
+        spacing[8],
+      paddingBottom:
+        spacing[8],
+      backgroundColor:
+        '#F8FBF9',
+    },
+    locationOverline: {
+      flexDirection: 'row',
+      alignItems:
+        'flex-start',
+      gap: spacing[2],
+      marginBottom:
+        spacing[2],
+    },
+    locationOverlineText: {
+      flex: 1,
+      letterSpacing: 1.1,
+    },
+    providerList: {
+      gap: spacing[4],
+      marginTop:
+        spacing[5],
+    },
+    emptyText: {
+      marginTop:
+        spacing[2],
+    },
+    reviewsSection: {
+      backgroundColor:
+        '#EAF8F0',
+      paddingTop:
+        spacing[8],
+      paddingBottom:
+        spacing[8],
+      paddingHorizontal:
+        layout.screenHorizontal,
+      overflow: 'hidden',
+    },
+    reviewsTitle: {
+      marginTop:
+        spacing[2],
+    },
+    reviewTrack: {
+      gap: spacing[3],
+      paddingTop:
+        spacing[5],
+      paddingRight:
+        spacing[4],
+    },
+    reviewSkeletons: {
+      marginTop:
+        spacing[5],
+      flexDirection: 'row',
+      gap: spacing[3],
+    },
+  });

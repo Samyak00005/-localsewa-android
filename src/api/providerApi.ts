@@ -12,6 +12,14 @@ import {
 type ApiRecord =
   Record<string, unknown>;
 
+export type ProviderListOptions = {
+  q?: string;
+  category?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  limit?: number;
+};
+
 function text(
   value: unknown,
   fallback = '',
@@ -42,14 +50,16 @@ function titleCase(
     .replace(/[-_]+/g, ' ')
     .replace(
       /\b\w/g,
-      letter => letter.toUpperCase(),
+      letter =>
+        letter.toUpperCase(),
     );
 }
 
 function mediaUrl(
   value: unknown,
 ): string | undefined {
-  const path = text(value).trim();
+  const path =
+    text(value).trim();
 
   if (!path) {
     return undefined;
@@ -76,23 +86,33 @@ function parseServices(
     .filter(
       (item): item is ApiRecord =>
         Boolean(item) &&
-        typeof item === 'object',
+        typeof item ===
+          'object',
     )
     .map(item => {
       const rawPrice =
-        number(item.price, NaN);
+        number(
+          item.price,
+          NaN,
+        );
 
       return {
-        id: String(item.id ?? ''),
+        id: String(
+          item.id ?? '',
+        ),
         name: text(
           item.name,
           'Service',
         ),
         description:
-          text(item.description) ||
+          text(
+            item.description,
+          ) ||
           undefined,
         price:
-          Number.isFinite(rawPrice)
+          Number.isFinite(
+            rawPrice,
+          )
             ? rawPrice
             : undefined,
       };
@@ -115,44 +135,63 @@ function parseReviews(
     .filter(
       (item): item is ApiRecord =>
         Boolean(item) &&
-        typeof item === 'object',
+        typeof item ===
+          'object',
     )
     .map(item => ({
-      id: String(item.id ?? ''),
-      rating: number(item.rating),
+      id: String(
+        item.id ?? '',
+      ),
+      rating:
+        number(item.rating),
       comment:
         text(item.comment) ||
         undefined,
       createdAt:
-        text(item.created_at) ||
+        text(
+          item.created_at,
+        ) ||
         undefined,
     }))
-    .filter(item => Boolean(item.id));
+    .filter(
+      item =>
+        Boolean(item.id),
+    );
 }
 
 function parseImageUrls(
   value: ApiRecord,
   primary?: string,
 ): string[] {
-  const urls = Array.isArray(
-    value.business_images,
-  )
-    ? value.business_images
-        .map(item =>
-          item &&
-          typeof item === 'object'
-            ? mediaUrl(
-                (item as ApiRecord).url ??
-                  (item as ApiRecord)
-                    .image_path,
-              )
-            : mediaUrl(item),
-        )
-        .filter(
-          (url): url is string =>
-            Boolean(url),
-        )
-    : [];
+  const urls =
+    Array.isArray(
+      value.business_images,
+    )
+      ? value.business_images
+          .map(item =>
+            item &&
+            typeof item ===
+              'object'
+              ? mediaUrl(
+                  (
+                    item as ApiRecord
+                  ).url ??
+                    (
+                      item as ApiRecord
+                    )
+                      .image_path,
+                )
+              : mediaUrl(
+                  item,
+                ),
+          )
+          .filter(
+            (
+              url,
+            ): url is string =>
+              Boolean(url),
+          )
+      : [];
 
   if (
     primary &&
@@ -164,16 +203,61 @@ function parseImageUrls(
   return urls;
 }
 
+function distanceLabel(
+  value: ApiRecord,
+): string | undefined {
+  const direct =
+    text(
+      value.distanceLabel ??
+        value.distance_label,
+    ).trim();
+
+  if (direct) {
+    return direct;
+  }
+
+  const rawKm =
+    number(
+      value.distance_km ??
+        value.distanceKm ??
+        value.distance,
+      NaN,
+    );
+
+  if (
+    Number.isFinite(rawKm) &&
+    rawKm >= 0
+  ) {
+    const rounded =
+      rawKm < 10
+        ? rawKm.toFixed(1)
+        : String(
+            Math.round(
+              rawKm,
+            ),
+          );
+
+    return `About ${rounded} km away (approx. area)`;
+  }
+
+  return undefined;
+}
+
 export function parseProvider(
   value: ApiRecord,
 ): Provider {
   const parsedServices =
-    parseServices(value.services);
+    parseServices(
+      value.services,
+    );
 
   const reviewCount =
     Math.max(
       0,
-      number(value.reviews),
+      number(
+        value.reviews ??
+          value.review_count,
+      ),
     );
 
   const serviceCount =
@@ -196,53 +280,69 @@ export function parseProvider(
     );
 
   const rawRating =
-    number(value.rating, NaN);
+    number(
+      value.rating,
+      NaN,
+    );
 
   return {
-    id: text(value.id),
-    name: text(
-      value.name,
-      'Service provider',
-    ),
-    category: titleCase(
+    id:
+      text(value.id),
+    name:
       text(
-        value.category,
-        'Local service',
+        value.name,
+        'Service provider',
       ),
-    ),
-    location: text(
-      value.location,
-      'Service area unavailable',
-    ),
+    category:
+      titleCase(
+        text(
+          value.category,
+          'Local service',
+        ),
+      ),
+    location:
+      text(
+        value.location,
+        'Service area unavailable',
+      ),
     distanceLabel:
-      text(
-        value.distanceLabel,
-      ) || undefined,
-    startingPrice: Number.isFinite(
-      number(
-        value.starting_price,
-        NaN,
-      ),
-    )
-      ? number(
-          value.starting_price,
-        )
-      : undefined,
+      distanceLabel(value),
+    startingPrice:
+      Number.isFinite(
+        number(
+          value.starting_price ??
+            value.startingPrice,
+          NaN,
+        ),
+      )
+        ? number(
+            value.starting_price ??
+              value.startingPrice,
+          )
+        : undefined,
     rating:
       reviewCount > 0 &&
-      Number.isFinite(rawRating)
+      Number.isFinite(
+        rawRating,
+      )
         ? rawRating
         : null,
     reviewCount,
     experienceYears:
       Math.max(
         0,
-        number(value.experience),
+        number(
+          value.experience ??
+            value.experience_years,
+        ),
       ),
     verified:
-      Boolean(value.verified),
+      Boolean(
+        value.verified,
+      ),
     available:
-      value.available !== false &&
+      value.available !==
+        false &&
       value.available !== 0,
     imageUrl,
     imageUrls:
@@ -251,22 +351,27 @@ export function parseProvider(
         imageUrl,
       ),
     description:
-      text(value.description) ||
+      text(
+        value.description,
+      ) ||
       undefined,
-    services: parsedServices,
+    services:
+      parsedServices,
     serviceCount,
     reviews:
       parseReviews(
         value.review_items,
       ),
     homeService:
-      value.home_service == null
+      value.home_service ==
+      null
         ? undefined
         : Boolean(
             value.home_service,
           ),
     shopService:
-      value.shop_service == null
+      value.shop_service ==
+      null
         ? undefined
         : Boolean(
             value.shop_service,
@@ -274,16 +379,86 @@ export function parseProvider(
   };
 }
 
+function listPath(
+  options: ProviderListOptions,
+): string {
+  const params =
+    new URLSearchParams();
+
+  params.set(
+    'limit',
+    String(
+      Math.max(
+        1,
+        Math.min(
+          150,
+          Math.trunc(
+            options.limit ??
+              150,
+          ),
+        ),
+      ),
+    ),
+  );
+
+  const query =
+    options.q?.trim();
+
+  if (query) {
+    params.set('q', query);
+  }
+
+  const category =
+    options.category?.trim();
+
+  if (category) {
+    params.set(
+      'category',
+      category,
+    );
+  }
+
+  if (
+    typeof options.latitude ===
+      'number' &&
+    Number.isFinite(
+      options.latitude,
+    ) &&
+    typeof options.longitude ===
+      'number' &&
+    Number.isFinite(
+      options.longitude,
+    )
+  ) {
+    params.set(
+      'lat',
+      String(
+        options.latitude,
+      ),
+    );
+
+    params.set(
+      'lng',
+      String(
+        options.longitude,
+      ),
+    );
+  }
+
+  return `/api/providers?${params.toString()}`;
+}
+
 export const providerApi = {
   async list(
     token?: string | null,
+    options: ProviderListOptions = {},
   ): Promise<Provider[]> {
     const result =
       await apiRequest<{
         success: true;
         providers: ApiRecord[];
       }>(
-        '/api/providers?limit=150',
+        listPath(options),
         {token},
       );
 
@@ -294,7 +469,9 @@ export const providerApi = {
           .map(parseProvider)
           .filter(
             provider =>
-              Boolean(provider.id),
+              Boolean(
+                provider.id,
+              ),
           )
       : [];
   },

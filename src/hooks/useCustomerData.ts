@@ -4,28 +4,57 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 
-import {bookingApi} from '../api/bookingApi';
-import {categoryApi} from '../api/categoryApi';
-import {customerApi} from '../api/customerApi';
-import {providerApi} from '../api/providerApi';
+import {
+  bookingApi,
+} from '../api/bookingApi';
+import {
+  categoryApi,
+} from '../api/categoryApi';
+import {
+  customerApi,
+} from '../api/customerApi';
+import {
+  providerApi,
+  ProviderListOptions,
+} from '../api/providerApi';
 import {useAuth} from '../auth';
-import {VerifiedLocation} from '../types/location';
+import {
+  VerifiedLocation,
+} from '../types/location';
 
 export function useCategories() {
   return useQuery({
-    queryKey: ['categories'],
-    queryFn: categoryApi.list,
-    staleTime: 5 * 60_000,
+    queryKey: [
+      'categories',
+    ],
+    queryFn:
+      categoryApi.list,
+    staleTime:
+      5 * 60_000,
   });
 }
 
-export function useProviders() {
+export function useProviders(
+  options: ProviderListOptions = {},
+) {
   const {token} = useAuth();
 
   return useQuery({
-    queryKey: ['providers'],
+    queryKey: [
+      'providers',
+      options.q ?? '',
+      options.category ?? '',
+      options.latitude ?? null,
+      options.longitude ?? null,
+      options.limit ?? 150,
+    ],
     queryFn: () =>
-      providerApi.list(token),
+      providerApi.list(
+        token,
+        options,
+      ),
+    staleTime:
+      60_000,
   });
 }
 
@@ -50,12 +79,16 @@ export function useProviderDetails(
 }
 
 export function useSavedProviders() {
-  const {token} = useAuth();
+  const {
+    token,
+    user,
+  } = useAuth();
 
   return useQuery({
     queryKey: [
       'saved-providers',
-      token ? 'auth' : 'guest',
+      user?.id ??
+        'guest',
     ],
     queryFn: () => {
       if (!token) {
@@ -68,7 +101,85 @@ export function useSavedProviders() {
         token,
       );
     },
-    enabled: Boolean(token),
+    enabled:
+      Boolean(
+        token &&
+          user?.id,
+      ),
+    staleTime:
+      30_000,
+  });
+}
+
+export function useSaveProvider() {
+  const {
+    token,
+    user,
+  } = useAuth();
+
+  const queryClient =
+    useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      providerRef: string,
+    ) => {
+      if (!token) {
+        throw new Error(
+          'Your session is unavailable. Sign in again.',
+        );
+      }
+
+      await customerApi.saveProvider(
+        providerRef,
+        token,
+      );
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [
+          'saved-providers',
+          user?.id ??
+            'guest',
+        ],
+      });
+    },
+  });
+}
+
+export function useRemoveSavedProvider() {
+  const {
+    token,
+    user,
+  } = useAuth();
+
+  const queryClient =
+    useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      providerRef: string,
+    ) => {
+      if (!token) {
+        throw new Error(
+          'Your session is unavailable. Sign in again.',
+        );
+      }
+
+      await customerApi.removeSavedProvider(
+        providerRef,
+        token,
+      );
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [
+          'saved-providers',
+          user?.id ??
+            'guest',
+        ],
+      });
+    },
   });
 }
 
@@ -90,13 +201,16 @@ export function useCustomerBookings() {
         token,
       );
     },
-    enabled: Boolean(token),
-    staleTime: 30_000,
+    enabled:
+      Boolean(token),
+    staleTime:
+      30_000,
   });
 }
 
 export function useCreateBooking() {
   const {token} = useAuth();
+
   const queryClient =
     useQueryClient();
 
@@ -136,6 +250,7 @@ export function useCreateBooking() {
 
 export function useCancelBooking() {
   const {token} = useAuth();
+
   const queryClient =
     useQueryClient();
 
@@ -166,6 +281,7 @@ export function useCancelBooking() {
 
 export function useReviewBooking() {
   const {token} = useAuth();
+
   const queryClient =
     useQueryClient();
 
@@ -207,6 +323,11 @@ export function useReviewBooking() {
         queryClient.invalidateQueries({
           queryKey: [
             'provider',
+          ],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            'home-review-highlights',
           ],
         }),
       ]);
