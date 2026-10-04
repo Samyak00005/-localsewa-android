@@ -1,17 +1,9 @@
 import React from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  View,
-} from 'react-native';
+import {Pressable, StyleSheet, View} from 'react-native';
 
-import {
-  AppText,
-} from '../ui';
-import {
-  spacing,
-  useAppTheme,
-} from '../../theme';
+import {AppIcon, iconSize} from '../icons';
+import {AppText} from '../ui';
+import {spacing, useAppTheme} from '../../theme';
 
 type SectionHeaderProps = {
   title: string;
@@ -31,15 +23,10 @@ export function SectionHeader({
   return (
     <View style={styles.row}>
       <View style={styles.copy}>
-        <AppText variant="title">
-          {title}
-        </AppText>
+        <AppText variant="title">{title}</AppText>
 
         {subtitle ? (
-          <AppText
-            variant="caption"
-            muted
-            style={styles.subtitle}>
+          <AppText variant="caption" muted style={styles.subtitle}>
             {subtitle}
           </AppText>
         ) : null}
@@ -48,12 +35,19 @@ export function SectionHeader({
       {actionLabel && onAction ? (
         <Pressable
           accessibilityRole="button"
-          onPress={onAction}>
-          <AppText
-            variant="label"
-            color={theme.colors.primary}>
+          onPress={onAction}
+          style={({pressed}) => [
+            styles.action,
+            {opacity: pressed ? 0.7 : 1},
+          ]}>
+          <AppText variant="label" color={theme.colors.primary}>
             {actionLabel}
           </AppText>
+          <AppIcon
+            name="chevronRight"
+            size={iconSize.xs}
+            color={theme.colors.primary}
+          />
         </Pressable>
       ) : null}
     </View>
@@ -71,5 +65,12 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     marginTop: spacing[1],
+  },
+  action: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[1],
+    paddingHorizontal: spacing[1],
   },
 });

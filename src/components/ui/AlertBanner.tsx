@@ -11,7 +11,8 @@ import {AppText} from './AppText';
 type AlertVariant =
   | 'error'
   | 'success'
-  | 'info';
+  | 'info'
+  | 'warning';
 
 type AlertBannerProps = PropsWithChildren<{
   variant?: AlertVariant;
@@ -36,11 +37,17 @@ export function AlertBanner({
             border: theme.colors.success,
             text: theme.colors.success,
           }
-        : {
-            background: '#DBEAFE',
-            border: theme.colors.info,
-            text: theme.colors.info,
-          };
+        : variant === 'warning'
+          ? {
+              background: '#FEF3C7',
+              border: theme.colors.warning,
+              text: theme.colors.warning,
+            }
+          : {
+              background: '#DBEAFE',
+              border: theme.colors.info,
+              text: theme.colors.info,
+            };
 
   return (
     <View
@@ -50,7 +57,8 @@ export function AlertBanner({
         {
           backgroundColor:
             palette.background,
-          borderColor: palette.border,
+          borderColor:
+            palette.border,
         },
       ]}>
       <AppText

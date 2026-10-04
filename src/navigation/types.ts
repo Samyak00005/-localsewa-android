@@ -36,18 +36,43 @@ export type CustomerStackParamList = {
   CustomerTabs:
     | NavigatorScreenParams<CustomerTabParamList>
     | undefined;
+
+  Notifications: undefined;
+
   ProviderDetails: {
     providerId: string;
   };
+
   BookingRequest: {
     providerId: string;
   };
+
   BookingDetails: {
     bookingId: number;
   };
+
+  BookingChat: {
+    bookingId: number;
+  };
+
+  VoiceCallPreview: {
+    bookingId: number;
+  };
+
   BookingReview: {
     bookingId: number;
   };
+
+  EditCustomerProfile: undefined;
+  DefaultLocation: undefined;
+  AccountSecurity: undefined;
+  ChangePassword: undefined;
+  SetPassword: undefined;
+  ChangeEmail: undefined;
+  HelpSupport: undefined;
+  TermsConditions: undefined;
+  PrivacyPolicy: undefined;
+  AccountDeletion: undefined;
 };
 
 export type CustomerTabParamList = {

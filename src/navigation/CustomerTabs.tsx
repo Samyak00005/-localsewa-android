@@ -2,7 +2,7 @@ import React from 'react';
 import {StyleSheet, View} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 
-import {AppText} from '../components/ui';
+import {AppIcon, AppIconName, iconSize} from '../components/icons';
 import {
   CustomerBookingsScreen,
   CustomerHomeScreen,
@@ -23,12 +23,12 @@ const labels: Record<keyof CustomerTabParamList, string> = {
   CustomerProfile: 'Profile',
 };
 
-const glyphs: Record<keyof CustomerTabParamList, string> = {
-  CustomerHome: 'H',
-  CustomerServices: 'S',
-  CustomerBookings: 'B',
-  CustomerSaved: '★',
-  CustomerProfile: 'P',
+const icons: Record<keyof CustomerTabParamList, AppIconName> = {
+  CustomerHome: 'home',
+  CustomerServices: 'wrench',
+  CustomerBookings: 'calendar',
+  CustomerSaved: 'bookmark',
+  CustomerProfile: 'user',
 };
 
 export function CustomerTabs(): React.JSX.Element {
@@ -44,51 +44,35 @@ export function CustomerTabs(): React.JSX.Element {
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.border,
-          height: 66,
+          height: 72,
           paddingTop: 6,
-          paddingBottom: 7,
+          paddingBottom: 8,
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '500',
         },
         tabBarLabel: labels[route.name],
-        tabBarIcon: ({focused}) => (
-          <TabGlyph
-            value={glyphs[route.name]}
-            focused={focused}
-          />
+        tabBarIcon: ({focused, color}) => (
+          <TabIcon name={icons[route.name]} color={color} focused={focused} />
         ),
       })}>
-      <Tab.Screen
-        name="CustomerHome"
-        component={CustomerHomeScreen}
-      />
-      <Tab.Screen
-        name="CustomerServices"
-        component={CustomerServicesScreen}
-      />
-      <Tab.Screen
-        name="CustomerBookings"
-        component={CustomerBookingsScreen}
-      />
-      <Tab.Screen
-        name="CustomerSaved"
-        component={CustomerSavedScreen}
-      />
-      <Tab.Screen
-        name="CustomerProfile"
-        component={CustomerProfileScreen}
-      />
+      <Tab.Screen name="CustomerHome" component={CustomerHomeScreen} />
+      <Tab.Screen name="CustomerServices" component={CustomerServicesScreen} />
+      <Tab.Screen name="CustomerBookings" component={CustomerBookingsScreen} />
+      <Tab.Screen name="CustomerSaved" component={CustomerSavedScreen} />
+      <Tab.Screen name="CustomerProfile" component={CustomerProfileScreen} />
     </Tab.Navigator>
   );
 }
 
-function TabGlyph({
-  value,
+function TabIcon({
+  name,
+  color,
   focused,
 }: {
-  value: string;
+  name: AppIconName;
+  color: string;
   focused: boolean;
 }): React.JSX.Element {
   const {theme} = useAppTheme();
@@ -96,36 +80,27 @@ function TabGlyph({
   return (
     <View
       style={[
-        styles.glyph,
+        styles.iconWrap,
         {
-          backgroundColor: focused
-            ? theme.colors.secondary
-            : 'transparent',
+          backgroundColor: focused ? theme.colors.secondary : 'transparent',
         },
       ]}>
-      <AppText
-        variant="caption"
-        color={
-          focused
-            ? theme.colors.primary
-            : theme.colors.textMuted
-        }
-        style={styles.glyphText}>
-        {value}
-      </AppText>
+      <AppIcon
+        name={name}
+        size={iconSize.sm}
+        color={color}
+        strokeWidth={focused ? 2.4 : 2}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  glyph: {
-    width: 28,
-    height: 28,
-    borderRadius: radius.sm,
+  iconWrap: {
+    width: 36,
+    height: 30,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  glyphText: {
-    fontWeight: '700',
   },
 });

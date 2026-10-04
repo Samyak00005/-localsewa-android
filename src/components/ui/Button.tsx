@@ -4,9 +4,11 @@ import {
   Pressable,
   PressableProps,
   StyleSheet,
+  View,
   ViewStyle,
 } from 'react-native';
 
+import {AppIcon, AppIconName, iconSize} from '../icons';
 import {layout, radius, spacing, useAppTheme} from '../../theme';
 import {AppText} from './AppText';
 
@@ -23,6 +25,8 @@ type ButtonProps = Omit<PressableProps, 'style'> & {
   loading?: boolean;
   fullWidth?: boolean;
   style?: ViewStyle;
+  icon?: AppIconName;
+  iconPosition?: 'left' | 'right';
 };
 
 export function Button({
@@ -32,11 +36,12 @@ export function Button({
   disabled = false,
   fullWidth = false,
   style,
+  icon,
+  iconPosition = 'left',
   ...props
 }: ButtonProps): React.JSX.Element {
   const {theme} = useAppTheme();
   const isDisabled = disabled || loading;
-
   const palette = getButtonPalette(variant, theme.colors);
 
   return (
@@ -49,9 +54,10 @@ export function Button({
         styles.base,
         fullWidth && styles.fullWidth,
         {
-          backgroundColor: pressed && !isDisabled
-            ? palette.pressedBackground
-            : palette.background,
+          backgroundColor:
+            pressed && !isDisabled
+              ? palette.pressedBackground
+              : palette.background,
           borderColor: palette.border,
           opacity: isDisabled ? 0.5 : 1,
         },
@@ -60,12 +66,19 @@ export function Button({
       {loading ? (
         <ActivityIndicator size="small" color={palette.text} />
       ) : (
-        <AppText
-          variant="label"
-          color={palette.text}
-          style={styles.label}>
-          {label}
-        </AppText>
+        <View style={styles.content}>
+          {icon && iconPosition === 'left' ? (
+            <AppIcon name={icon} size={iconSize.sm} color={palette.text} />
+          ) : null}
+
+          <AppText variant="label" color={palette.text} style={styles.label}>
+            {label}
+          </AppText>
+
+          {icon && iconPosition === 'right' ? (
+            <AppIcon name={icon} size={iconSize.sm} color={palette.text} />
+          ) : null}
+        </View>
       )}
     </Pressable>
   );
@@ -112,7 +125,6 @@ function getButtonPalette(
         border: colors.error,
         text: colors.onPrimary,
       };
-    case 'primary':
     default:
       return {
         background: colors.primary,
@@ -134,6 +146,12 @@ const styles = StyleSheet.create({
   },
   fullWidth: {
     width: '100%',
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing[2],
   },
   label: {
     textAlign: 'center',

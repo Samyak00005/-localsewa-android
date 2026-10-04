@@ -13,6 +13,10 @@ import {
   errorMessage,
 } from '../../api/apiClient';
 import {
+  AppIcon,
+  iconSize,
+} from '../../components/icons';
+import {
   useProviderDetails,
 } from '../../hooks/useCustomerData';
 import {
@@ -337,9 +341,17 @@ export function ProviderDetailsScreen({
                       <View
                         key={review.id}
                         style={styles.review}>
-                        <AppText variant="label">
-                          ★ {review.rating.toFixed(1)}
-                        </AppText>
+                        <View style={styles.reviewRating}>
+                          <AppIcon
+                            name="star"
+                            size={iconSize.xs}
+                            color={theme.colors.warning}
+                            fill={theme.colors.warning}
+                          />
+                          <AppText variant="label">
+                            {review.rating.toFixed(1)}
+                          </AppText>
+                        </View>
 
                         {review.comment ? (
                           <AppText
@@ -379,6 +391,7 @@ export function ProviderDetailsScreen({
                     ? 'Request service'
                     : 'Provider unavailable'
                 }
+                icon="calendar"
                 disabled={
                   !provider.available
                 }
@@ -496,6 +509,11 @@ const styles = StyleSheet.create({
   },
   review: {
     paddingBottom: spacing[3],
+  },
+  reviewRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[1],
   },
   bookingCard: {
     marginTop: spacing[4],

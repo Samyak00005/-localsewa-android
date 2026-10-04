@@ -62,7 +62,8 @@ export function BookingDetailsScreen({
   navigation,
   route,
 }: Props): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const {theme} =
+    useAppTheme();
 
   const [
     actionError,
@@ -174,13 +175,18 @@ export function BookingDetailsScreen({
         <AppText
           variant="body"
           muted
-          style={styles.pageSubtitle}>
+          style={
+            styles.pageSubtitle
+          }>
           Track the request and use only the actions currently allowed by the
           backend.
         </AppText>
 
         {isLoading ? (
-          <Card style={styles.firstCard}>
+          <Card
+            style={
+              styles.firstCard
+            }>
             <Skeleton
               width="65%"
               height={26}
@@ -197,7 +203,10 @@ export function BookingDetailsScreen({
             />
           </Card>
         ) : error || !booking ? (
-          <View style={styles.actions}>
+          <View
+            style={
+              styles.actions
+            }>
             <AlertBanner variant="error">
               {errorMessage(
                 error ??
@@ -209,7 +218,9 @@ export function BookingDetailsScreen({
 
             <Button
               label="Retry"
-              loading={isRefetching}
+              loading={
+                isRefetching
+              }
               onPress={() => {
                 refetch();
               }}
@@ -219,16 +230,28 @@ export function BookingDetailsScreen({
         ) : (
           <>
             {actionError ? (
-              <View style={styles.firstCard}>
+              <View
+                style={
+                  styles.firstCard
+                }>
                 <AlertBanner variant="error">
                   {actionError}
                 </AlertBanner>
               </View>
             ) : null}
 
-            <Card style={styles.heroCard}>
-              <View style={styles.titleRow}>
-                <View style={styles.titleCopy}>
+            <Card
+              style={
+                styles.heroCard
+              }>
+              <View
+                style={
+                  styles.titleRow
+                }>
+                <View
+                  style={
+                    styles.titleCopy
+                  }>
                   <AppText variant="h2">
                     {booking.serviceName}
                   </AppText>
@@ -236,17 +259,24 @@ export function BookingDetailsScreen({
                   <AppText
                     variant="bodySmall"
                     muted
-                    style={styles.smallGap}>
+                    style={
+                      styles.smallGap
+                    }>
                     {booking.providerName}
                   </AppText>
                 </View>
 
                 <BookingStatusBadge
-                  status={booking.status}
+                  status={
+                    booking.status
+                  }
                 />
               </View>
 
-              <View style={styles.codeRow}>
+              <View
+                style={
+                  styles.codeRow
+                }>
                 <AppText
                   variant="caption"
                   muted>
@@ -259,14 +289,90 @@ export function BookingDetailsScreen({
               </View>
             </Card>
 
-            <Card style={styles.sectionCard}>
+            {booking.chatEnabled ? (
+              <Card
+                style={
+                  styles.chatCard
+                }>
+                <View
+                  style={
+                    styles.chatCopy
+                  }>
+                  <AppText variant="title">
+                    Contact provider
+                  </AppText>
+
+                  <AppText
+                    variant="bodySmall"
+                    muted
+                    style={
+                      styles.smallGap
+                    }>
+                    Chat is live. Voice calling is UI-only for now.
+                  </AppText>
+                </View>
+
+                <View
+                  style={
+                    styles.communicationRow
+                  }>
+                  <View
+                    style={
+                      styles.communicationAction
+                    }>
+                    <Button
+                      label="Open chat"
+                      icon="message"
+                      onPress={() =>
+                        navigation.navigate(
+                          'BookingChat',
+                          {
+                            bookingId:
+                              booking.id,
+                          },
+                        )
+                      }
+                      fullWidth
+                    />
+                  </View>
+
+                  <View
+                    style={
+                      styles.communicationAction
+                    }>
+                    <Button
+                      label="Call"
+                      icon="phone"
+                      variant="outline"
+                      onPress={() =>
+                        navigation.navigate(
+                          'VoiceCallPreview',
+                          {
+                            bookingId:
+                              booking.id,
+                          },
+                        )
+                      }
+                      fullWidth
+                    />
+                  </View>
+                </View>
+              </Card>
+            ) : null}
+
+            <Card
+              style={
+                styles.sectionCard
+              }>
               <AppText variant="title">
                 Schedule
               </AppText>
 
               <InfoRow
                 label="Date"
-                value={booking.date}
+                value={
+                  booking.date
+                }
               />
 
               <Divider />
@@ -296,7 +402,10 @@ export function BookingDetailsScreen({
               ) : null}
             </Card>
 
-            <Card style={styles.sectionCard}>
+            <Card
+              style={
+                styles.sectionCard
+              }>
               <AppText variant="title">
                 Service location
               </AppText>
@@ -304,7 +413,9 @@ export function BookingDetailsScreen({
               <AppText
                 variant="bodySmall"
                 muted
-                style={styles.sectionText}>
+                style={
+                  styles.sectionText
+                }>
                 {booking.location ||
                   booking.area ||
                   'Location is hidden for this booking state.'}
@@ -313,6 +424,7 @@ export function BookingDetailsScreen({
               {booking.mapsUrl ? (
                 <Button
                   label="Open service location"
+                  icon="mapPin"
                   variant="outline"
                   onPress={() => {
                     openMap(
@@ -325,7 +437,10 @@ export function BookingDetailsScreen({
             </Card>
 
             {booking.providerLocation ? (
-              <Card style={styles.sectionCard}>
+              <Card
+                style={
+                  styles.sectionCard
+                }>
                 <AppText variant="title">
                   Provider location
                 </AppText>
@@ -333,13 +448,16 @@ export function BookingDetailsScreen({
                 <AppText
                   variant="bodySmall"
                   muted
-                  style={styles.sectionText}>
+                  style={
+                    styles.sectionText
+                  }>
                   {booking.providerLocation}
                 </AppText>
 
                 {booking.providerMapsUrl ? (
                   <Button
                     label="Open provider location"
+                    icon="mapPin"
                     variant="outline"
                     onPress={() => {
                       openMap(
@@ -352,7 +470,10 @@ export function BookingDetailsScreen({
               </Card>
             ) : null}
 
-            <Card style={styles.sectionCard}>
+            <Card
+              style={
+                styles.sectionCard
+              }>
               <AppText variant="title">
                 Booking details
               </AppText>
@@ -373,7 +494,10 @@ export function BookingDetailsScreen({
               {booking.note ? (
                 <>
                   <Divider />
-                  <View style={styles.note}>
+                  <View
+                    style={
+                      styles.note
+                    }>
                     <AppText
                       variant="caption"
                       muted>
@@ -382,7 +506,9 @@ export function BookingDetailsScreen({
 
                     <AppText
                       variant="bodySmall"
-                      style={styles.smallGap}>
+                      style={
+                        styles.smallGap
+                      }>
                       {booking.note}
                     </AppText>
                   </View>
@@ -392,7 +518,10 @@ export function BookingDetailsScreen({
               {booking.reason ? (
                 <>
                   <Divider />
-                  <View style={styles.note}>
+                  <View
+                    style={
+                      styles.note
+                    }>
                     <AppText
                       variant="caption"
                       muted>
@@ -401,7 +530,9 @@ export function BookingDetailsScreen({
 
                     <AppText
                       variant="bodySmall"
-                      style={styles.smallGap}>
+                      style={
+                        styles.smallGap
+                      }>
                       {booking.reason}
                     </AppText>
                   </View>
@@ -409,26 +540,14 @@ export function BookingDetailsScreen({
               ) : null}
             </Card>
 
-            {booking.chatEnabled ? (
-              <Card style={styles.sectionCard}>
-                <AppText variant="title">
-                  Chat available
-                </AppText>
-
-                <AppText
-                  variant="bodySmall"
-                  muted
-                  style={styles.sectionText}>
-                  This booking is eligible for booking-scoped chat. Native chat
-                  is the next milestone.
-                </AppText>
-              </Card>
-            ) : null}
-
-            <View style={styles.actions}>
+            <View
+              style={
+                styles.actions
+              }>
               {booking.canRate ? (
                 <Button
                   label="Rate this service"
+                  icon="star"
                   onPress={() =>
                     navigation.navigate(
                       'BookingReview',
@@ -446,6 +565,7 @@ export function BookingDetailsScreen({
               booking.providerId ? (
                 <Button
                   label="View provider to rebook"
+                  icon="user"
                   variant="outline"
                   onPress={() =>
                     navigation.navigate(
@@ -463,6 +583,7 @@ export function BookingDetailsScreen({
               {booking.canCancel ? (
                 <Button
                   label="Cancel booking"
+                  icon="trash"
                   variant="destructive"
                   loading={
                     cancel.isPending
@@ -478,7 +599,9 @@ export function BookingDetailsScreen({
             <AppText
               variant="caption"
               muted
-              style={styles.paymentNote}>
+              style={
+                styles.paymentNote
+              }>
               “Service price” is the backend booking price. A completed booking
               is not treated as proof of online payment.
             </AppText>
@@ -497,7 +620,8 @@ function InfoRow({
   value: string;
 }): React.JSX.Element {
   return (
-    <View style={styles.infoRow}>
+    <View
+      style={styles.infoRow}>
       <AppText
         variant="caption"
         muted>
@@ -506,7 +630,9 @@ function InfoRow({
 
       <AppText
         variant="label"
-        style={styles.infoValue}>
+        style={
+          styles.infoValue
+        }>
         {value}
       </AppText>
     </View>
@@ -521,7 +647,8 @@ const styles = StyleSheet.create({
     paddingHorizontal:
       layout.screenHorizontal,
     paddingTop: spacing[6],
-    paddingBottom: spacing[12],
+    paddingBottom:
+      spacing[12],
   },
   pageSubtitle: {
     marginTop: spacing[2],
@@ -531,6 +658,20 @@ const styles = StyleSheet.create({
   },
   heroCard: {
     marginTop: spacing[5],
+  },
+  chatCard: {
+    marginTop: spacing[4],
+    gap: spacing[4],
+  },
+  chatCopy: {
+    flex: 1,
+  },
+  communicationRow: {
+    flexDirection: 'row',
+    gap: spacing[3],
+  },
+  communicationAction: {
+    flex: 1,
   },
   titleRow: {
     flexDirection: 'row',
@@ -552,13 +693,15 @@ const styles = StyleSheet.create({
     marginTop: spacing[2],
   },
   infoRow: {
-    paddingVertical: spacing[1],
+    paddingVertical:
+      spacing[1],
   },
   infoValue: {
     marginTop: spacing[1],
   },
   note: {
-    paddingVertical: spacing[1],
+    paddingVertical:
+      spacing[1],
   },
   smallGap: {
     marginTop: spacing[1],

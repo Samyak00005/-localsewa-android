@@ -1,24 +1,15 @@
 import React, {useState} from 'react';
-import {
-  Pressable,
-  TextInputProps,
-} from 'react-native';
+import {Pressable, StyleSheet, TextInputProps} from 'react-native';
 
-import {
-  AppText,
-  Input,
-} from '../ui';
+import {AppIcon, iconSize} from '../icons';
+import {Input} from '../ui';
 import {useAppTheme} from '../../theme';
 
-type PasswordInputProps =
-  Omit<
-    TextInputProps,
-    'secureTextEntry'
-  > & {
-    label: string;
-    helperText?: string;
-    error?: string;
-  };
+type PasswordInputProps = Omit<TextInputProps, 'secureTextEntry'> & {
+  label: string;
+  helperText?: string;
+  error?: string;
+};
 
 export function PasswordInput({
   label,
@@ -27,8 +18,7 @@ export function PasswordInput({
   ...props
 }: PasswordInputProps): React.JSX.Element {
   const {theme} = useAppTheme();
-  const [visible, setVisible] =
-    useState(false);
+  const [visible, setVisible] = useState(false);
 
   return (
     <Input
@@ -42,21 +32,26 @@ export function PasswordInput({
       rightAccessory={
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={
-            visible
-              ? 'Hide password'
-              : 'Show password'
-          }
-          onPress={() =>
-            setVisible(value => !value)
-          }>
-          <AppText
-            variant="label"
-            color={theme.colors.primary}>
-            {visible ? 'Hide' : 'Show'}
-          </AppText>
+          accessibilityLabel={visible ? 'Hide password' : 'Show password'}
+          hitSlop={4}
+          onPress={() => setVisible(value => !value)}
+          style={styles.toggle}>
+          <AppIcon
+            name={visible ? 'eyeOff' : 'eye'}
+            size={iconSize.sm}
+            color={theme.colors.textMuted}
+          />
         </Pressable>
       }
     />
   );
 }
+
+const styles = StyleSheet.create({
+  toggle: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

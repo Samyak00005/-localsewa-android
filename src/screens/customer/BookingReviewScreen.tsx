@@ -1,19 +1,9 @@
-import React, {
-  useState,
-} from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
-import {
-  NativeStackScreenProps,
-} from '@react-navigation/native-stack';
+import React, {useState} from 'react';
+import {Pressable, ScrollView, StyleSheet, View} from 'react-native';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
 
-import {
-  errorMessage,
-} from '../../api/apiClient';
+import {errorMessage} from '../../api/apiClient';
+import {AppIcon, iconSize} from '../../components/icons';
 import {
   AlertBanner,
   AppText,
@@ -21,140 +11,100 @@ import {
   Card,
   Input,
 } from '../../components/ui';
-import {
-  useReviewBooking,
-} from '../../hooks/useCustomerData';
-import {
-  CustomerStackParamList,
-} from '../../navigation/types';
-import {
-  layout,
-  radius,
-  spacing,
-  useAppTheme,
-} from '../../theme';
+import {useReviewBooking} from '../../hooks/useCustomerData';
+import {CustomerStackParamList} from '../../navigation/types';
+import {layout, radius, spacing, useAppTheme} from '../../theme';
 
-type Props =
-  NativeStackScreenProps<
-    CustomerStackParamList,
-    'BookingReview'
-  >;
+type Props = NativeStackScreenProps<
+  CustomerStackParamList,
+  'BookingReview'
+>;
 
 export function BookingReviewScreen({
   navigation,
   route,
 }: Props): React.JSX.Element {
   const {theme} = useAppTheme();
-  const review =
-    useReviewBooking();
+  const review = useReviewBooking();
 
-  const [rating, setRating] =
-    useState(5);
-  const [comment, setComment] =
-    useState('');
-  const [error, setError] =
-    useState<string | null>(null);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   async function submit() {
     setError(null);
 
     try {
       await review.mutateAsync({
-        bookingId:
-          route.params.bookingId,
+        bookingId: route.params.bookingId,
         rating,
         comment,
       });
-
       navigation.goBack();
-    } catch (
-      mutationError
-    ) {
-      setError(
-        errorMessage(
-          mutationError,
-        ),
-      );
+    } catch (mutationError) {
+      setError(errorMessage(mutationError));
     }
   }
 
   return (
     <ScrollView
-      style={{
-        backgroundColor:
-          theme.colors.background,
-      }}
-      contentContainerStyle={
-        styles.content
-      }
+      style={{backgroundColor: theme.colors.background}}
+      contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}>
-      <AppText variant="h1">
-        Rate your service
-      </AppText>
+      <AppText variant="h1">Rate your service</AppText>
 
-      <AppText
-        variant="body"
-        muted
-        style={styles.subtitle}>
+      <AppText variant="body" muted style={styles.subtitle}>
         Your rating updates the provider’s Localsewa review profile.
       </AppText>
 
       <Card style={styles.card}>
-        {error ? (
-          <AlertBanner variant="error">
-            {error}
-          </AlertBanner>
-        ) : null}
+        {error ? <AlertBanner variant="error">{error}</AlertBanner> : null}
 
-        <AppText variant="label">
-          Rating
-        </AppText>
+        <AppText variant="label">Rating</AppText>
 
         <View style={styles.stars}>
-          {[1, 2, 3, 4, 5].map(
-            value => (
+          {[1, 2, 3, 4, 5].map(value => {
+            const active = value <= rating;
+
+            return (
               <Pressable
                 key={value}
                 accessibilityRole="button"
                 accessibilityLabel={`${value} star rating`}
-                onPress={() =>
-                  setRating(value)
-                }
+                accessibilityState={{selected: value === rating}}
+                onPress={() => setRating(value)}
                 style={[
                   styles.starButton,
                   {
-                    backgroundColor:
-                      value <= rating
-                        ? theme.colors.secondary
-                        : theme.colors.surfaceMuted,
-                    borderColor:
-                      value <= rating
-                        ? theme.colors.primary
-                        : theme.colors.border,
+                    backgroundColor: active
+                      ? theme.colors.secondary
+                      : theme.colors.surfaceMuted,
+                    borderColor: active
+                      ? theme.colors.primary
+                      : theme.colors.border,
                   },
                 ]}>
-                <AppText
-                  variant="h3"
+                <AppIcon
+                  name="star"
+                  size={iconSize.lg}
                   color={
-                    value <= rating
+                    active
                       ? theme.colors.primary
                       : theme.colors.textMuted
-                  }>
-                  ★
-                </AppText>
+                  }
+                  fill={active ? theme.colors.primary : 'none'}
+                />
               </Pressable>
-            ),
-          )}
+            );
+          })}
         </View>
 
         <Input
           label="Comment (optional)"
           placeholder="How was your experience?"
           value={comment}
-          onChangeText={
-            setComment
-          }
+          onChangeText={setComment}
           multiline
           maxLength={1000}
           style={styles.comment}
@@ -162,9 +112,8 @@ export function BookingReviewScreen({
 
         <Button
           label="Submit review"
-          loading={
-            review.isPending
-          }
+          icon="star"
+          loading={review.isPending}
           onPress={submit}
           fullWidth
         />
@@ -175,8 +124,7 @@ export function BookingReviewScreen({
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal:
-      layout.screenHorizontal,
+    paddingHorizontal: layout.screenHorizontal,
     paddingTop: spacing[6],
     paddingBottom: spacing[12],
   },

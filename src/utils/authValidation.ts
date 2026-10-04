@@ -1,6 +1,9 @@
 export type ValidationResult =
   | {valid: true}
-  | {valid: false; message: string};
+  | {
+      valid: false;
+      message: string;
+    };
 
 const EMAIL_PATTERN =
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -11,7 +14,9 @@ const PHONE_PATTERN =
 export function normalizeEmail(
   value: string,
 ): string {
-  return value.trim().toLowerCase();
+  return value
+    .trim()
+    .toLowerCase();
 }
 
 export function normalizePhone(
@@ -26,12 +31,14 @@ export function normalizePhone(
 export function validateEmail(
   value: string,
 ): ValidationResult {
-  const email = normalizeEmail(value);
+  const email =
+    normalizeEmail(value);
 
   if (!email) {
     return {
       valid: false,
-      message: 'Enter your email address.',
+      message:
+        'Enter your email address.',
     };
   }
 
@@ -52,7 +59,8 @@ export function validateEmail(
 export function validatePhone(
   value: string,
 ): ValidationResult {
-  const phone = normalizePhone(value);
+  const phone =
+    normalizePhone(value);
 
   if (!phone) {
     return {
@@ -76,7 +84,8 @@ export function validatePhone(
 export function validateIdentifier(
   value: string,
 ): ValidationResult {
-  const identifier = value.trim();
+  const identifier =
+    value.trim();
 
   if (!identifier) {
     return {
@@ -86,17 +95,24 @@ export function validateIdentifier(
     };
   }
 
-  if (identifier.includes('@')) {
-    return validateEmail(identifier);
+  if (
+    identifier.includes('@')
+  ) {
+    return validateEmail(
+      identifier,
+    );
   }
 
-  return validatePhone(identifier);
+  return validatePhone(
+    identifier,
+  );
 }
 
 export function validateFullName(
   value: string,
 ): ValidationResult {
-  const name = value.trim();
+  const name =
+    value.trim();
 
   if (name.length < 2) {
     return {
@@ -123,7 +139,8 @@ export function validatePassword(
   if (!value) {
     return {
       valid: false,
-      message: 'Enter a password.',
+      message:
+        'Enter a password.',
     };
   }
 
@@ -135,11 +152,11 @@ export function validatePassword(
     };
   }
 
-  if (value.length > 128) {
+  if (value.length > 72) {
     return {
       valid: false,
       message:
-        'Password is too long.',
+        'Password cannot exceed 72 characters.',
     };
   }
 
@@ -149,7 +166,11 @@ export function validatePassword(
 export function validateOtp(
   value: string,
 ): ValidationResult {
-  if (!/^\d{6}$/.test(value.trim())) {
+  if (
+    !/^\d{6}$/.test(
+      value.trim(),
+    )
+  ) {
     return {
       valid: false,
       message:

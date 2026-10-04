@@ -2,7 +2,7 @@ import React from 'react';
 import {StyleSheet, View} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 
-import {AppText} from '../components/ui';
+import {AppIcon, AppIconName, iconSize} from '../components/icons';
 import {
   ProviderHomeScreen,
   ProviderProfileScreen,
@@ -23,12 +23,12 @@ const labels: Record<keyof ProviderTabParamList, string> = {
   ProviderProfile: 'Profile',
 };
 
-const glyphs: Record<keyof ProviderTabParamList, string> = {
-  ProviderHome: 'H',
-  ProviderRequests: 'R',
-  ProviderServices: 'S',
-  ProviderReviews: '★',
-  ProviderProfile: 'P',
+const icons: Record<keyof ProviderTabParamList, AppIconName> = {
+  ProviderHome: 'home',
+  ProviderRequests: 'calendar',
+  ProviderServices: 'wrench',
+  ProviderReviews: 'star',
+  ProviderProfile: 'user',
 };
 
 export function ProviderTabs(): React.JSX.Element {
@@ -43,76 +43,54 @@ export function ProviderTabs(): React.JSX.Element {
         tabBarActiveTintColor: premium
           ? theme.colors.accent
           : theme.colors.primary,
-        tabBarInactiveTintColor: premium
-          ? '#D9D1DF'
-          : theme.colors.textMuted,
+        tabBarInactiveTintColor: premium ? '#D9D1DF' : theme.colors.textMuted,
         tabBarStyle: {
-          backgroundColor: premium
-            ? theme.colors.secondary
-            : theme.colors.surface,
-          borderTopColor: premium
-            ? theme.colors.accent
-            : theme.colors.border,
-          height: 66,
+          backgroundColor: premium ? theme.colors.secondary : theme.colors.surface,
+          borderTopColor: premium ? theme.colors.accent : theme.colors.border,
+          height: 72,
           paddingTop: 6,
-          paddingBottom: 7,
+          paddingBottom: 8,
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '500',
         },
         tabBarLabel: labels[route.name],
-        tabBarIcon: ({focused}) => (
-          <ProviderTabGlyph
-            value={glyphs[route.name]}
+        tabBarIcon: ({focused, color}) => (
+          <ProviderTabIcon
+            name={icons[route.name]}
+            color={color}
             focused={focused}
             premium={premium}
           />
         ),
       })}>
-      <Tab.Screen
-        name="ProviderHome"
-        component={ProviderHomeScreen}
-      />
-      <Tab.Screen
-        name="ProviderRequests"
-        component={ProviderRequestsScreen}
-      />
-      <Tab.Screen
-        name="ProviderServices"
-        component={ProviderServicesScreen}
-      />
-      <Tab.Screen
-        name="ProviderReviews"
-        component={ProviderReviewsScreen}
-      />
-      <Tab.Screen
-        name="ProviderProfile"
-        component={ProviderProfileScreen}
-      />
+      <Tab.Screen name="ProviderHome" component={ProviderHomeScreen} />
+      <Tab.Screen name="ProviderRequests" component={ProviderRequestsScreen} />
+      <Tab.Screen name="ProviderServices" component={ProviderServicesScreen} />
+      <Tab.Screen name="ProviderReviews" component={ProviderReviewsScreen} />
+      <Tab.Screen name="ProviderProfile" component={ProviderProfileScreen} />
     </Tab.Navigator>
   );
 }
 
-function ProviderTabGlyph({
-  value,
+function ProviderTabIcon({
+  name,
+  color,
   focused,
   premium,
 }: {
-  value: string;
+  name: AppIconName;
+  color: string;
   focused: boolean;
   premium: boolean;
 }): React.JSX.Element {
   const {theme} = useAppTheme();
 
-  const active = premium
-    ? theme.colors.accent
-    : theme.colors.primary;
-
   return (
     <View
       style={[
-        styles.glyph,
+        styles.iconWrap,
         {
           backgroundColor: focused
             ? premium
@@ -121,31 +99,22 @@ function ProviderTabGlyph({
             : 'transparent',
         },
       ]}>
-      <AppText
-        variant="caption"
-        color={
-          focused
-            ? active
-            : premium
-              ? '#D9D1DF'
-              : theme.colors.textMuted
-        }
-        style={styles.glyphText}>
-        {value}
-      </AppText>
+      <AppIcon
+        name={name}
+        size={iconSize.sm}
+        color={color}
+        strokeWidth={focused ? 2.4 : 2}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  glyph: {
-    width: 28,
-    height: 28,
-    borderRadius: radius.sm,
+  iconWrap: {
+    width: 36,
+    height: 30,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  glyphText: {
-    fontWeight: '700',
   },
 });

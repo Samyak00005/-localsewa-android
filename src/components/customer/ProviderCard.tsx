@@ -1,42 +1,22 @@
 import React from 'react';
-import {
-  Image,
-  Pressable,
-  StyleSheet,
-  View,
-} from 'react-native';
+import {Image, Pressable, StyleSheet, View} from 'react-native';
 
+import {AppIcon, iconSize} from '../icons';
 import {Provider} from '../../types/provider';
-import {
-  radius,
-  spacing,
-  useAppTheme,
-} from '../../theme';
-import {
-  AppText,
-  Avatar,
-  Badge,
-  Card,
-} from '../ui';
+import {radius, spacing, useAppTheme} from '../../theme';
+import {AppText, Avatar, Badge, Card} from '../ui';
 
 type ProviderCardProps = {
   provider: Provider;
   onPress: () => void;
 };
 
-function money(
-  value?: number,
-): string | null {
-  if (
-    value == null ||
-    !Number.isFinite(value)
-  ) {
+function money(value?: number): string | null {
+  if (value == null || !Number.isFinite(value)) {
     return null;
   }
 
-  return `₹${Math.round(
-    value,
-  ).toLocaleString('en-IN')}`;
+  return `₹${Math.round(value).toLocaleString('en-IN')}`;
 }
 
 export function ProviderCard({
@@ -44,36 +24,17 @@ export function ProviderCard({
   onPress,
 }: ProviderCardProps): React.JSX.Element {
   const {theme} = useAppTheme();
-  const price =
-    money(provider.startingPrice);
+  const price = money(provider.startingPrice);
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}>
+    <Pressable accessibilityRole="button" onPress={onPress}>
       {({pressed}) => (
-        <Card
-          style={[
-            styles.card,
-            {
-              opacity: pressed
-                ? 0.92
-                : 1,
-            },
-          ]}>
+        <Card style={[styles.card, {opacity: pressed ? 0.92 : 1}]}>
           <View style={styles.row}>
             {provider.imageUrl ? (
-              <Image
-                source={{
-                  uri: provider.imageUrl,
-                }}
-                style={styles.image}
-              />
+              <Image source={{uri: provider.imageUrl}} style={styles.image} />
             ) : (
-              <Avatar
-                initials={provider.name}
-                size="lg"
-              />
+              <Avatar initials={provider.name} size="lg" />
             )}
 
             <View style={styles.copy}>
@@ -86,9 +47,7 @@ export function ProviderCard({
                 </AppText>
 
                 {provider.verified ? (
-                  <Badge variant="success">
-                    VERIFIED
-                  </Badge>
+                  <Badge variant="success">VERIFIED</Badge>
                 ) : null}
               </View>
 
@@ -109,50 +68,42 @@ export function ProviderCard({
 
               <View style={styles.footer}>
                 <View>
-                  <AppText
-                    variant="label">
-                    {provider.rating == null
-                      ? 'New'
-                      : `★ ${provider.rating.toFixed(
-                          1,
-                        )}`}
-                  </AppText>
+                  {provider.rating == null ? (
+                    <AppText variant="label">New</AppText>
+                  ) : (
+                    <View style={styles.rating}>
+                      <AppIcon
+                        name="star"
+                        size={iconSize.xs}
+                        color={theme.colors.warning}
+                        fill={theme.colors.warning}
+                      />
+                      <AppText variant="label">
+                        {provider.rating.toFixed(1)}
+                      </AppText>
+                    </View>
+                  )}
 
-                  <AppText
-                    variant="caption"
-                    muted>
-                    {provider.reviewCount}
-                    {' '}
-                    {provider.reviewCount === 1
-                      ? 'review'
-                      : 'reviews'}
+                  <AppText variant="caption" muted>
+                    {provider.reviewCount}{' '}
+                    {provider.reviewCount === 1 ? 'review' : 'reviews'}
                   </AppText>
                 </View>
 
                 <View style={styles.price}>
                   {price ? (
                     <>
-                      <AppText
-                        variant="caption"
-                        muted>
+                      <AppText variant="caption" muted>
                         Starting
                       </AppText>
-                      <AppText
-                        variant="label"
-                        color={theme.colors.primary}>
+                      <AppText variant="label" color={theme.colors.primary}>
                         {price}
                       </AppText>
                     </>
                   ) : (
                     <Badge
-                      variant={
-                        provider.available
-                          ? 'success'
-                          : 'default'
-                      }>
-                      {provider.available
-                        ? 'AVAILABLE'
-                        : 'UNAVAILABLE'}
+                      variant={provider.available ? 'success' : 'default'}>
+                      {provider.available ? 'AVAILABLE' : 'UNAVAILABLE'}
                     </Badge>
                   )}
                 </View>
@@ -198,6 +149,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
+  },
+  rating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[1],
   },
   price: {
     alignItems: 'flex-end',

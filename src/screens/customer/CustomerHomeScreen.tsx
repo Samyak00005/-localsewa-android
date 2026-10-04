@@ -1,23 +1,10 @@
-import React, {
-  useMemo,
-  useState,
-} from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
-import {
-  NativeStackNavigationProp,
-} from '@react-navigation/native-stack';
-import {
-  BottomTabScreenProps,
-} from '@react-navigation/bottom-tabs';
+import React, {useMemo, useState} from 'react';
+import {Pressable, ScrollView, StyleSheet, View} from 'react-native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 
-import {
-  errorMessage,
-} from '../../api/apiClient';
+import {errorMessage} from '../../api/apiClient';
+import {AppIcon, iconSize} from '../../components/icons';
 import {
   ProviderCard,
   ProviderListSkeleton,
@@ -31,20 +18,13 @@ import {
   Card,
   Input,
 } from '../../components/ui';
-import {
-  useCategories,
-  useProviders,
-} from '../../hooks/useCustomerData';
+import {useCategories, useProviders} from '../../hooks/useCustomerData';
+import {useNotifications} from '../../hooks/useNotifications';
 import {
   CustomerStackParamList,
   CustomerTabParamList,
 } from '../../navigation/types';
-import {
-  layout,
-  radius,
-  spacing,
-  useAppTheme,
-} from '../../theme';
+import {layout, radius, spacing, useAppTheme} from '../../theme';
 
 type Props = BottomTabScreenProps<
   CustomerTabParamList,
@@ -55,8 +35,7 @@ export function CustomerHomeScreen({
   navigation,
 }: Props): React.JSX.Element {
   const {theme} = useAppTheme();
-  const [search, setSearch] =
-    useState('');
+  const [search, setSearch] = useState('');
 
   const {
     data: providers = [],
@@ -66,89 +45,98 @@ export function CustomerHomeScreen({
     isRefetching,
   } = useProviders();
 
-  const {
-    data: categories = [],
-  } = useCategories();
+  const {data: categories = []} = useCategories();
+  const {data: notifications} = useNotifications();
 
   const stack =
     navigation.getParent<
       NativeStackNavigationProp<CustomerStackParamList>
     >();
 
-  const filteredProviders =
-    useMemo(() => {
-      const query =
-        search.trim().toLowerCase();
+  const filteredProviders = useMemo(() => {
+    const query = search.trim().toLowerCase();
 
-      const source =
-        [...providers].sort(
-          (a, b) =>
-            Number(b.available) -
-              Number(a.available) ||
-            (b.rating ?? 0) -
-              (a.rating ?? 0),
-        );
-
-      if (!query) {
-        return source.slice(0, 6);
-      }
-
-      return source
-        .filter(provider =>
-          [
-            provider.name,
-            provider.category,
-            provider.location,
-          ].some(value =>
-            value
-              .toLowerCase()
-              .includes(query),
-          ),
-        )
-        .slice(0, 20);
-    }, [providers, search]);
-
-  function openProvider(
-    providerId: string,
-  ) {
-    stack?.navigate(
-      'ProviderDetails',
-      {providerId},
+    const source = [...providers].sort(
+      (a, b) =>
+        Number(b.available) -
+          Number(a.available) ||
+        (b.rating ?? 0) -
+          (a.rating ?? 0),
     );
+
+    if (!query) {
+      return source.slice(0, 6);
+    }
+
+    return source
+      .filter(provider =>
+        [
+          provider.name,
+          provider.category,
+          provider.location,
+        ].some(value =>
+          value.toLowerCase().includes(query),
+        ),
+      )
+      .slice(0, 20);
+  }, [providers, search]);
+
+  function openProvider(providerId: string) {
+    stack?.navigate('ProviderDetails', {providerId});
   }
 
   return (
     <ScrollView
-      style={{
-        backgroundColor:
-          theme.colors.background,
-      }}
-      contentContainerStyle={
-        styles.content
-      }
+      style={{backgroundColor: theme.colors.background}}
+      contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled">
       <View
         style={[
           styles.hero,
-          {
-            backgroundColor:
-              theme.colors.primary,
-          },
+          {backgroundColor: theme.colors.primary},
         ]}>
-        <Badge>LOCALSEWA</Badge>
+        <View style={styles.heroTop}>
+          <Badge>LOCALSEWA</Badge>
 
-        <AppText
-          variant="h1"
-          color="#FFFFFF"
-          style={styles.heroTitle}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Notifications"
+            onPress={() => stack?.navigate('Notifications')}
+            style={({pressed}) => [
+              styles.notificationButton,
+              {
+                backgroundColor: '#FFFFFF',
+                opacity: pressed ? 0.88 : 1,
+              },
+            ]}>
+            <View>
+              <AppIcon
+                name="bell"
+                size={iconSize.sm}
+                color={theme.colors.primary}
+              />
+
+              {(notifications?.unreadCount ?? 0) > 0 ? (
+                <View
+                  style={[
+                    styles.unreadBadge,
+                    {backgroundColor: theme.colors.error},
+                  ]}>
+                  <AppText variant="overline" color="#FFFFFF">
+                    {Math.min(99, notifications?.unreadCount ?? 0)}
+                  </AppText>
+                </View>
+              ) : null}
+            </View>
+          </Pressable>
+        </View>
+
+        <AppText variant="h1" color="#FFFFFF" style={styles.heroTitle}>
           Trusted help, close to home.
         </AppText>
 
-        <AppText
-          variant="body"
-          color="#E7F6ED"
-          style={styles.heroText}>
+        <AppText variant="body" color="#E7F6ED" style={styles.heroText}>
           Find available local professionals and compare real service
           providers in one place.
         </AppText>
@@ -156,10 +144,7 @@ export function CustomerHomeScreen({
         <View
           style={[
             styles.searchWrap,
-            {
-              backgroundColor:
-                theme.colors.surface,
-            },
+            {backgroundColor: theme.colors.surface},
           ]}>
           <Input
             placeholder="Search provider, service or area"
@@ -176,51 +161,30 @@ export function CustomerHomeScreen({
           title="Popular services"
           subtitle="Active Localsewa service categories."
           actionLabel="See all"
-          onAction={() =>
-            navigation.navigate(
-              'CustomerServices',
-            )
-          }
+          onAction={() => navigation.navigate('CustomerServices')}
         />
 
         <View style={styles.chips}>
-          {categories
-            .slice(0, 10)
-            .map(category => (
-              <Pressable
-                key={category.id}
-                accessibilityRole="button"
-                onPress={() => {
-                  setSearch(
-                    category.name,
-                  );
-                }}
-                style={[
-                  styles.chip,
-                  {
-                    backgroundColor:
-                      theme.colors.secondary,
-                  },
-                ]}>
-                <AppText
-                  variant="label"
-                  color={
-                    theme.colors.primary
-                  }>
-                  {category.name}
-                </AppText>
-              </Pressable>
-            ))}
+          {categories.slice(0, 10).map(category => (
+            <Pressable
+              key={category.id}
+              accessibilityRole="button"
+              onPress={() => setSearch(category.name)}
+              style={[
+                styles.chip,
+                {backgroundColor: theme.colors.secondary},
+              ]}>
+              <AppText variant="label" color={theme.colors.primary}>
+                {category.name}
+              </AppText>
+            </Pressable>
+          ))}
         </View>
       </View>
 
       <View style={styles.section}>
         <SectionHeader
-          title={
-            search.trim()
-              ? 'Search results'
-              : 'Providers to explore'
-          }
+          title={search.trim() ? 'Search results' : 'Providers to explore'}
           subtitle={
             search.trim()
               ? `${filteredProviders.length} matching providers`
@@ -240,32 +204,21 @@ export function CustomerHomeScreen({
               <Button
                 label="Retry"
                 loading={isRefetching}
-                onPress={() => {
-                  refetch();
-                }}
+                onPress={() => refetch()}
                 fullWidth
               />
             </>
           ) : filteredProviders.length ? (
-            filteredProviders.map(
-              provider => (
-                <ProviderCard
-                  key={provider.id}
-                  provider={provider}
-                  onPress={() =>
-                    openProvider(
-                      provider.id,
-                    )
-                  }
-                />
-              ),
-            )
+            filteredProviders.map(provider => (
+              <ProviderCard
+                key={provider.id}
+                provider={provider}
+                onPress={() => openProvider(provider.id)}
+              />
+            ))
           ) : (
             <Card>
-              <AppText variant="title">
-                No matches found
-              </AppText>
-
+              <AppText variant="title">No matches found</AppText>
               <AppText
                 variant="bodySmall"
                 muted
@@ -285,10 +238,35 @@ const styles = StyleSheet.create({
     paddingBottom: spacing[12],
   },
   hero: {
-    paddingHorizontal:
-      layout.screenHorizontal,
+    paddingHorizontal: layout.screenHorizontal,
     paddingTop: spacing[7],
     paddingBottom: spacing[6],
+  },
+  heroTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing[3],
+  },
+  notificationButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  unreadBadge: {
+    position: 'absolute',
+    top: -9,
+    right: -11,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
   heroTitle: {
     marginTop: spacing[4],
@@ -304,8 +282,7 @@ const styles = StyleSheet.create({
     padding: spacing[2],
   },
   section: {
-    paddingHorizontal:
-      layout.screenHorizontal,
+    paddingHorizontal: layout.screenHorizontal,
     marginTop: spacing[8],
   },
   chips: {
