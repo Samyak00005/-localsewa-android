@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { accountApi } from '../api/accountApi';
 import { useAuth } from '../auth';
+import { ProfileImageUpload } from '../types/account';
 import { VerifiedLocation } from '../types/location';
 
 const PROFILE_KEY = ['customer-profile'] as const;
@@ -38,6 +39,25 @@ export function useUpdateCustomerProfile() {
       }
 
       return accountApi.updateProfile(token, input);
+    },
+
+    onSuccess: profile => {
+      queryClient.setQueryData(PROFILE_KEY, profile);
+    },
+  });
+}
+
+export function useUploadProfileImage() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (image: ProfileImageUpload) => {
+      if (!token) {
+        throw new Error('Your session is unavailable. Sign in again.');
+      }
+
+      return accountApi.uploadProfileImage(token, image);
     },
 
     onSuccess: profile => {

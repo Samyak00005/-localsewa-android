@@ -1,0 +1,18 @@
+ADDED
+src/native/profilePhotoPicker.ts
+android/app/src/main/java/com/localsewaapp/ProfilePhotoPickerModule.kt
+android/app/src/main/java/com/localsewaapp/ProfilePhotoPickerPackage.kt
+
+REPLACED
+src/screens/customer/CustomerProfileScreen.tsx
+src/screens/customer/DefaultLocationScreen.tsx
+src/navigation/CustomerNavigator.tsx
+src/api/accountApi.ts
+src/hooks/useAccount.ts
+src/types/account.ts
+src/components/icons/AppIcon.tsx
+android/app/src/main/java/com/localsewaapp/MainApplication.kt
+
+NO PACKAGE.JSON CHANGE
+NO NPM INSTALL
+NO NEW ANDROID PERMISSION

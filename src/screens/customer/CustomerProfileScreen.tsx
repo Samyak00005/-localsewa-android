@@ -2,6 +2,7 @@ import React, {
   useState,
 } from 'react';
 import {
+  ActivityIndicator,
   Image,
   Pressable,
   ScrollView,
@@ -33,6 +34,7 @@ import {
   Badge,
   Button,
   Card,
+  Input,
   Skeleton,
 } from '../../components/ui';
 import {
@@ -43,7 +45,12 @@ import {
 } from '../../auth';
 import {
   useCustomerProfile,
+  useUpdateCustomerProfile,
+  useUploadProfileImage,
 } from '../../hooks/useAccount';
+import {
+  pickProfilePhoto,
+} from '../../native/profilePhotoPicker';
 import {
   CustomerStackParamList,
   CustomerTabParamList,
@@ -55,6 +62,9 @@ import {
   spacing,
   useAppTheme,
 } from '../../theme';
+import {
+  validateFullName,
+} from '../../utils/authValidation';
 
 type Props =
   BottomTabScreenProps<
@@ -85,6 +95,12 @@ export function CustomerProfileScreen({
     isRefetching,
   } = useCustomerProfile();
 
+  const updateProfile =
+    useUpdateCustomerProfile();
+
+  const uploadPhoto =
+    useUploadProfileImage();
+
   const [
     signingOut,
     setSigningOut,
@@ -99,10 +115,137 @@ export function CustomerProfileScreen({
       null,
     );
 
+  const [
+    editing,
+    setEditing,
+  ] =
+    useState(false);
+
+  const [
+    fullName,
+    setFullName,
+  ] =
+    useState('');
+
+
+  const [
+    profileMessage,
+    setProfileMessage,
+  ] =
+    useState<string | null>(
+      null,
+    );
+
+  const [
+    profileError,
+    setProfileError,
+  ] =
+    useState<string | null>(
+      null,
+    );
+
   const stack =
     navigation.getParent<
       NativeStackNavigationProp<CustomerStackParamList>
     >();
+
+  function beginEditing() {
+    if (!profile) {
+      return;
+    }
+
+    setFullName(
+      profile.fullName,
+    );
+    setProfileMessage(null);
+    setProfileError(null);
+    setEditing(true);
+  }
+
+  function cancelEditing() {
+    setEditing(false);
+    setProfileError(null);
+  }
+
+  async function saveProfile() {
+    if (!profile) {
+      return;
+    }
+
+    setProfileMessage(null);
+    setProfileError(null);
+
+    const nameCheck =
+      validateFullName(
+        fullName,
+      );
+
+    if (!nameCheck.valid) {
+      setProfileError(
+        nameCheck.message,
+      );
+      return;
+    }
+
+
+    try {
+      await updateProfile.mutateAsync({
+        fullName,
+        phone:
+          profile.phone ?? '',
+        whatsapp:
+          profile.whatsapp ??
+          '',
+      });
+
+      setEditing(false);
+      setProfileMessage(
+        'Profile updated successfully.',
+      );
+    } catch (
+      mutationError
+    ) {
+      setProfileError(
+        errorMessage(
+          mutationError,
+        ),
+      );
+    }
+  }
+
+  async function changePhoto() {
+    if (uploadPhoto.isPending) {
+      return;
+    }
+
+    setProfileMessage(null);
+    setProfileError(null);
+
+    try {
+      const image =
+        await pickProfilePhoto();
+
+      if (!image) {
+        return;
+      }
+
+      await uploadPhoto.mutateAsync(
+        image,
+      );
+
+      setProfileMessage(
+        'Profile photo updated.',
+      );
+    } catch (
+      photoError
+    ) {
+      setProfileError(
+        errorMessage(
+          photoError,
+        ),
+      );
+    }
+  }
 
   async function signOut() {
     if (signingOut) {
@@ -135,6 +278,7 @@ export function CustomerProfileScreen({
       contentContainerStyle={
         styles.content
       }
+      keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}>
       {isLoading ? (
         <ProfileSkeleton />
@@ -177,24 +321,74 @@ export function CustomerProfileScreen({
               },
               shadows.sm,
             ]}>
-            {profile.profileImage ? (
-              <Image
-                source={{
-                  uri:
-                    profile.profileImage,
+            <View
+              style={
+                styles.photoWrap
+              }>
+              {profile.profileImage ? (
+                <Image
+                  source={{
+                    uri:
+                      profile.profileImage,
+                  }}
+                  style={
+                    styles.profileImage
+                  }
+                />
+              ) : (
+                <Avatar
+                  initials={
+                    profile.fullName
+                  }
+                  size="lg"
+                />
+              )}
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Change profile photo"
+                accessibilityState={{
+                  busy:
+                    uploadPhoto.isPending,
                 }}
-                style={
-                  styles.profileImage
+                disabled={
+                  uploadPhoto.isPending
                 }
-              />
-            ) : (
-              <Avatar
-                initials={
-                  profile.fullName
+                hitSlop={5}
+                onPress={
+                  changePhoto
                 }
-                size="lg"
-              />
-            )}
+                style={({pressed}) => [
+                  styles.photoEdit,
+                  {
+                    backgroundColor:
+                      theme.colors.primary,
+                    borderColor:
+                      theme.colors.surface,
+                    opacity:
+                      pressed
+                        ? 0.78
+                        : 1,
+                  },
+                ]}>
+                {uploadPhoto.isPending ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={
+                      theme.colors.onPrimary
+                    }
+                  />
+                ) : (
+                  <AppIcon
+                    name="camera"
+                    size={16}
+                    color={
+                      theme.colors.onPrimary
+                    }
+                  />
+                )}
+              </Pressable>
+            </View>
 
             <AppText
               variant="h2"
@@ -252,33 +446,85 @@ export function CustomerProfileScreen({
               ) : null}
             </View>
 
-            <Button
-              label="Edit profile"
-              icon="userEdit"
-              variant="outline"
-              onPress={() =>
-                stack?.navigate(
-                  'EditCustomerProfile',
-                )
-              }
-              fullWidth
-              style={
-                styles.editButton
-              }
-            />
+            {!editing ? (
+              <Button
+                label="Edit profile"
+                icon="userEdit"
+                variant="outline"
+                onPress={
+                  beginEditing
+                }
+                fullWidth
+                style={
+                  styles.editButton
+                }
+              />
+            ) : null}
           </View>
 
-          <ProfileSummary
-            name={
-              profile.fullName
-            }
-            email={
-              profile.email
-            }
-            phone={
-              profile.phone
-            }
-          />
+          {profileMessage ? (
+            <View
+              style={
+                styles.inlineAlert
+              }>
+              <AlertBanner variant="success">
+                {profileMessage}
+              </AlertBanner>
+            </View>
+          ) : null}
+
+          {profileError &&
+          !editing ? (
+            <View
+              style={
+                styles.inlineAlert
+              }>
+              <AlertBanner variant="error">
+                {profileError}
+              </AlertBanner>
+            </View>
+          ) : null}
+
+          {editing ? (
+            <ProfileEditCard
+              fullName={
+                fullName
+              }
+              email={
+                profile.email
+              }
+              phone={
+                profile.phone
+              }
+              error={
+                profileError
+              }
+              saving={
+                updateProfile.isPending
+              }
+              onFullNameChange={
+                setFullName
+              }
+              onCancel={
+                cancelEditing
+              }
+              onSave={
+                saveProfile
+              }
+            />
+          ) : (
+            <ProfileSummary
+              name={
+                profile.fullName
+              }
+              email={
+                profile.email
+              }
+              phone={
+                profile.phone
+              }
+            />
+          )}
 
           <ProfileSection
             title="Account & settings">
@@ -304,7 +550,7 @@ export function CustomerProfileScreen({
             <ProfileMenuRow
               icon="shieldCheck"
               title="Account security"
-              subtitle="Password, email, sessions and account deletion"
+              subtitle="Password, sessions and account deletion"
               onPress={() =>
                 stack?.navigate(
                   'AccountSecurity',
@@ -442,6 +688,205 @@ export function CustomerProfileScreen({
         </>
       )}
     </ScrollView>
+  );
+}
+
+function ProfileEditCard({
+  fullName,
+  email,
+  phone,
+  error,
+  saving,
+  onFullNameChange,
+  onCancel,
+  onSave,
+}: {
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  error: string | null;
+  saving: boolean;
+  onFullNameChange: (value: string) => void;
+  onCancel: () => void;
+  onSave: () => void;
+}): React.JSX.Element {
+  const {theme} =
+    useAppTheme();
+
+  return (
+    <View
+      style={[
+        styles.editCard,
+        {
+          backgroundColor:
+            theme.colors.surface,
+          borderColor:
+            theme.colors.border,
+        },
+      ]}>
+      <View
+        style={
+          styles.editHeader
+        }>
+        <View>
+          <AppText variant="title">
+            Edit profile details
+          </AppText>
+
+          <AppText
+            variant="caption"
+            muted
+            style={
+              styles.editSubtitle
+            }>
+            Email and mobile stay linked to your account.
+          </AppText>
+        </View>
+      </View>
+
+      {error ? (
+        <AlertBanner variant="error">
+          {error}
+        </AlertBanner>
+      ) : null}
+
+      <Input
+        label="Full name"
+        placeholder="Your name"
+        value={fullName}
+        onChangeText={
+          onFullNameChange
+        }
+        editable={!saving}
+        maxLength={80}
+      />
+
+
+      <View
+        style={
+          styles.lockedDetails
+        }>
+        <LockedDetail
+          icon="mail"
+          label="Email"
+          value={
+            email ??
+            'Not added'
+          }
+        />
+
+        <View
+          style={[
+            styles.summaryDivider,
+            {
+              backgroundColor:
+                theme.colors.border,
+            },
+          ]}
+        />
+
+        <LockedDetail
+          icon="phone"
+          label="Mobile"
+          value={
+            phone ??
+            'Not added'
+          }
+        />
+      </View>
+
+      <View
+        style={
+          styles.editActions
+        }>
+        <Button
+          label="Cancel"
+          variant="secondary"
+          disabled={saving}
+          onPress={onCancel}
+          style={
+            styles.editAction
+          }
+        />
+
+        <Button
+          label="Save changes"
+          loading={saving}
+          onPress={onSave}
+          style={
+            styles.editAction
+          }
+        />
+      </View>
+    </View>
+  );
+}
+
+function LockedDetail({
+  icon,
+  label,
+  value,
+}: {
+  icon: 'mail' | 'phone';
+  label: string;
+  value: string;
+}): React.JSX.Element {
+  const {theme} =
+    useAppTheme();
+
+  return (
+    <View
+      style={
+        styles.lockedRow
+      }>
+      <View
+        style={[
+          styles.summaryIcon,
+          {
+            backgroundColor:
+              theme.colors.surfaceMuted,
+          },
+        ]}>
+        <AppIcon
+          name={icon}
+          size={
+            iconSize.sm
+          }
+          color={
+            theme.colors.textMuted
+          }
+        />
+      </View>
+
+      <View
+        style={
+          styles.summaryCopy
+        }>
+        <View
+          style={
+            styles.lockedLabelRow
+          }>
+          <AppText
+            variant="caption"
+            muted>
+            {label}
+          </AppText>
+
+          <Badge>
+            LINKED
+          </Badge>
+        </View>
+
+        <AppText
+          variant="label"
+          numberOfLines={2}
+          style={
+            styles.summaryValue
+          }>
+          {value}
+        </AppText>
+      </View>
+    </View>
   );
 }
 
@@ -729,10 +1174,29 @@ const styles =
       alignItems:
         'center',
     },
+    photoWrap: {
+      width: 88,
+      height: 88,
+      alignItems: 'center',
+      justifyContent:
+        'center',
+    },
     profileImage: {
-      width: 76,
-      height: 76,
-      borderRadius: 38,
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+    },
+    photoEdit: {
+      position: 'absolute',
+      right: 0,
+      bottom: 0,
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      borderWidth: 3,
+      alignItems: 'center',
+      justifyContent:
+        'center',
     },
     profileName: {
       marginTop:
@@ -759,6 +1223,10 @@ const styles =
       marginTop:
         spacing[4],
       borderRadius: 999,
+    },
+    inlineAlert: {
+      marginTop:
+        spacing[3],
     },
     summaryCard: {
       marginTop:
@@ -796,6 +1264,56 @@ const styles =
     summaryDivider: {
       height:
         StyleSheet.hairlineWidth,
+    },
+    editCard: {
+      marginTop:
+        spacing[4],
+      borderWidth: 1,
+      borderRadius:
+        radius.xl,
+      padding:
+        spacing[4],
+      gap: spacing[4],
+    },
+    editHeader: {
+      flexDirection: 'row',
+      justifyContent:
+        'space-between',
+      alignItems:
+        'flex-start',
+      gap: spacing[3],
+    },
+    editSubtitle: {
+      marginTop:
+        spacing[1],
+    },
+    lockedDetails: {
+      borderRadius:
+        radius.md,
+      overflow: 'hidden',
+    },
+    lockedRow: {
+      minHeight: 64,
+      paddingVertical:
+        spacing[2],
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[3],
+    },
+    lockedLabelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent:
+        'space-between',
+      gap: spacing[2],
+    },
+    editActions: {
+      flexDirection: 'row',
+      gap: spacing[3],
+    },
+    editAction: {
+      flex: 1,
+      borderRadius: 999,
     },
     section: {
       marginTop:

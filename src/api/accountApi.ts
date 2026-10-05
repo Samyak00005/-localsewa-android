@@ -1,4 +1,4 @@
-import { AccountDeletionStatus, CustomerProfile } from '../types/account';
+import { AccountDeletionStatus, CustomerProfile, ProfileImageUpload } from '../types/account';
 import { VerifiedLocation } from '../types/location';
 import { API_ORIGIN, ApiError, apiRequest } from './apiClient';
 
@@ -157,6 +157,33 @@ export const accountApi = {
     });
 
     return parseProfile(result);
+  },
+
+  async uploadProfileImage(
+    token: string,
+    image: ProfileImageUpload,
+  ): Promise<CustomerProfile> {
+    const form = new FormData();
+
+    form.append(
+      'image',
+      {
+        uri: image.uri,
+        name: image.name || 'profile.jpg',
+        type: image.type || 'image/jpeg',
+      } as any,
+    );
+
+    await apiRequest<ApiRecord>('/api/profile/image', {
+      method: 'POST',
+      token,
+      body: form,
+      timeoutMs: 45_000,
+    });
+
+    // The upload endpoint is allowed to return only upload metadata.
+    // Re-read the canonical profile so the UI always receives the same shape.
+    return accountApi.profile(token);
   },
 
   async updateDefaultLocation(

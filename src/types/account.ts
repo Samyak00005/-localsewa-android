@@ -17,6 +17,16 @@ export type CustomerProfile = {
   updatedAt: string | null;
 };
 
+
+export type ProfileImageUpload = {
+  uri: string;
+  name: string;
+  type: string;
+  size: number;
+  width: number;
+  height: number;
+};
+
 export type AccountDeletionState =
   | 'pending'
   | 'due'

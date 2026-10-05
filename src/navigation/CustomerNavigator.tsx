@@ -98,6 +98,15 @@ export function CustomerNavigator(): React.JSX.Element {
         component={
           DefaultLocationScreen
         }
+        options={{
+          presentation:
+            'transparentModal',
+          animation: 'fade',
+          contentStyle: {
+            backgroundColor:
+              'transparent',
+          },
+        }}
       />
 
       <Stack.Screen

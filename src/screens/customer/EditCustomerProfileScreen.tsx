@@ -23,9 +23,7 @@ import {
   useUpdateCustomerProfile,
 } from '../../hooks/useAccount';
 import {
-  normalizePhone,
   validateFullName,
-  validatePhone,
 } from '../../utils/authValidation';
 import {
   layout,
@@ -48,8 +46,6 @@ export function EditCustomerProfileScreen(): React.JSX.Element {
 
   const [fullName, setFullName] =
     useState('');
-  const [whatsapp, setWhatsapp] =
-    useState('');
   const [message, setMessage] =
     useState<string | null>(null);
   const [formError, setFormError] =
@@ -64,9 +60,6 @@ export function EditCustomerProfileScreen(): React.JSX.Element {
 
     setFullName(
       profile.fullName,
-    );
-    setWhatsapp(
-      profile.whatsapp ?? '',
     );
   }, [profile]);
 
@@ -86,19 +79,6 @@ export function EditCustomerProfileScreen(): React.JSX.Element {
       return;
     }
 
-    if (whatsapp.trim()) {
-      const whatsappCheck =
-        validatePhone(
-          whatsapp,
-        );
-
-      if (!whatsappCheck.valid) {
-        setFormError(
-          'Enter a valid WhatsApp number.',
-        );
-        return;
-      }
-    }
 
     try {
       await update.mutateAsync({
@@ -107,11 +87,8 @@ export function EditCustomerProfileScreen(): React.JSX.Element {
           profile?.phone ??
           '',
         whatsapp:
-          whatsapp.trim()
-            ? normalizePhone(
-                whatsapp,
-              )
-            : '',
+          profile?.whatsapp ??
+          '',
       });
 
       setMessage(
@@ -190,20 +167,6 @@ export function EditCustomerProfileScreen(): React.JSX.Element {
             maxLength={80}
           />
 
-          <Input
-            label="WhatsApp (optional)"
-            placeholder="+91"
-            value={whatsapp}
-            onChangeText={
-              setWhatsapp
-            }
-            keyboardType="phone-pad"
-            editable={
-              !isLoading &&
-              !update.isPending
-            }
-            maxLength={20}
-          />
 
           <Button
             label="Save changes"
