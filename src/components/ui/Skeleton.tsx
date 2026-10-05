@@ -1,11 +1,7 @@
-import React, {useEffect, useRef} from 'react';
-import {
-  Animated,
-  StyleProp,
-  ViewStyle,
-} from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, StyleProp, ViewStyle } from 'react-native';
 
-import {radius, useAppTheme} from '../../theme';
+import { radius, useAppTheme } from '../../theme';
 
 type SkeletonProps = {
   width?: ViewStyle['width'];
@@ -20,7 +16,7 @@ export function Skeleton({
   radiusValue = radius.sm,
   style,
 }: SkeletonProps): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
   const opacity = useRef(new Animated.Value(0.45)).current;
 
   useEffect(() => {

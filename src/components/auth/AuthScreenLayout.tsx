@@ -1,4 +1,4 @@
-import React, {PropsWithChildren} from 'react';
+import React, { PropsWithChildren } from 'react';
 import {
   Image,
   KeyboardAvoidingView,
@@ -7,15 +7,10 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {AppText} from '../ui';
-import {
-  layout,
-  radius,
-  spacing,
-  useAppTheme,
-} from '../../theme';
+import { layout, radius, spacing, useAppTheme } from '../../theme';
+import { AppText } from '../ui';
 
 type AuthScreenLayoutProps = PropsWithChildren<{
   eyebrow?: string;
@@ -31,21 +26,21 @@ export function AuthScreenLayout({
   showBrand = true,
   children,
 }: AuthScreenLayoutProps): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
 
   return (
     <SafeAreaView
-      style={[
-        styles.safeArea,
-        {backgroundColor: theme.colors.background},
-      ]}>
+      style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
+    >
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <ScrollView
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}>
+          showsVerticalScrollIndicator={false}
+        >
           {showBrand ? (
             <View style={styles.brandRow}>
               <Image
@@ -54,14 +49,10 @@ export function AuthScreenLayout({
                 resizeMode="contain"
               />
               <View style={styles.brandCopy}>
-                <AppText
-                  variant="title"
-                  style={styles.brandName}>
+                <AppText variant="title" style={styles.brandName}>
                   Localsewa
                 </AppText>
-                <AppText
-                  variant="caption"
-                  muted>
+                <AppText variant="caption" muted>
                   Fast • Trusted • Nearby
                 </AppText>
               </View>
@@ -75,32 +66,27 @@ export function AuthScreenLayout({
                 backgroundColor: theme.colors.surface,
                 borderColor: theme.colors.border,
               },
-            ]}>
+            ]}
+          >
             {eyebrow ? (
               <AppText
                 variant="overline"
                 color={theme.colors.primary}
-                style={styles.eyebrow}>
+                style={styles.eyebrow}
+              >
                 {eyebrow}
               </AppText>
             ) : null}
 
-            <AppText variant="h2">
-              {title}
-            </AppText>
+            <AppText variant="h2">{title}</AppText>
 
             {description ? (
-              <AppText
-                variant="bodySmall"
-                muted
-                style={styles.description}>
+              <AppText variant="bodySmall" muted style={styles.description}>
                 {description}
               </AppText>
             ) : null}
 
-            <View style={styles.body}>
-              {children}
-            </View>
+            <View style={styles.body}>{children}</View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

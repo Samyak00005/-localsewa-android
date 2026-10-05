@@ -1,18 +1,9 @@
-import React, {ReactNode} from 'react';
-import {ScrollView, StyleSheet, View} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import React, { ReactNode } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {
-  AppText,
-  Badge,
-  Card,
-} from '../../components/ui';
-import {
-  layout,
-  radius,
-  spacing,
-  useAppTheme,
-} from '../../theme';
+import { AppText, Badge, Card } from '../../components/ui';
+import { layout, radius, spacing, useAppTheme } from '../../theme';
 
 type WorkspacePlaceholderScreenProps = {
   eyebrow: string;
@@ -29,37 +20,31 @@ export function WorkspacePlaceholderScreen({
   children,
   premiumBadge = false,
 }: WorkspacePlaceholderScreenProps): React.JSX.Element {
-  const {theme, mode} = useAppTheme();
+  const { theme, mode } = useAppTheme();
   const premium = mode === 'providerPremium';
 
   return (
     <SafeAreaView
-      style={[
-        styles.safeArea,
-        {backgroundColor: theme.colors.background},
-      ]}
-      edges={['top']}>
+      style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
+      edges={['top']}
+    >
       <ScrollView
         contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.headingRow}>
           <View style={styles.headingCopy}>
             <AppText
               variant="overline"
-              color={
-                premium
-                  ? theme.colors.accent
-                  : theme.colors.primary
-              }
-              style={styles.eyebrow}>
+              color={premium ? theme.colors.accent : theme.colors.primary}
+              style={styles.eyebrow}
+            >
               {eyebrow}
             </AppText>
             <AppText variant="h1">{title}</AppText>
           </View>
 
-          {premiumBadge ? (
-            <Badge variant="premium">LOCALSEWA+</Badge>
-          ) : null}
+          {premiumBadge ? <Badge variant="premium">LOCALSEWA+</Badge> : null}
         </View>
 
         <AppText variant="body" muted style={styles.description}>
@@ -71,11 +56,11 @@ export function WorkspacePlaceholderScreen({
             styles.placeholderCard,
             premium && {
               backgroundColor:
-                theme.colors.premiumIvorySurface ??
-                theme.colors.surface,
+                theme.colors.premiumIvorySurface ?? theme.colors.surface,
               borderColor: theme.colors.accent,
             },
-          ]}>
+          ]}
+        >
           <View
             style={[
               styles.mark,
@@ -86,20 +71,14 @@ export function WorkspacePlaceholderScreen({
               },
             ]}
           />
-          <AppText variant="title">
-            App shell ready
-          </AppText>
+          <AppText variant="title">App shell ready</AppText>
           <AppText variant="bodySmall" muted style={styles.cardText}>
             This screen is intentionally a placeholder. Real screen UI will be
             designed after navigation structure is approved.
           </AppText>
         </Card>
 
-        {children ? (
-          <View style={styles.actions}>
-            {children}
-          </View>
-        ) : null}
+        {children ? <View style={styles.actions}>{children}</View> : null}
       </ScrollView>
     </SafeAreaView>
   );

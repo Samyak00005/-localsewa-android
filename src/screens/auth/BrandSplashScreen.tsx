@@ -1,31 +1,16 @@
-import React, {useEffect} from 'react';
-import {
-  Image,
-  StyleSheet,
-  View,
-} from 'react-native';
-import {
-  NativeStackScreenProps,
-} from '@react-navigation/native-stack';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import React, { useEffect } from 'react';
+import { Image, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {AppText} from '../../components/ui';
-import {
-  radius,
-  spacing,
-  useAppTheme,
-} from '../../theme';
-import {AuthStackParamList} from '../../navigation/types';
+import { AppText } from '../../components/ui';
+import { AuthStackParamList } from '../../navigation/types';
+import { radius, spacing, useAppTheme } from '../../theme';
 
-type Props = NativeStackScreenProps<
-  AuthStackParamList,
-  'Splash'
->;
+type Props = NativeStackScreenProps<AuthStackParamList, 'Splash'>;
 
-export function BrandSplashScreen({
-  navigation,
-}: Props): React.JSX.Element {
-  const {theme} = useAppTheme();
+export function BrandSplashScreen({ navigation }: Props): React.JSX.Element {
+  const { theme } = useAppTheme();
 
   useEffect(() => {
     // Short React-level bridge after the Android native splash.
@@ -39,10 +24,8 @@ export function BrandSplashScreen({
 
   return (
     <SafeAreaView
-      style={[
-        styles.safeArea,
-        {backgroundColor: theme.colors.background},
-      ]}>
+      style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
+    >
       <View style={styles.content}>
         <View
           style={[
@@ -51,7 +34,8 @@ export function BrandSplashScreen({
               backgroundColor: theme.colors.surface,
               borderColor: theme.colors.border,
             },
-          ]}>
+          ]}
+        >
           <Image
             source={require('../../assets/branding/localsewa-logo.png')}
             style={styles.logo}
@@ -59,16 +43,11 @@ export function BrandSplashScreen({
           />
         </View>
 
-        <AppText
-          variant="h2"
-          style={styles.brand}>
+        <AppText variant="h2" style={styles.brand}>
           Localsewa
         </AppText>
 
-        <AppText
-          variant="bodySmall"
-          muted
-          style={styles.tagline}>
+        <AppText variant="bodySmall" muted style={styles.tagline}>
           Fast • Trusted • Nearby
         </AppText>
       </View>

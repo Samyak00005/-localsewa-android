@@ -6,12 +6,7 @@ import React, {
   useState,
 } from 'react';
 
-import {
-  AppTheme,
-  AppThemeMode,
-  customerTheme,
-  themes,
-} from './themes';
+import { AppTheme, AppThemeMode, customerTheme, themes } from './themes';
 
 type ThemeContextValue = {
   mode: AppThemeMode;
@@ -45,9 +40,7 @@ export function ThemeProvider({
   );
 
   return (
-    <ThemeContext.Provider value={value}>
-      {children}
-    </ThemeContext.Provider>
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
   );
 }
 

@@ -1,9 +1,9 @@
 import React from 'react';
-import {Pressable, StyleSheet, View} from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import {AppIcon, iconSize} from '../icons';
-import {AppText} from '../ui';
-import {spacing, useAppTheme} from '../../theme';
+import { spacing, useAppTheme } from '../../theme';
+import { AppIcon, iconSize } from '../icons';
+import { AppText } from '../ui';
 
 type SectionHeaderProps = {
   title: string;
@@ -18,7 +18,7 @@ export function SectionHeader({
   actionLabel,
   onAction,
 }: SectionHeaderProps): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
 
   return (
     <View style={styles.row}>
@@ -36,10 +36,11 @@ export function SectionHeader({
         <Pressable
           accessibilityRole="button"
           onPress={onAction}
-          style={({pressed}) => [
+          style={({ pressed }) => [
             styles.action,
-            {opacity: pressed ? 0.7 : 1},
-          ]}>
+            { opacity: pressed ? 0.7 : 1 },
+          ]}
+        >
           <AppText variant="label" color={theme.colors.primary}>
             {actionLabel}
           </AppText>

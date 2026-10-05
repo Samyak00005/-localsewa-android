@@ -1,46 +1,23 @@
-import {
-  ApiError,
-  apiRequest,
-} from './apiClient';
-import {VerifiedLocation} from '../types/location';
+import { VerifiedLocation } from '../types/location';
+import { ApiError, apiRequest } from './apiClient';
 
-type ApiRecord =
-  Record<string, unknown>;
+type ApiRecord = Record<string, unknown>;
 
-function isRecord(
-  value: unknown,
-): value is ApiRecord {
-  return Boolean(
-    value &&
-      typeof value === 'object' &&
-      !Array.isArray(value),
-  );
+function isRecord(value: unknown): value is ApiRecord {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
 }
 
-function text(
-  value: unknown,
-): string {
-  return typeof value === 'string'
-    ? value.trim()
-    : '';
+function text(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : '';
 }
 
-function number(
-  value: unknown,
-): number | null {
-  const parsed =
-    typeof value === 'number'
-      ? value
-      : Number(value);
+function number(value: unknown): number | null {
+  const parsed = typeof value === 'number' ? value : Number(value);
 
-  return Number.isFinite(parsed)
-    ? parsed
-    : null;
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
-function locationRecord(
-  result: ApiRecord,
-): ApiRecord {
+function locationRecord(result: ApiRecord): ApiRecord {
   const candidates = [
     result.location,
     result.verified_location,
@@ -57,52 +34,28 @@ function locationRecord(
   return result;
 }
 
-function parseVerifiedLocation(
-  result: ApiRecord,
-): VerifiedLocation {
-  const source =
-    locationRecord(result);
+function parseVerifiedLocation(result: ApiRecord): VerifiedLocation {
+  const source = locationRecord(result);
 
-  const latitude =
-    number(
-      source.latitude ??
-        source.lat,
-    );
+  const latitude = number(source.latitude ?? source.lat);
 
-  const longitude =
-    number(
-      source.longitude ??
-        source.lng ??
-        source.lon,
-    );
+  const longitude = number(source.longitude ?? source.lng ?? source.lon);
 
-  const verificationToken =
-    text(
-      source.verification_token ??
-        source.verificationToken,
-    );
+  const verificationToken = text(
+    source.verification_token ?? source.verificationToken,
+  );
 
-  const address =
-    text(
-      source.formatted_address ??
-        source.formattedAddress ??
-        source.address ??
-        source.label,
-    );
+  const address = text(
+    source.formatted_address ??
+      source.formattedAddress ??
+      source.address ??
+      source.label,
+  );
 
   const areaLabel =
-    text(
-      source.area_label ??
-        source.areaLabel ??
-        source.area,
-    ) || address;
+    text(source.area_label ?? source.areaLabel ?? source.area) || address;
 
-  if (
-    latitude == null ||
-    longitude == null ||
-    !verificationToken ||
-    !address
-  ) {
+  if (latitude == null || longitude == null || !verificationToken || !address) {
     throw new ApiError(
       'Localsewa could not verify this address. Try a more complete address with area, city, state and PIN code.',
     );
@@ -121,53 +74,31 @@ async function validateWithKey(
   key: 'address' | 'q',
   address: string,
 ): Promise<VerifiedLocation> {
-  const query =
-    new URLSearchParams({
-      [key]: address,
-    }).toString();
+  const query = new URLSearchParams({
+    [key]: address,
+  }).toString();
 
-  const result =
-    await apiRequest<ApiRecord>(
-      `/api/location/validate?${query}`,
-    );
+  const result = await apiRequest<ApiRecord>(`/api/location/validate?${query}`);
 
-  return parseVerifiedLocation(
-    result,
-  );
+  return parseVerifiedLocation(result);
 }
 
 export const locationApi = {
-  async validateAddress(
-    address: string,
-  ): Promise<VerifiedLocation> {
-    const clean =
-      address.trim();
+  async validateAddress(address: string): Promise<VerifiedLocation> {
+    const clean = address.trim();
 
     if (clean.length < 8) {
-      throw new Error(
-        'Enter a complete service address before verification.',
-      );
+      throw new Error('Enter a complete service address before verification.');
     }
 
     try {
-      return await validateWithKey(
-        'address',
-        clean,
-      );
+      return await validateWithKey('address', clean);
     } catch (error) {
       // Current backend documentation identifies this endpoint as
       // address-text validation. q fallback keeps compatibility with
       // older map-router parameter naming without hiding server errors.
-      if (
-        error instanceof ApiError &&
-        [400, 422].includes(
-          error.status,
-        )
-      ) {
-        return validateWithKey(
-          'q',
-          clean,
-        );
+      if (error instanceof ApiError && [400, 422].includes(error.status)) {
+        return validateWithKey('q', clean);
       }
 
       throw error;

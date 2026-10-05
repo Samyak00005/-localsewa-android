@@ -1,18 +1,8 @@
 import React from 'react';
-import {
-  Pressable,
-  PressableProps,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Pressable, PressableProps, StyleSheet, View } from 'react-native';
 
-import {
-  layout,
-  radius,
-  spacing,
-  useAppTheme,
-} from '../../theme';
-import {AppText} from '../ui';
+import { layout, radius, spacing, useAppTheme } from '../../theme';
+import { AppText } from '../ui';
 
 type GoogleSignInButtonProps = Omit<PressableProps, 'style'> & {
   label?: string;
@@ -23,7 +13,7 @@ export function GoogleSignInButton({
   disabled = false,
   ...props
 }: GoogleSignInButtonProps): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
 
   return (
     <Pressable
@@ -31,7 +21,7 @@ export function GoogleSignInButton({
       accessibilityRole="button"
       accessibilityLabel={label}
       disabled={disabled}
-      style={({pressed}) => [
+      style={({ pressed }) => [
         styles.button,
         {
           backgroundColor: pressed
@@ -40,22 +30,15 @@ export function GoogleSignInButton({
           borderColor: theme.colors.border,
           opacity: disabled ? 0.5 : 1,
         },
-      ]}>
-      <View
-        style={[
-          styles.googleMark,
-          {borderColor: theme.colors.border},
-        ]}>
-        <AppText
-          variant="title"
-          color="#4285F4">
+      ]}
+    >
+      <View style={[styles.googleMark, { borderColor: theme.colors.border }]}>
+        <AppText variant="title" color="#4285F4">
           G
         </AppText>
       </View>
 
-      <AppText
-        variant="label"
-        style={styles.label}>
+      <AppText variant="label" style={styles.label}>
         {label}
       </AppText>
     </Pressable>

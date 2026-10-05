@@ -1,18 +1,13 @@
 import React from 'react';
-import {StyleSheet, View} from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import {useAppTheme} from '../../theme';
+import { useAppTheme } from '../../theme';
 
 export function Divider(): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
 
   return (
-    <View
-      style={[
-        styles.divider,
-        {backgroundColor: theme.colors.border},
-      ]}
-    />
+    <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
   );
 }
 

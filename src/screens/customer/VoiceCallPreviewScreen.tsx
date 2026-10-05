@@ -1,31 +1,25 @@
-import React, {useMemo, useState} from 'react';
-import {Image, Pressable, StyleSheet, View} from 'react-native';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import React, { useMemo, useState } from 'react';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {AppIcon, AppIconName, iconSize} from '../../components/icons';
-import {AppText, Avatar} from '../../components/ui';
-import {useCustomerBookings} from '../../hooks/useCustomerData';
-import {CustomerStackParamList} from '../../navigation/types';
-import {spacing} from '../../theme';
+import { AppIcon, AppIconName, iconSize } from '../../components/icons';
+import { AppText, Avatar } from '../../components/ui';
+import { useCustomerBookings } from '../../hooks/useCustomerData';
+import { CustomerStackParamList } from '../../navigation/types';
+import { spacing } from '../../theme';
 
-type Props = NativeStackScreenProps<
-  CustomerStackParamList,
-  'VoiceCallPreview'
->;
+type Props = NativeStackScreenProps<CustomerStackParamList, 'VoiceCallPreview'>;
 
 export function VoiceCallPreviewScreen({
   navigation,
   route,
 }: Props): React.JSX.Element {
   const insets = useSafeAreaInsets();
-  const {data: bookings = []} = useCustomerBookings();
+  const { data: bookings = [] } = useCustomerBookings();
 
   const booking = useMemo(
-    () =>
-      bookings.find(
-        item => item.id === route.params.bookingId,
-      ),
+    () => bookings.find(item => item.id === route.params.bookingId),
     [bookings, route.params.bookingId],
   );
 
@@ -42,7 +36,8 @@ export function VoiceCallPreviewScreen({
           paddingTop: Math.max(insets.top, spacing[4]),
           paddingBottom: Math.max(insets.bottom, spacing[5]),
         },
-      ]}>
+      ]}
+    >
       <View style={styles.top}>
         <AppText variant="overline" color="#A7F3D0">
           VOICE CALL PREVIEW
@@ -55,7 +50,7 @@ export function VoiceCallPreviewScreen({
       <View style={styles.identity}>
         {booking?.providerImage ? (
           <Image
-            source={{uri: booking.providerImage}}
+            source={{ uri: booking.providerImage }}
             style={styles.avatarImage}
           />
         ) : (
@@ -90,18 +85,16 @@ export function VoiceCallPreviewScreen({
             accessibilityRole="button"
             accessibilityLabel="End call preview"
             onPress={() => navigation.goBack()}
-            style={[styles.controlButton, styles.endButton]}>
-            <AppIcon
-              name="phoneOff"
-              size={iconSize.lg}
-              color="#FFFFFF"
-            />
+            style={[styles.controlButton, styles.endButton]}
+          >
+            <AppIcon name="phoneOff" size={iconSize.lg} color="#FFFFFF" />
           </Pressable>
 
           <AppText
             variant="caption"
             color="#FFFFFF"
-            style={styles.controlLabel}>
+            style={styles.controlLabel}
+          >
             End
           </AppText>
         </View>
@@ -137,11 +130,10 @@ function Control({
         style={[
           styles.controlButton,
           {
-            backgroundColor: active
-              ? '#FFFFFF'
-              : 'rgba(255,255,255,0.16)',
+            backgroundColor: active ? '#FFFFFF' : 'rgba(255,255,255,0.16)',
           },
-        ]}>
+        ]}
+      >
         <AppIcon
           name={icon}
           size={iconSize.lg}
@@ -149,10 +141,7 @@ function Control({
         />
       </Pressable>
 
-      <AppText
-        variant="caption"
-        color="#FFFFFF"
-        style={styles.controlLabel}>
+      <AppText variant="caption" color="#FFFFFF" style={styles.controlLabel}>
         {label}
       </AppText>
     </View>

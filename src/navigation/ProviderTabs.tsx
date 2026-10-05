@@ -1,8 +1,8 @@
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import React from 'react';
-import {StyleSheet, View} from 'react-native';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import { StyleSheet, View } from 'react-native';
 
-import {AppIcon, AppIconName, iconSize} from '../components/icons';
+import { AppIcon, AppIconName, iconSize } from '../components/icons';
 import {
   ProviderHomeScreen,
   ProviderProfileScreen,
@@ -10,8 +10,8 @@ import {
   ProviderReviewsScreen,
   ProviderServicesScreen,
 } from '../screens/provider';
-import {radius, useAppTheme} from '../theme';
-import {ProviderTabParamList} from './types';
+import { radius, useAppTheme } from '../theme';
+import { ProviderTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<ProviderTabParamList>();
 
@@ -32,12 +32,12 @@ const icons: Record<keyof ProviderTabParamList, AppIconName> = {
 };
 
 export function ProviderTabs(): React.JSX.Element {
-  const {theme, mode} = useAppTheme();
+  const { theme, mode } = useAppTheme();
   const premium = mode === 'providerPremium';
 
   return (
     <Tab.Navigator
-      screenOptions={({route}) => ({
+      screenOptions={({ route }) => ({
         headerShown: false,
         tabBarHideOnKeyboard: true,
         tabBarActiveTintColor: premium
@@ -45,7 +45,9 @@ export function ProviderTabs(): React.JSX.Element {
           : theme.colors.primary,
         tabBarInactiveTintColor: premium ? '#D9D1DF' : theme.colors.textMuted,
         tabBarStyle: {
-          backgroundColor: premium ? theme.colors.secondary : theme.colors.surface,
+          backgroundColor: premium
+            ? theme.colors.secondary
+            : theme.colors.surface,
           borderTopColor: premium ? theme.colors.accent : theme.colors.border,
           height: 72,
           paddingTop: 6,
@@ -56,7 +58,7 @@ export function ProviderTabs(): React.JSX.Element {
           fontWeight: '500',
         },
         tabBarLabel: labels[route.name],
-        tabBarIcon: ({focused, color}) => (
+        tabBarIcon: ({ focused, color }) => (
           <ProviderTabIcon
             name={icons[route.name]}
             color={color}
@@ -64,7 +66,8 @@ export function ProviderTabs(): React.JSX.Element {
             premium={premium}
           />
         ),
-      })}>
+      })}
+    >
       <Tab.Screen name="ProviderHome" component={ProviderHomeScreen} />
       <Tab.Screen name="ProviderRequests" component={ProviderRequestsScreen} />
       <Tab.Screen name="ProviderServices" component={ProviderServicesScreen} />
@@ -85,7 +88,7 @@ function ProviderTabIcon({
   focused: boolean;
   premium: boolean;
 }): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
 
   return (
     <View
@@ -98,7 +101,8 @@ function ProviderTabIcon({
               : theme.colors.secondary
             : 'transparent',
         },
-      ]}>
+      ]}
+    >
       <AppIcon
         name={name}
         size={iconSize.sm}

@@ -7,11 +7,7 @@ export class ApiError extends Error {
   status: number;
   data: Record<string, unknown>;
 
-  constructor(
-    message: string,
-    status = 0,
-    data: Record<string, unknown> = {},
-  ) {
+  constructor(message: string, status = 0, data: Record<string, unknown> = {}) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
@@ -26,29 +22,18 @@ type ApiOptions = Omit<RequestInit, 'body'> & {
   retryGet?: boolean;
 };
 
-function isObject(
-  value: unknown,
-): value is Record<string, unknown> {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    !Array.isArray(value)
-  );
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export function buildBackendUrl(path: string): string {
-  if (
-    !path.startsWith('/api/') ||
-    /[\\#]/.test(path)
-  ) {
+  if (!path.startsWith('/api/') || /[\\#]/.test(path)) {
     throw new Error('Expected a relative /api/ path.');
   }
 
   const separator = path.indexOf('?');
-  const route =
-    separator < 0 ? path : path.slice(0, separator);
-  const query =
-    separator < 0 ? '' : path.slice(separator + 1);
+  const route = separator < 0 ? path : path.slice(0, separator);
+  const query = separator < 0 ? '' : path.slice(separator + 1);
 
   if (
     query
@@ -67,8 +52,7 @@ export function buildBackendUrl(path: string): string {
     throw new Error('The route parameter is reserved.');
   }
 
-  const encodedRoute =
-    encodeURIComponent(route.slice(5));
+  const encodedRoute = encodeURIComponent(route.slice(5));
 
   return `${API_ORIGIN}/api/index.php?route=${encodedRoute}${
     query ? `&${query}` : ''
@@ -91,31 +75,19 @@ export async function apiRequest<T>(
   } = options;
 
   const url = buildBackendUrl(path);
-  const headers =
-    new Headers(suppliedHeaders);
+  const headers = new Headers(suppliedHeaders);
 
   headers.set('Accept', 'application/json');
   headers.delete('Authorization');
 
   if (token) {
-    headers.set(
-      'Authorization',
-      `Bearer ${token}`,
-    );
+    headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const isForm =
-    typeof FormData !== 'undefined' &&
-    body instanceof FormData;
+  const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
 
-  if (
-    body !== undefined &&
-    !isForm
-  ) {
-    headers.set(
-      'Content-Type',
-      'application/json',
-    );
+  if (body !== undefined && !isForm) {
+    headers.set('Content-Type', 'application/json');
   }
 
   if (isForm) {
@@ -126,31 +98,20 @@ export async function apiRequest<T>(
     body === undefined
       ? undefined
       : isForm
-        ? (body as FormData)
-        : JSON.stringify(body);
+      ? (body as FormData)
+      : JSON.stringify(body);
 
-  const isGet =
-    method.toUpperCase() === 'GET';
-  const attempts =
-    isGet && retryGet ? 2 : 1;
+  const isGet = method.toUpperCase() === 'GET';
+  const attempts = isGet && retryGet ? 2 : 1;
 
-  for (
-    let attempt = 0;
-    attempt < attempts;
-    attempt += 1
-  ) {
-    const controller =
-      new AbortController();
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const controller = new AbortController();
 
     let timedOut = false;
 
-    const abortFromCaller = () =>
-      controller.abort();
+    const abortFromCaller = () => controller.abort();
 
-    callerSignal?.addEventListener(
-      'abort',
-      abortFromCaller,
-    );
+    callerSignal?.addEventListener('abort', abortFromCaller);
 
     if (callerSignal?.aborted) {
       controller.abort();
@@ -171,70 +132,46 @@ export async function apiRequest<T>(
         credentials: 'omit',
       });
 
-      const raw =
-        await response.text();
+      const raw = await response.text();
 
       let data: unknown = null;
 
       try {
-        data = raw
-          ? JSON.parse(raw)
-          : null;
+        data = raw ? JSON.parse(raw) : null;
       } catch {
         data = null;
       }
 
-      if (
-        RETRYABLE_STATUS.has(
-          response.status,
-        ) &&
-        attempt + 1 < attempts
-      ) {
+      if (RETRYABLE_STATUS.has(response.status) && attempt + 1 < attempts) {
         continue;
       }
 
-      if (
-        !response.ok ||
-        !isObject(data) ||
-        data.success !== true
-      ) {
+      if (!response.ok || !isObject(data) || data.success !== true) {
         const message =
-          isObject(data) &&
-          typeof data.message ===
-            'string'
+          isObject(data) && typeof data.message === 'string'
             ? data.message
             : response.ok
-              ? 'Server returned an unexpected response. Please try again.'
-              : `Request failed (${response.status}). Please try again.`;
+            ? 'Server returned an unexpected response. Please try again.'
+            : `Request failed (${response.status}). Please try again.`;
 
         throw new ApiError(
           message,
           response.status,
-          isObject(data) &&
-          isObject(data.details)
-            ? data.details
-            : {},
+          isObject(data) && isObject(data.details) ? data.details : {},
         );
       }
 
       return data as T;
     } catch (error) {
       if (callerSignal?.aborted) {
-        throw new ApiError(
-          'Request cancelled.',
-          0,
-          {code: 'CANCELLED'},
-        );
+        throw new ApiError('Request cancelled.', 0, { code: 'CANCELLED' });
       }
 
       if (error instanceof ApiError) {
         throw error;
       }
 
-      if (
-        attempt + 1 <
-        attempts
-      ) {
+      if (attempt + 1 < attempts) {
         continue;
       }
 
@@ -246,21 +183,14 @@ export async function apiRequest<T>(
     } finally {
       clearTimeout(timer);
 
-      callerSignal?.removeEventListener(
-        'abort',
-        abortFromCaller,
-      );
+      callerSignal?.removeEventListener('abort', abortFromCaller);
     }
   }
 
-  throw new ApiError(
-    'Unable to complete the request.',
-  );
+  throw new ApiError('Unable to complete the request.');
 }
 
-export function errorMessage(
-  error: unknown,
-): string {
+export function errorMessage(error: unknown): string {
   return error instanceof Error
     ? error.message
     : 'Something went wrong. Please try again.';

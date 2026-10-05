@@ -1,49 +1,28 @@
-import React, {useState} from 'react';
-import {StyleSheet, View} from 'react-native';
-import {
-  NativeStackScreenProps,
-} from '@react-navigation/native-stack';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import React, { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 
-import {
-  errorMessage,
-} from '../../api/apiClient';
-import {useAuth} from '../../auth';
-import {AuthScreenLayout} from '../../components/auth';
-import {
-  AlertBanner,
-  Button,
-  Input,
-} from '../../components/ui';
-import {spacing} from '../../theme';
-import {AuthStackParamList} from '../../navigation/types';
-import {
-  normalizeEmail,
-  validateEmail,
-} from '../../utils/authValidation';
+import { errorMessage } from '../../api/apiClient';
+import { useAuth } from '../../auth';
+import { AuthScreenLayout } from '../../components/auth';
+import { AlertBanner, Button, Input } from '../../components/ui';
+import { AuthStackParamList } from '../../navigation/types';
+import { spacing } from '../../theme';
+import { normalizeEmail, validateEmail } from '../../utils/authValidation';
 
-type Props = NativeStackScreenProps<
-  AuthStackParamList,
-  'ForgotPassword'
->;
+type Props = NativeStackScreenProps<AuthStackParamList, 'ForgotPassword'>;
 
-export function ForgotPasswordScreen({
-  navigation,
-}: Props): React.JSX.Element {
-  const {requestPasswordOtp} =
-    useAuth();
+export function ForgotPasswordScreen({ navigation }: Props): React.JSX.Element {
+  const { requestPasswordOtp } = useAuth();
 
-  const [email, setEmail] =
-    useState('');
-  const [busy, setBusy] =
-    useState(false);
-  const [error, setError] =
-    useState<string | null>(null);
+  const [email, setEmail] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function submit() {
     setError(null);
 
-    const check =
-      validateEmail(email);
+    const check = validateEmail(email);
 
     if (!check.valid) {
       setError(check.message);
@@ -53,24 +32,17 @@ export function ForgotPasswordScreen({
     setBusy(true);
 
     try {
-      const normalized =
-        normalizeEmail(email);
+      const normalized = normalizeEmail(email);
 
-      const result =
-        await requestPasswordOtp(
-          normalized,
-        );
+      const result = await requestPasswordOtp(normalized);
 
       navigation.navigate('Otp', {
         purpose: 'password',
         identifier: normalized,
-        resendAfter:
-          result.resend_after,
+        resendAfter: result.resend_after,
       });
     } catch (submitError) {
-      setError(
-        errorMessage(submitError),
-      );
+      setError(errorMessage(submitError));
     } finally {
       setBusy(false);
     }
@@ -80,13 +52,10 @@ export function ForgotPasswordScreen({
     <AuthScreenLayout
       eyebrow="PASSWORD RECOVERY"
       title="Reset your password"
-      description="Enter your account email. Localsewa will send a verification code before allowing a password change.">
+      description="Enter your account email. Localsewa will send a verification code before allowing a password change."
+    >
       <View style={styles.form}>
-        {error ? (
-          <AlertBanner variant="error">
-            {error}
-          </AlertBanner>
-        ) : null}
+        {error ? <AlertBanner variant="error">{error}</AlertBanner> : null}
 
         <Input
           label="Account email"

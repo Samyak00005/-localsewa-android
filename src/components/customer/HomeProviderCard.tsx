@@ -7,24 +7,10 @@ import {
   View,
 } from 'react-native';
 
-import {
-  AppIcon,
-  iconSize,
-} from '../icons';
-import {
-  AppText,
-  Avatar,
-  Badge,
-} from '../ui';
-import {
-  Provider,
-} from '../../types/provider';
-import {
-  radius,
-  shadows,
-  spacing,
-  useAppTheme,
-} from '../../theme';
+import { radius, shadows, spacing, useAppTheme } from '../../theme';
+import { Provider } from '../../types/provider';
+import { AppIcon } from '../icons';
+import { AppText, Avatar, Badge } from '../ui';
 
 type Props = {
   provider: Provider;
@@ -35,23 +21,12 @@ type Props = {
   onBook: () => void;
 };
 
-function money(
-  value?: number,
-): string | null {
-  if (
-    value == null ||
-    !Number.isFinite(
-      value,
-    )
-  ) {
+function money(value?: number): string | null {
+  if (value == null || !Number.isFinite(value)) {
     return null;
   }
 
-  return `₹${Math.round(
-    value,
-  ).toLocaleString(
-    'en-IN',
-  )}`;
+  return `₹${Math.round(value).toLocaleString('en-IN')}`;
 }
 
 export function HomeProviderCard({
@@ -62,26 +37,21 @@ export function HomeProviderCard({
   onToggleSaved,
   onBook,
 }: Props): React.JSX.Element {
-  const {theme} =
-    useAppTheme();
+  const { theme } = useAppTheme();
 
-  const price =
-    money(
-      provider.startingPrice,
-    );
+  const price = money(provider.startingPrice);
 
   return (
     <View
       style={[
         styles.card,
         {
-          backgroundColor:
-            theme.colors.surface,
-          borderColor:
-            theme.colors.border,
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
         },
         shadows.sm,
-      ]}>
+      ]}
+    >
       <View style={styles.decorOne} />
       <View style={styles.decorTwo} />
 
@@ -89,62 +59,44 @@ export function HomeProviderCard({
         {provider.imageUrl ? (
           <Image
             source={{
-              uri:
-                provider.imageUrl,
+              uri: provider.imageUrl,
             }}
             style={styles.image}
           />
         ) : (
           <View style={styles.avatarBox}>
-            <Avatar
-              initials={
-                provider.name
-              }
-              size="lg"
-            />
+            <Avatar initials={provider.name} size="lg" />
           </View>
         )}
 
         <View style={styles.identity}>
           <View style={styles.nameRow}>
-            <AppText
-              variant="title"
-              numberOfLines={1}
-              style={styles.name}>
+            <AppText variant="title" numberOfLines={1} style={styles.name}>
               {provider.name}
             </AppText>
 
             {provider.verified ? (
-              <Badge variant="success">
-                VERIFIED
-              </Badge>
+              <Badge variant="success">VERIFIED</Badge>
             ) : null}
           </View>
 
           <AppText
             variant="label"
-            color={
-              theme.colors.primary
-            }
-            numberOfLines={1}>
+            color={theme.colors.primary}
+            numberOfLines={1}
+          >
             {provider.category}
           </AppText>
 
           <View style={styles.locationRow}>
-            <AppIcon
-              name="mapPin"
-              size={14}
-              color={
-                theme.colors
-                  .textMuted
-              }
-            />
+            <AppIcon name="mapPin" size={14} color={theme.colors.textMuted} />
 
             <AppText
               variant="caption"
               muted
               numberOfLines={1}
-              style={styles.location}>
+              style={styles.location}
+            >
               {provider.location}
             </AppText>
           </View>
@@ -152,66 +104,44 @@ export function HomeProviderCard({
           {provider.distanceLabel ? (
             <AppText
               variant="caption"
-              color={
-                theme.colors.primary
-              }
+              color={theme.colors.primary}
               numberOfLines={1}
-              style={styles.distance}>
+              style={styles.distance}
+            >
               {provider.distanceLabel}
             </AppText>
           ) : null}
         </View>
       </View>
 
-      {provider.serviceCount >
-      0 ? (
+      {provider.serviceCount > 0 ? (
         <View
           style={[
             styles.catalog,
             {
-              backgroundColor:
-                '#ECFAF1',
-              borderColor:
-                '#D6F0E0',
+              backgroundColor: '#ECFAF1',
+              borderColor: '#D6F0E0',
             },
-          ]}>
+          ]}
+        >
           <View>
-            <AppText
-              variant="overline"
-              color={
-                theme.colors.primary
-              }>
+            <AppText variant="overline" color={theme.colors.primary}>
               PROVIDER CATALOG
             </AppText>
 
-            <AppText
-              variant="label"
-              style={styles.catalogValue}>
+            <AppText variant="label" style={styles.catalogValue}>
               {provider.serviceCount}{' '}
-              {provider.serviceCount ===
-              1
-                ? 'service'
-                : 'services'}{' '}
-              available
+              {provider.serviceCount === 1 ? 'service' : 'services'} available
             </AppText>
           </View>
 
           {price ? (
             <View style={styles.price}>
-              <AppText
-                variant="overline"
-                color={
-                  theme.colors
-                    .textMuted
-                }>
+              <AppText variant="overline" color={theme.colors.textMuted}>
                 STARTING AT
               </AppText>
 
-              <AppText
-                variant="title"
-                color={
-                  theme.colors.primary
-                }>
+              <AppText variant="title" color={theme.colors.primary}>
                 {price}
               </AppText>
             </View>
@@ -225,45 +155,23 @@ export function HomeProviderCard({
             name="star"
             size={14}
             color="#F5A623"
-            fill={
-              provider.rating ==
-              null
-                ? 'none'
-                : '#F5A623'
-            }
+            fill={provider.rating == null ? 'none' : '#F5A623'}
           />
 
-          <AppText
-            variant="label"
-            color={
-              theme.colors.text
-            }>
-            {provider.rating ==
-            null
-              ? 'New'
-              : provider.rating.toFixed(
-                  1,
-                )}
+          <AppText variant="label" color={theme.colors.text}>
+            {provider.rating == null ? 'New' : provider.rating.toFixed(1)}
           </AppText>
 
-          <AppText
-            variant="caption"
-            muted>
-            {provider.reviewCount}{' '}
-            reviews
+          <AppText variant="caption" muted>
+            {provider.reviewCount} reviews
           </AppText>
 
-          <AppText
-            variant="caption"
-            muted>
+          <AppText variant="caption" muted>
             •
           </AppText>
 
-          <AppText
-            variant="caption"
-            muted>
-            {provider.experienceYears}{' '}
-            yrs experience
+          <AppText variant="caption" muted>
+            {provider.experienceYears} yrs experience
           </AppText>
         </View>
 
@@ -272,11 +180,9 @@ export function HomeProviderCard({
             style={[
               styles.availableDot,
               {
-                backgroundColor:
-                  provider.available
-                    ? '#24C56A'
-                    : theme.colors
-                        .disabled,
+                backgroundColor: provider.available
+                  ? '#24C56A'
+                  : theme.colors.disabled,
               },
             ]}
           />
@@ -284,47 +190,30 @@ export function HomeProviderCard({
           <AppText
             variant="caption"
             color={
-              provider.available
-                ? theme.colors
-                    .primary
-                : theme.colors
-                    .textMuted
-            }>
-            {provider.available
-              ? 'Available'
-              : 'Unavailable'}
+              provider.available ? theme.colors.primary : theme.colors.textMuted
+            }
+          >
+            {provider.available ? 'Available' : 'Unavailable'}
           </AppText>
         </View>
       </View>
 
       <View style={styles.actions}>
-        <ProviderAction
-          icon="eye"
-          label="Details"
-          onPress={onDetails}
-        />
+        <ProviderAction icon="eye" label="Details" onPress={onDetails} />
 
         <ProviderAction
           icon="bookmark"
-          label={
-            saved
-              ? 'Saved'
-              : 'Save'
-          }
+          label={saved ? 'Saved' : 'Save'}
           active={saved}
           busy={saving}
-          onPress={
-            onToggleSaved
-          }
+          onPress={onToggleSaved}
         />
 
         <ProviderAction
           icon="calendar"
           label="Book"
           filled
-          disabled={
-            !provider.available
-          }
+          disabled={!provider.available}
           onPress={onBook}
         />
       </View>
@@ -341,10 +230,7 @@ function ProviderAction({
   busy = false,
   onPress,
 }: {
-  icon:
-    | 'eye'
-    | 'bookmark'
-    | 'calendar';
+  icon: 'eye' | 'bookmark' | 'calendar';
   label: string;
   active?: boolean;
   filled?: boolean;
@@ -352,55 +238,34 @@ function ProviderAction({
   busy?: boolean;
   onPress: () => void;
 }): React.JSX.Element {
-  const {theme} =
-    useAppTheme();
+  const { theme } = useAppTheme();
 
-  const dark =
-    filled &&
-    !disabled;
+  const dark = filled && !disabled;
 
   return (
     <Pressable
       accessibilityRole="button"
-      disabled={
-        disabled ||
-        busy
-      }
+      disabled={disabled || busy}
       onPress={onPress}
-      style={({pressed}) => [
+      style={({ pressed }) => [
         styles.action,
         {
-          backgroundColor:
-            dark
-              ? '#092C20'
-              : active
-                ? theme.colors
-                    .secondary
-                : theme.colors
-                    .surface,
-          borderColor:
-            dark
-              ? '#092C20'
-              : active
-                ? theme.colors
-                    .primary
-                : theme.colors
-                    .border,
-          opacity:
-            disabled
-              ? 0.45
-              : pressed
-                ? 0.85
-                : 1,
+          backgroundColor: dark
+            ? '#092C20'
+            : active
+            ? theme.colors.secondary
+            : theme.colors.surface,
+          borderColor: dark
+            ? '#092C20'
+            : active
+            ? theme.colors.primary
+            : theme.colors.border,
+          opacity: disabled ? 0.45 : pressed ? 0.85 : 1,
         },
-      ]}>
+      ]}
+    >
       {busy ? (
-        <ActivityIndicator
-          size="small"
-          color={
-            theme.colors.primary
-          }
-        />
+        <ActivityIndicator size="small" color={theme.colors.primary} />
       ) : (
         <AppIcon
           name={icon}
@@ -409,19 +274,10 @@ function ProviderAction({
             dark
               ? '#FFFFFF'
               : active
-                ? theme.colors
-                    .primary
-                : theme.colors
-                    .textSecondary
+              ? theme.colors.primary
+              : theme.colors.textSecondary
           }
-          fill={
-            icon ===
-              'bookmark' &&
-            active
-              ? theme.colors
-                  .primary
-              : 'none'
-          }
+          fill={icon === 'bookmark' && active ? theme.colors.primary : 'none'}
         />
       )}
 
@@ -431,165 +287,136 @@ function ProviderAction({
           dark
             ? '#FFFFFF'
             : active
-              ? theme.colors
-                  .primary
-              : theme.colors
-                  .textSecondary
-        }>
+            ? theme.colors.primary
+            : theme.colors.textSecondary
+        }
+      >
         {label}
       </AppText>
     </Pressable>
   );
 }
 
-const styles =
-  StyleSheet.create({
-    card: {
-      borderWidth: 1,
-      borderRadius:
-        radius.xl,
-      padding: spacing[4],
-      overflow: 'hidden',
-    },
-    decorOne: {
-      position: 'absolute',
-      width: 110,
-      height: 110,
-      borderRadius: 55,
-      right: -56,
-      top: 42,
-      borderWidth: 7,
-      borderColor:
-        '#F0FAF4',
-    },
-    decorTwo: {
-      position: 'absolute',
-      width: 46,
-      height: 46,
-      borderRadius: 23,
-      right: 15,
-      top: 80,
-      borderWidth: 4,
-      borderColor:
-        '#F0FAF4',
-    },
-    topRow: {
-      flexDirection: 'row',
-      alignItems:
-        'flex-start',
-      gap: spacing[3],
-    },
-    image: {
-      width: 56,
-      height: 56,
-      borderRadius:
-        radius.md,
-    },
-    avatarBox: {
-      width: 56,
-      height: 56,
-      alignItems:
-        'center',
-      justifyContent:
-        'center',
-    },
-    identity: {
-      flex: 1,
-    },
-    nameRow: {
-      flexDirection: 'row',
-      alignItems:
-        'center',
-      gap: spacing[2],
-    },
-    name: {
-      flex: 1,
-    },
-    locationRow: {
-      marginTop:
-        spacing[1],
-      flexDirection: 'row',
-      alignItems:
-        'center',
-      gap: spacing[1],
-    },
-    location: {
-      flex: 1,
-    },
-    distance: {
-      marginTop:
-        spacing[2],
-      fontWeight: '600',
-    },
-    catalog: {
-      marginTop:
-        spacing[4],
-      borderWidth: 1,
-      borderRadius:
-        radius.md,
-      padding: spacing[3],
-      flexDirection: 'row',
-      justifyContent:
-        'space-between',
-      alignItems:
-        'center',
-      gap: spacing[3],
-    },
-    catalogValue: {
-      marginTop:
-        spacing[1],
-    },
-    price: {
-      alignItems:
-        'flex-end',
-    },
-    metaRow: {
-      marginTop:
-        spacing[4],
-      paddingTop:
-        spacing[3],
-      borderTopWidth: 1,
-      borderTopColor:
-        '#EDF2EF',
-      gap: spacing[3],
-    },
-    ratingRow: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      alignItems:
-        'center',
-      gap: spacing[2],
-    },
-    availableRow: {
-      flexDirection: 'row',
-      alignItems:
-        'center',
-      gap: spacing[2],
-    },
-    availableDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-    },
-    actions: {
-      flexDirection: 'row',
-      gap: spacing[2],
-      marginTop:
-        spacing[4],
-    },
-    action: {
-      flex: 1,
-      minHeight: 44,
-      borderWidth: 1,
-      borderRadius:
-        radius.md,
-      flexDirection: 'row',
-      alignItems:
-        'center',
-      justifyContent:
-        'center',
-      gap: spacing[2],
-      paddingHorizontal:
-        spacing[2],
-    },
-  });
+const styles = StyleSheet.create({
+  card: {
+    borderWidth: 1,
+    borderRadius: radius.xl,
+    padding: spacing[4],
+    overflow: 'hidden',
+  },
+  decorOne: {
+    position: 'absolute',
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    right: -56,
+    top: 42,
+    borderWidth: 7,
+    borderColor: '#F0FAF4',
+  },
+  decorTwo: {
+    position: 'absolute',
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    right: 15,
+    top: 80,
+    borderWidth: 4,
+    borderColor: '#F0FAF4',
+  },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing[3],
+  },
+  image: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+  },
+  avatarBox: {
+    width: 56,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  identity: {
+    flex: 1,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+  },
+  name: {
+    flex: 1,
+  },
+  locationRow: {
+    marginTop: spacing[1],
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[1],
+  },
+  location: {
+    flex: 1,
+  },
+  distance: {
+    marginTop: spacing[2],
+    fontWeight: '600',
+  },
+  catalog: {
+    marginTop: spacing[4],
+    borderWidth: 1,
+    borderRadius: radius.md,
+    padding: spacing[3],
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: spacing[3],
+  },
+  catalogValue: {
+    marginTop: spacing[1],
+  },
+  price: {
+    alignItems: 'flex-end',
+  },
+  metaRow: {
+    marginTop: spacing[4],
+    paddingTop: spacing[3],
+    borderTopWidth: 1,
+    borderTopColor: '#EDF2EF',
+    gap: spacing[3],
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: spacing[2],
+  },
+  availableRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+  },
+  availableDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: spacing[2],
+    marginTop: spacing[4],
+  },
+  action: {
+    flex: 1,
+    minHeight: 44,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing[2],
+    paddingHorizontal: spacing[2],
+  },
+});

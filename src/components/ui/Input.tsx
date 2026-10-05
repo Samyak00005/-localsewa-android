@@ -1,4 +1,4 @@
-import React, {ReactNode} from 'react';
+import React, { ReactNode } from 'react';
 import {
   StyleProp,
   StyleSheet,
@@ -8,14 +8,8 @@ import {
   View,
 } from 'react-native';
 
-import {
-  layout,
-  radius,
-  spacing,
-  typography,
-  useAppTheme,
-} from '../../theme';
-import {AppText} from './AppText';
+import { layout, radius, spacing, typography, useAppTheme } from '../../theme';
+import { AppText } from './AppText';
 
 type InputProps = Omit<TextInputProps, 'style'> & {
   label?: string;
@@ -36,14 +30,12 @@ export function Input({
   style,
   ...props
 }: InputProps): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
 
   return (
     <View style={styles.wrapper}>
       {label ? (
-        <AppText
-          variant="label"
-          style={styles.label}>
+        <AppText variant="label" style={styles.label}>
           {label}
         </AppText>
       ) : null}
@@ -52,40 +44,26 @@ export function Input({
         style={[
           styles.inputFrame,
           {
-            backgroundColor:
-              theme.colors.surface,
-            borderColor: error
-              ? theme.colors.error
-              : theme.colors.border,
+            backgroundColor: theme.colors.surface,
+            borderColor: error ? theme.colors.error : theme.colors.border,
             opacity: editable ? 1 : 0.55,
           },
-        ]}>
+        ]}
+      >
         {leftAccessory ? (
-          <View style={styles.accessory}>
-            {leftAccessory}
-          </View>
+          <View style={styles.accessory}>{leftAccessory}</View>
         ) : null}
 
         <TextInput
           {...props}
           editable={editable}
-          placeholderTextColor={
-            theme.colors.textMuted
-          }
-          selectionColor={
-            theme.colors.primary
-          }
-          style={[
-            styles.input,
-            {color: theme.colors.text},
-            style,
-          ]}
+          placeholderTextColor={theme.colors.textMuted}
+          selectionColor={theme.colors.primary}
+          style={[styles.input, { color: theme.colors.text }, style]}
         />
 
         {rightAccessory ? (
-          <View style={styles.accessory}>
-            {rightAccessory}
-          </View>
+          <View style={styles.accessory}>{rightAccessory}</View>
         ) : null}
       </View>
 
@@ -93,14 +71,12 @@ export function Input({
         <AppText
           variant="caption"
           color={theme.colors.error}
-          style={styles.message}>
+          style={styles.message}
+        >
           {error}
         </AppText>
       ) : helperText ? (
-        <AppText
-          variant="caption"
-          muted
-          style={styles.message}>
+        <AppText variant="caption" muted style={styles.message}>
           {helperText}
         </AppText>
       ) : null}

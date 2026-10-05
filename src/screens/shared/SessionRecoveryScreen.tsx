@@ -1,23 +1,10 @@
-import React, {useState} from 'react';
-import {
-  Image,
-  StyleSheet,
-  View,
-} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import React, { useState } from 'react';
+import { Image, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {useAuth} from '../../auth';
-import {
-  AppText,
-  Button,
-  Card,
-} from '../../components/ui';
-import {
-  layout,
-  radius,
-  spacing,
-  useAppTheme,
-} from '../../theme';
+import { useAuth } from '../../auth';
+import { AppText, Button, Card } from '../../components/ui';
+import { layout, radius, spacing, useAppTheme } from '../../theme';
 
 type SessionRecoveryScreenProps = {
   message: string;
@@ -26,13 +13,9 @@ type SessionRecoveryScreenProps = {
 export function SessionRecoveryScreen({
   message,
 }: SessionRecoveryScreenProps): React.JSX.Element {
-  const {
-    refreshSession,
-    clearLocalSession,
-  } = useAuth();
-  const {theme} = useAppTheme();
-  const [busy, setBusy] =
-    useState(false);
+  const { refreshSession, clearLocalSession } = useAuth();
+  const { theme } = useAppTheme();
+  const [busy, setBusy] = useState(false);
 
   async function retry() {
     setBusy(true);
@@ -57,10 +40,10 @@ export function SessionRecoveryScreen({
       style={[
         styles.safeArea,
         {
-          backgroundColor:
-            theme.colors.background,
+          backgroundColor: theme.colors.background,
         },
-      ]}>
+      ]}
+    >
       <View style={styles.content}>
         <Image
           source={require('../../assets/branding/localsewa-logo.png')}
@@ -69,32 +52,19 @@ export function SessionRecoveryScreen({
         />
 
         <Card style={styles.card}>
-          <AppText variant="h3">
-            Unable to verify your session
-          </AppText>
+          <AppText variant="h3">Unable to verify your session</AppText>
 
-          <AppText
-            variant="bodySmall"
-            muted
-            style={styles.message}>
+          <AppText variant="bodySmall" muted style={styles.message}>
             {message}
           </AppText>
 
-          <AppText
-            variant="caption"
-            muted
-            style={styles.note}>
-            Your saved session has not been deleted. Retry when your
-            connection is available.
+          <AppText variant="caption" muted style={styles.note}>
+            Your saved session has not been deleted. Retry when your connection
+            is available.
           </AppText>
 
           <View style={styles.actions}>
-            <Button
-              label="Retry"
-              loading={busy}
-              onPress={retry}
-              fullWidth
-            />
+            <Button label="Retry" loading={busy} onPress={retry} fullWidth />
 
             <Button
               label="Use sign in instead"
@@ -116,8 +86,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal:
-      layout.screenHorizontal,
+    paddingHorizontal: layout.screenHorizontal,
     justifyContent: 'center',
   },
   logo: {

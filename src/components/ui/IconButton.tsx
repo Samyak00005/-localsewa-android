@@ -1,12 +1,7 @@
-import React, {ReactNode} from 'react';
-import {
-  Pressable,
-  PressableProps,
-  StyleSheet,
-  View,
-} from 'react-native';
+import React, { ReactNode } from 'react';
+import { Pressable, PressableProps, StyleSheet, View } from 'react-native';
 
-import {layout, radius, useAppTheme} from '../../theme';
+import { layout, radius, useAppTheme } from '../../theme';
 
 type IconButtonProps = Omit<PressableProps, 'style'> & {
   icon: ReactNode;
@@ -21,31 +16,30 @@ export function IconButton({
   disabled = false,
   ...props
 }: IconButtonProps): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
 
   return (
     <Pressable
       {...props}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      accessibilityState={{disabled}}
+      accessibilityState={{ disabled }}
       disabled={disabled}
-      style={({pressed}) => [
+      style={({ pressed }) => [
         styles.base,
         {
           backgroundColor:
             variant === 'filled'
               ? theme.colors.primary
               : pressed
-                ? theme.colors.surfaceMuted
-                : theme.colors.surface,
+              ? theme.colors.surfaceMuted
+              : theme.colors.surface,
           borderColor:
-            variant === 'filled'
-              ? theme.colors.primary
-              : theme.colors.border,
+            variant === 'filled' ? theme.colors.primary : theme.colors.border,
           opacity: disabled ? 0.5 : 1,
         },
-      ]}>
+      ]}
+    >
       <View style={styles.icon}>{icon}</View>
     </Pressable>
   );

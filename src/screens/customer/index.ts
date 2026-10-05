@@ -3,7 +3,6 @@ export * from './AccountSecurityScreen';
 export * from './BookingChatScreen';
 export * from './BookingDetailsScreen';
 export * from './BookingRequestScreen';
-export * from './BookingReviewScreen';
 export * from './ChangeEmailScreen';
 export * from './ChangePasswordScreen';
 export * from './CustomerBookingsScreen';

@@ -1,9 +1,9 @@
-import React, {PropsWithChildren, useState} from 'react';
-import {Pressable, StyleSheet, View} from 'react-native';
+import React, { PropsWithChildren, useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import {AppIcon, AppIconName, iconSize} from '../icons';
-import {AppText, Card} from '../ui';
-import {radius, spacing, useAppTheme} from '../../theme';
+import { radius, spacing, useAppTheme } from '../../theme';
+import { AppIcon, AppIconName, iconSize } from '../icons';
+import { AppText, Card } from '../ui';
 
 type Props = PropsWithChildren<{
   title: string;
@@ -19,22 +19,24 @@ export function AccordionCard({
   icon,
   children,
 }: Props): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
   const [open, setOpen] = useState(defaultOpen);
 
   return (
     <Card>
       <Pressable
         accessibilityRole="button"
-        accessibilityState={{expanded: open}}
+        accessibilityState={{ expanded: open }}
         onPress={() => setOpen(value => !value)}
-        style={styles.header}>
+        style={styles.header}
+      >
         {icon ? (
           <View
             style={[
               styles.iconWrap,
-              {backgroundColor: theme.colors.secondary},
-            ]}>
+              { backgroundColor: theme.colors.secondary },
+            ]}
+          >
             <AppIcon
               name={icon}
               size={iconSize.sm}
@@ -53,7 +55,7 @@ export function AccordionCard({
           ) : null}
         </View>
 
-        <View style={[styles.chevron, {borderColor: theme.colors.border}]}>
+        <View style={[styles.chevron, { borderColor: theme.colors.border }]}>
           <AppIcon
             name={open ? 'chevronUp' : 'chevronDown'}
             size={iconSize.sm}

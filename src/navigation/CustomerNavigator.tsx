@@ -9,7 +9,6 @@ import {
   BookingChatScreen,
   BookingDetailsScreen,
   BookingRequestScreen,
-  BookingReviewScreen,
   ChangeEmailScreen,
   ChangePasswordScreen,
   CustomerNotificationsScreen,
@@ -85,13 +84,6 @@ export function CustomerNavigator(): React.JSX.Element {
         options={{
           animation: 'fade',
         }}
-      />
-
-      <Stack.Screen
-        name="BookingReview"
-        component={
-          BookingReviewScreen
-        }
       />
 
       <Stack.Screen

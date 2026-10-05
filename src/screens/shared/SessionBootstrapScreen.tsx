@@ -1,33 +1,22 @@
 import React from 'react';
-import {
-  Image,
-  StyleSheet,
-  View,
-} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import { Image, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {
-  AppText,
-  Spinner,
-} from '../../components/ui';
-import {
-  radius,
-  spacing,
-  useAppTheme,
-} from '../../theme';
+import { AppText, Spinner } from '../../components/ui';
+import { radius, spacing, useAppTheme } from '../../theme';
 
 export function SessionBootstrapScreen(): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
 
   return (
     <SafeAreaView
       style={[
         styles.safeArea,
         {
-          backgroundColor:
-            theme.colors.background,
+          backgroundColor: theme.colors.background,
         },
-      ]}>
+      ]}
+    >
       <View style={styles.content}>
         <Image
           source={require('../../assets/branding/localsewa-logo.png')}
@@ -35,17 +24,13 @@ export function SessionBootstrapScreen(): React.JSX.Element {
           resizeMode="contain"
         />
 
-        <AppText
-          variant="title"
-          style={styles.title}>
+        <AppText variant="title" style={styles.title}>
           Localsewa
         </AppText>
 
         <View style={styles.loading}>
           <Spinner />
-          <AppText
-            variant="caption"
-            muted>
+          <AppText variant="caption" muted>
             Checking your session…
           </AppText>
         </View>

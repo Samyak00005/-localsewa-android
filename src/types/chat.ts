@@ -1,6 +1,4 @@
-export type ChatSenderRole =
-  | 'customer'
-  | 'provider';
+export type ChatSenderRole = 'customer' | 'provider';
 
 export type ChatMessage = {
   id: number;

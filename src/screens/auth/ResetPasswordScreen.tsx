@@ -1,80 +1,44 @@
-import React, {useState} from 'react';
-import {
-  StyleSheet,
-  View,
-} from 'react-native';
-import {
-  NativeStackScreenProps,
-} from '@react-navigation/native-stack';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import React, { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 
-import {
-  errorMessage,
-} from '../../api/apiClient';
-import {useAuth} from '../../auth';
-import {
-  AuthScreenLayout,
-  PasswordInput,
-} from '../../components/auth';
-import {
-  AlertBanner,
-  Button,
-} from '../../components/ui';
-import {spacing} from '../../theme';
-import {AuthStackParamList} from '../../navigation/types';
-import {
-  validatePassword,
-} from '../../utils/authValidation';
+import { errorMessage } from '../../api/apiClient';
+import { useAuth } from '../../auth';
+import { AuthScreenLayout, PasswordInput } from '../../components/auth';
+import { AlertBanner, Button } from '../../components/ui';
+import { AuthStackParamList } from '../../navigation/types';
+import { spacing } from '../../theme';
+import { validatePassword } from '../../utils/authValidation';
 
-type Props = NativeStackScreenProps<
-  AuthStackParamList,
-  'ResetPassword'
->;
+type Props = NativeStackScreenProps<AuthStackParamList, 'ResetPassword'>;
 
-export function ResetPasswordScreen({
-  navigation,
-}: Props): React.JSX.Element {
-  const {
-    completePasswordReset,
-  } = useAuth();
+export function ResetPasswordScreen({ navigation }: Props): React.JSX.Element {
+  const { completePasswordReset } = useAuth();
 
-  const [password, setPassword] =
-    useState('');
-  const [
-    confirmPassword,
-    setConfirmPassword,
-  ] = useState('');
-  const [busy, setBusy] =
-    useState(false);
-  const [error, setError] =
-    useState<string | null>(null);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function submit() {
     setError(null);
 
-    const check =
-      validatePassword(password);
+    const check = validatePassword(password);
 
     if (!check.valid) {
       setError(check.message);
       return;
     }
 
-    if (
-      password !== confirmPassword
-    ) {
-      setError(
-        'Passwords do not match.',
-      );
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
       return;
     }
 
     setBusy(true);
 
     try {
-      await completePasswordReset(
-        password,
-        confirmPassword,
-      );
+      await completePasswordReset(password, confirmPassword);
 
       navigation.reset({
         index: 0,
@@ -89,9 +53,7 @@ export function ResetPasswordScreen({
         ],
       });
     } catch (submitError) {
-      setError(
-        errorMessage(submitError),
-      );
+      setError(errorMessage(submitError));
     } finally {
       setBusy(false);
     }
@@ -101,13 +63,10 @@ export function ResetPasswordScreen({
     <AuthScreenLayout
       eyebrow="NEW PASSWORD"
       title="Create a new password"
-      description="Choose a strong password you haven't used for this account before.">
+      description="Choose a strong password you haven't used for this account before."
+    >
       <View style={styles.form}>
-        {error ? (
-          <AlertBanner variant="error">
-            {error}
-          </AlertBanner>
-        ) : null}
+        {error ? <AlertBanner variant="error">{error}</AlertBanner> : null}
 
         <PasswordInput
           label="New password"

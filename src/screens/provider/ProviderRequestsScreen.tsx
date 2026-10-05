@@ -1,10 +1,10 @@
 import React from 'react';
 
-import {useAppShell} from '../../app/AppShellProvider';
-import {WorkspacePlaceholderScreen} from '../shared/WorkspacePlaceholderScreen';
+import { useAppShell } from '../../app/AppShellProvider';
+import { WorkspacePlaceholderScreen } from '../shared/WorkspacePlaceholderScreen';
 
 export function ProviderRequestsScreen(): React.JSX.Element {
-  const {providerTier} = useAppShell();
+  const { providerTier } = useAppShell();
 
   return (
     <WorkspacePlaceholderScreen

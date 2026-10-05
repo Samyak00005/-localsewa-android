@@ -12,9 +12,6 @@ import {
   errorMessage,
 } from '../../api/apiClient';
 import {
-  PasswordInput,
-} from '../../components/auth';
-import {
   AlertBanner,
   AppText,
   Button,
@@ -51,8 +48,6 @@ export function EditCustomerProfileScreen(): React.JSX.Element {
 
   const [fullName, setFullName] =
     useState('');
-  const [phone, setPhone] =
-    useState('');
   const [whatsapp, setWhatsapp] =
     useState('');
   const [message, setMessage] =
@@ -69,9 +64,6 @@ export function EditCustomerProfileScreen(): React.JSX.Element {
 
     setFullName(
       profile.fullName,
-    );
-    setPhone(
-      profile.phone ?? '',
     );
     setWhatsapp(
       profile.whatsapp ?? '',
@@ -94,16 +86,6 @@ export function EditCustomerProfileScreen(): React.JSX.Element {
       return;
     }
 
-    const phoneCheck =
-      validatePhone(phone);
-
-    if (!phoneCheck.valid) {
-      setFormError(
-        phoneCheck.message,
-      );
-      return;
-    }
-
     if (whatsapp.trim()) {
       const whatsappCheck =
         validatePhone(
@@ -122,9 +104,8 @@ export function EditCustomerProfileScreen(): React.JSX.Element {
       await update.mutateAsync({
         fullName,
         phone:
-          normalizePhone(
-            phone,
-          ),
+          profile?.phone ??
+          '',
         whatsapp:
           whatsapp.trim()
             ? normalizePhone(
@@ -165,8 +146,8 @@ export function EditCustomerProfileScreen(): React.JSX.Element {
         variant="body"
         muted
         style={styles.subtitle}>
-        Update your customer contact details. Email changes use a separate
-        verified flow and are not edited here.
+        Update the profile details that are allowed to change. Your linked
+        email and mobile number stay fixed.
       </AppText>
 
       {error ? (
@@ -210,21 +191,6 @@ export function EditCustomerProfileScreen(): React.JSX.Element {
           />
 
           <Input
-            label="Mobile number"
-            placeholder="+91"
-            value={phone}
-            onChangeText={
-              setPhone
-            }
-            keyboardType="phone-pad"
-            editable={
-              !isLoading &&
-              !update.isPending
-            }
-            maxLength={20}
-          />
-
-          <Input
             label="WhatsApp (optional)"
             placeholder="+91"
             value={whatsapp}
@@ -239,15 +205,6 @@ export function EditCustomerProfileScreen(): React.JSX.Element {
             maxLength={20}
           />
 
-          <Input
-            label="Email"
-            value={
-              profile?.email ?? ''
-            }
-            editable={false}
-            helperText="Email is protected by a separate OTP-verified change flow."
-          />
-
           <Button
             label="Save changes"
             loading={
@@ -257,6 +214,20 @@ export function EditCustomerProfileScreen(): React.JSX.Element {
             fullWidth
           />
         </View>
+      </Card>
+
+      <Card style={styles.infoCard}>
+        <AppText variant="label">
+          Linked account details
+        </AppText>
+
+        <AppText
+          variant="bodySmall"
+          muted
+          style={styles.subtitle}>
+          Your account email and mobile number cannot be changed after they are
+          linked to your Localsewa account.
+        </AppText>
       </Card>
 
       <Card style={styles.infoCard}>

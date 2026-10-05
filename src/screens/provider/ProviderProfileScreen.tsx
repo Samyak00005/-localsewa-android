@@ -1,33 +1,19 @@
-import React, {useState} from 'react';
-import {StyleSheet, View} from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 
-import {
-  errorMessage,
-} from '../../api/apiClient';
-import {useAppShell} from '../../app/AppShellProvider';
-import {useAuth} from '../../auth';
-import {
-  AppText,
-  Avatar,
-  Badge,
-  Button,
-  Card,
-} from '../../components/ui';
-import {spacing} from '../../theme';
-import {WorkspacePlaceholderScreen} from '../shared/WorkspacePlaceholderScreen';
+import { errorMessage } from '../../api/apiClient';
+import { useAppShell } from '../../app/AppShellProvider';
+import { useAuth } from '../../auth';
+import { AppText, Avatar, Badge, Button, Card } from '../../components/ui';
+import { spacing } from '../../theme';
+import { WorkspacePlaceholderScreen } from '../shared/WorkspacePlaceholderScreen';
 
 export function ProviderProfileScreen(): React.JSX.Element {
-  const {enterCustomer} =
-    useAppShell();
-  const {
-    user,
-    logout,
-  } = useAuth();
+  const { enterCustomer } = useAppShell();
+  const { user, logout } = useAuth();
 
-  const [busy, setBusy] =
-    useState(false);
-  const [error, setError] =
-    useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function signOut() {
     setBusy(true);
@@ -36,9 +22,7 @@ export function ProviderProfileScreen(): React.JSX.Element {
     try {
       await logout();
     } catch (logoutError) {
-      setError(
-        errorMessage(logoutError),
-      );
+      setError(errorMessage(logoutError));
     } finally {
       setBusy(false);
     }
@@ -48,30 +32,19 @@ export function ProviderProfileScreen(): React.JSX.Element {
     <WorkspacePlaceholderScreen
       eyebrow="PROVIDER"
       title="Profile"
-      description="Provider workspace access is based on your authenticated account roles.">
+      description="Provider workspace access is based on your authenticated account roles."
+    >
       <Card>
         <View style={styles.accountRow}>
-          <Avatar
-            initials={
-              user?.full_name || 'LS'
-            }
-            size="lg"
-          />
+          <Avatar initials={user?.full_name || 'LS'} size="lg" />
 
           <View style={styles.accountCopy}>
-            <AppText variant="title">
-              {user?.full_name ||
-                'Provider'}
-            </AppText>
+            <AppText variant="title">{user?.full_name || 'Provider'}</AppText>
 
-            <Badge>
-              PROVIDER
-            </Badge>
+            <Badge>PROVIDER</Badge>
 
             {user?.email ? (
-              <AppText
-                variant="caption"
-                muted>
+              <AppText variant="caption" muted>
                 {user.email}
               </AppText>
             ) : null}
@@ -87,9 +60,7 @@ export function ProviderProfileScreen(): React.JSX.Element {
       />
 
       {error ? (
-        <AppText
-          variant="bodySmall"
-          color="#B42318">
+        <AppText variant="bodySmall" color="#B42318">
           {error}
         </AppText>
       ) : null}

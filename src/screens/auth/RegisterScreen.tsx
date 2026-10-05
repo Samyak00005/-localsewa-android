@@ -1,32 +1,13 @@
-import React, {useState} from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  View,
-} from 'react-native';
-import {
-  NativeStackScreenProps,
-} from '@react-navigation/native-stack';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import React, { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import {
-  errorMessage,
-} from '../../api/apiClient';
-import {useAuth} from '../../auth';
-import {
-  AuthScreenLayout,
-  PasswordInput,
-} from '../../components/auth';
-import {
-  AlertBanner,
-  AppText,
-  Button,
-  Input,
-} from '../../components/ui';
-import {
-  spacing,
-  useAppTheme,
-} from '../../theme';
-import {AuthStackParamList} from '../../navigation/types';
+import { errorMessage } from '../../api/apiClient';
+import { useAuth } from '../../auth';
+import { AuthScreenLayout, PasswordInput } from '../../components/auth';
+import { AlertBanner, AppText, Button, Input } from '../../components/ui';
+import { AuthStackParamList } from '../../navigation/types';
+import { spacing, useAppTheme } from '../../theme';
 import {
   normalizeEmail,
   normalizePhone,
@@ -36,35 +17,19 @@ import {
   validatePhone,
 } from '../../utils/authValidation';
 
-type Props = NativeStackScreenProps<
-  AuthStackParamList,
-  'Register'
->;
+type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
-export function RegisterScreen({
-  navigation,
-}: Props): React.JSX.Element {
-  const {
-    requestRegistrationOtp,
-  } = useAuth();
-  const {theme} = useAppTheme();
+export function RegisterScreen({ navigation }: Props): React.JSX.Element {
+  const { requestRegistrationOtp } = useAuth();
+  const { theme } = useAppTheme();
 
-  const [fullName, setFullName] =
-    useState('');
-  const [mobile, setMobile] =
-    useState('');
-  const [email, setEmail] =
-    useState('');
-  const [password, setPassword] =
-    useState('');
-  const [
-    confirmPassword,
-    setConfirmPassword,
-  ] = useState('');
-  const [busy, setBusy] =
-    useState(false);
-  const [error, setError] =
-    useState<string | null>(null);
+  const [fullName, setFullName] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function submit() {
     setError(null);
@@ -76,52 +41,35 @@ export function RegisterScreen({
       validatePassword(password),
     ];
 
-    const failed =
-      checks.find(
-        result => !result.valid,
-      );
+    const failed = checks.find(result => !result.valid);
 
-    if (
-      failed &&
-      !failed.valid
-    ) {
+    if (failed && !failed.valid) {
       setError(failed.message);
       return;
     }
 
-    if (
-      password !== confirmPassword
-    ) {
-      setError(
-        'Passwords do not match.',
-      );
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
       return;
     }
 
     setBusy(true);
 
     try {
-      const result =
-        await requestRegistrationOtp({
-          full_name: fullName.trim(),
-          phone:
-            normalizePhone(mobile),
-          email:
-            normalizeEmail(email),
-          password,
-        });
+      const result = await requestRegistrationOtp({
+        full_name: fullName.trim(),
+        phone: normalizePhone(mobile),
+        email: normalizeEmail(email),
+        password,
+      });
 
       navigation.navigate('Otp', {
         purpose: 'registration',
-        identifier:
-          normalizePhone(mobile),
-        resendAfter:
-          result.resend_after,
+        identifier: normalizePhone(mobile),
+        resendAfter: result.resend_after,
       });
     } catch (submitError) {
-      setError(
-        errorMessage(submitError),
-      );
+      setError(errorMessage(submitError));
     } finally {
       setBusy(false);
     }
@@ -131,13 +79,10 @@ export function RegisterScreen({
     <AuthScreenLayout
       eyebrow="CREATE ACCOUNT"
       title="Join Localsewa"
-      description="Create one account for Localsewa. Provider capability can be attached to the same account when active.">
+      description="Create one account for Localsewa. Provider capability can be attached to the same account when active."
+    >
       <View style={styles.form}>
-        {error ? (
-          <AlertBanner variant="error">
-            {error}
-          </AlertBanner>
-        ) : null}
+        {error ? <AlertBanner variant="error">{error}</AlertBanner> : null}
 
         <Input
           label="Full name"
@@ -206,23 +151,16 @@ export function RegisterScreen({
         />
 
         <View style={styles.footerRow}>
-          <AppText
-            variant="bodySmall"
-            muted>
+          <AppText variant="bodySmall" muted>
             Already have an account?
           </AppText>
 
           <Pressable
             accessibilityRole="button"
             disabled={busy}
-            onPress={() =>
-              navigation.navigate(
-                'Login',
-              )
-            }>
-            <AppText
-              variant="label"
-              color={theme.colors.primary}>
+            onPress={() => navigation.navigate('Login')}
+          >
+            <AppText variant="label" color={theme.colors.primary}>
               Sign in
             </AppText>
           </Pressable>

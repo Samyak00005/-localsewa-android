@@ -1,12 +1,7 @@
 import React from 'react';
-import {
-  StyleProp,
-  Text,
-  TextProps,
-  TextStyle,
-} from 'react-native';
+import { StyleProp, Text, TextProps, TextStyle } from 'react-native';
 
-import {typography, useAppTheme} from '../../theme';
+import { typography, useAppTheme } from '../../theme';
 
 export type AppTextVariant = keyof typeof typography;
 
@@ -24,18 +19,17 @@ export function AppText({
   style,
   ...props
 }: AppTextProps): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
 
   const resolvedColor =
-    color ??
-    (muted ? theme.colors.textSecondary : theme.colors.text);
+    color ?? (muted ? theme.colors.textSecondary : theme.colors.text);
 
   return (
     <Text
       {...props}
       style={[
         typography[variant] as TextStyle,
-        {color: resolvedColor},
+        { color: resolvedColor },
         style,
       ]}
     />

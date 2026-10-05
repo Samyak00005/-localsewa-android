@@ -1,6 +1,6 @@
-import {LinkingOptions} from '@react-navigation/native';
+import { LinkingOptions } from '@react-navigation/native';
 
-import {RootStackParamList} from './types';
+import { RootStackParamList } from './types';
 
 /**
  * Route structure is deep-link ready.

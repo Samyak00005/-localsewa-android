@@ -1,9 +1,9 @@
-import React, {useState} from 'react';
-import {Pressable, StyleSheet, TextInputProps} from 'react-native';
+import React, { useState } from 'react';
+import { Pressable, StyleSheet, TextInputProps } from 'react-native';
 
-import {AppIcon, iconSize} from '../icons';
-import {Input} from '../ui';
-import {useAppTheme} from '../../theme';
+import { useAppTheme } from '../../theme';
+import { AppIcon, iconSize } from '../icons';
+import { Input } from '../ui';
 
 type PasswordInputProps = Omit<TextInputProps, 'secureTextEntry'> & {
   label: string;
@@ -17,7 +17,7 @@ export function PasswordInput({
   error,
   ...props
 }: PasswordInputProps): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
   const [visible, setVisible] = useState(false);
 
   return (
@@ -35,7 +35,8 @@ export function PasswordInput({
           accessibilityLabel={visible ? 'Hide password' : 'Show password'}
           hitSlop={4}
           onPress={() => setVisible(value => !value)}
-          style={styles.toggle}>
+          style={styles.toggle}
+        >
           <AppIcon
             name={visible ? 'eyeOff' : 'eye'}
             size={iconSize.sm}

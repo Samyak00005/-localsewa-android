@@ -1,73 +1,42 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import {chatApi} from '../api/chatApi';
-import {useAuth} from '../auth';
+import { chatApi } from '../api/chatApi';
+import { useAuth } from '../auth';
 
-export function useBookingChat(
-  bookingId: number,
-) {
-  const {token} = useAuth();
+export function useBookingChat(bookingId: number) {
+  const { token } = useAuth();
 
   return useQuery({
-    queryKey: [
-      'booking-chat',
-      bookingId,
-    ],
+    queryKey: ['booking-chat', bookingId],
     queryFn: () => {
       if (!token) {
-        throw new Error(
-          'Your session is unavailable. Sign in again.',
-        );
+        throw new Error('Your session is unavailable. Sign in again.');
       }
 
-      return chatApi.history(
-        bookingId,
-        token,
-      );
+      return chatApi.history(bookingId, token);
     },
-    enabled:
-      Boolean(token) &&
-      Number.isInteger(
-        bookingId,
-      ) &&
-      bookingId > 0,
+    enabled: Boolean(token) && Number.isInteger(bookingId) && bookingId > 0,
 
     // Lightweight foreground polling.
     // Backend has no message push channel in this contract.
     refetchInterval: 4000,
-    refetchIntervalInBackground:
-      false,
+    refetchIntervalInBackground: false,
     staleTime: 1500,
     retry: 1,
   });
 }
 
-export function useSendChatMessage(
-  bookingId: number,
-) {
-  const {token} = useAuth();
-  const queryClient =
-    useQueryClient();
+export function useSendChatMessage(bookingId: number) {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (
-      message: string,
-    ) => {
+    mutationFn: async (message: string) => {
       if (!token) {
-        throw new Error(
-          'Your session is unavailable. Sign in again.',
-        );
+        throw new Error('Your session is unavailable. Sign in again.');
       }
 
-      await chatApi.send(
-        bookingId,
-        message,
-        token,
-      );
+      await chatApi.send(bookingId, message, token);
     },
 
     // Mutation retry stays off because the active backend
@@ -76,10 +45,7 @@ export function useSendChatMessage(
 
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [
-          'booking-chat',
-          bookingId,
-        ],
+        queryKey: ['booking-chat', bookingId],
       });
     },
   });

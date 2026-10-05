@@ -1,11 +1,5 @@
-import React, {useMemo, useState} from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import {
   AppThemeMode,
@@ -16,10 +10,10 @@ import {
   typography,
 } from '../../theme';
 
-const options: Array<{label: string; mode: AppThemeMode}> = [
-  {label: 'Customer', mode: 'customer'},
-  {label: 'Provider', mode: 'providerStandard'},
-  {label: 'Localsewa+', mode: 'providerPremium'},
+const options: Array<{ label: string; mode: AppThemeMode }> = [
+  { label: 'Customer', mode: 'customer' },
+  { label: 'Provider', mode: 'providerStandard' },
+  { label: 'Localsewa+', mode: 'providerPremium' },
 ];
 
 export function FoundationScreen(): React.JSX.Element {
@@ -30,17 +24,18 @@ export function FoundationScreen(): React.JSX.Element {
 
   return (
     <ScrollView
-      style={[styles.screen, {backgroundColor: theme.colors.background}]}
-      contentContainerStyle={styles.content}>
-      <Text style={[styles.overline, {color: theme.colors.primary}]}>
+      style={[styles.screen, { backgroundColor: theme.colors.background }]}
+      contentContainerStyle={styles.content}
+    >
+      <Text style={[styles.overline, { color: theme.colors.primary }]}>
         LOCALSEWA ANDROID
       </Text>
 
-      <Text style={[styles.heading, {color: theme.colors.text}]}>
+      <Text style={[styles.heading, { color: theme.colors.text }]}>
         Foundation Design System
       </Text>
 
-      <Text style={[styles.description, {color: theme.colors.textSecondary}]}>
+      <Text style={[styles.description, { color: theme.colors.textSecondary }]}>
         Each role has five core brand colors: Text, Background, Primary,
         Secondary and Accent.
       </Text>
@@ -53,7 +48,7 @@ export function FoundationScreen(): React.JSX.Element {
             <Pressable
               key={option.mode}
               accessibilityRole="button"
-              accessibilityState={{selected}}
+              accessibilityState={{ selected }}
               onPress={() => setMode(option.mode)}
               style={[
                 styles.modeButton,
@@ -69,7 +64,8 @@ export function FoundationScreen(): React.JSX.Element {
                       : theme.colors.primary
                     : theme.colors.border,
                 },
-              ]}>
+              ]}
+            >
               <Text
                 style={[
                   styles.modeButtonText,
@@ -78,7 +74,8 @@ export function FoundationScreen(): React.JSX.Element {
                       ? theme.colors.onPrimary
                       : theme.colors.textSecondary,
                   },
-                ]}>
+                ]}
+              >
                 {option.label}
               </Text>
             </Pressable>
@@ -95,7 +92,8 @@ export function FoundationScreen(): React.JSX.Element {
             {
               backgroundColor: theme.colors.primary,
             },
-          ]}>
+          ]}
+        >
           <Text style={styles.heroEyebrow}>CURRENT MODE</Text>
           <Text style={styles.heroTitle}>
             {mode === 'customer' ? 'Customer' : 'Provider Standard'}
@@ -106,7 +104,7 @@ export function FoundationScreen(): React.JSX.Element {
         </View>
       )}
 
-      <Text style={[styles.sectionTitle, {color: theme.colors.text}]}>
+      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
         5-color brand palette
       </Text>
 
@@ -162,14 +160,17 @@ export function FoundationScreen(): React.JSX.Element {
                 theme.colors.premiumIvorySurface ?? theme.colors.surface,
               borderColor: theme.colors.accent,
             },
-          ]}>
-          <Text style={[styles.infoTitle, {color: theme.colors.text}]}>
+          ]}
+        >
+          <Text style={[styles.infoTitle, { color: theme.colors.text }]}>
             Premium visual language
           </Text>
-          <Text style={[styles.infoBody, {color: theme.colors.textSecondary}]}>
+          <Text
+            style={[styles.infoBody, { color: theme.colors.textSecondary }]}
+          >
             Deep emerald anchors the Localsewa identity, royal aubergine gives
-            the workspace a richer character, and champagne gold is reserved
-            for Localsewa+ entitlement, rank and premium emphasis.
+            the workspace a richer character, and champagne gold is reserved for
+            Localsewa+ entitlement, rank and premium emphasis.
           </Text>
         </View>
       ) : (
@@ -180,11 +181,14 @@ export function FoundationScreen(): React.JSX.Element {
               backgroundColor: theme.colors.surface,
               borderColor: theme.colors.border,
             },
-          ]}>
-          <Text style={[styles.infoTitle, {color: theme.colors.text}]}>
+          ]}
+        >
+          <Text style={[styles.infoTitle, { color: theme.colors.text }]}>
             Design rule
           </Text>
-          <Text style={[styles.infoBody, {color: theme.colors.textSecondary}]}>
+          <Text
+            style={[styles.infoBody, { color: theme.colors.textSecondary }]}
+          >
             Brand colors stay separate from semantic colors such as success,
             warning, error and information states.
           </Text>
@@ -207,11 +211,12 @@ function PremiumHero({
           backgroundColor: theme.colors.premiumSecondaryDeep,
           borderColor: theme.colors.accent,
         },
-      ]}>
+      ]}
+    >
       <View
         style={[
           styles.premiumTopLine,
-          {backgroundColor: theme.colors.accent},
+          { backgroundColor: theme.colors.accent },
         ]}
       />
 
@@ -224,13 +229,15 @@ function PremiumHero({
         <View
           style={[
             styles.premiumBadge,
-            {backgroundColor: theme.colors.premiumGoldSoft},
-          ]}>
+            { backgroundColor: theme.colors.premiumGoldSoft },
+          ]}
+        >
           <Text
             style={[
               styles.premiumBadgeText,
-              {color: theme.colors.premiumGoldStrong},
-            ]}>
+              { color: theme.colors.premiumGoldStrong },
+            ]}
+          >
             PLUS
           </Text>
         </View>
@@ -244,8 +251,9 @@ function PremiumHero({
       <View
         style={[
           styles.premiumIdentityStrip,
-          {backgroundColor: theme.colors.primary},
-        ]}>
+          { backgroundColor: theme.colors.primary },
+        ]}
+      >
         <View>
           <Text style={styles.premiumIdentityLabel}>IDENTITY</Text>
           <Text style={styles.premiumIdentityValue}>
@@ -254,10 +262,7 @@ function PremiumHero({
         </View>
 
         <View
-          style={[
-            styles.goldDot,
-            {backgroundColor: theme.colors.accent},
-          ]}
+          style={[styles.goldDot, { backgroundColor: theme.colors.accent }]}
         />
       </View>
     </View>
@@ -282,9 +287,9 @@ function TokenCard({
   textColor,
 }: TokenCardProps): React.JSX.Element {
   return (
-    <View style={[styles.tokenCard, {backgroundColor: surface, borderColor}]}>
-      <View style={[styles.swatch, {backgroundColor: color, borderColor}]} />
-      <Text style={[styles.tokenTitle, {color: textColor}]}>{title}</Text>
+    <View style={[styles.tokenCard, { backgroundColor: surface, borderColor }]}>
+      <View style={[styles.swatch, { backgroundColor: color, borderColor }]} />
+      <Text style={[styles.tokenTitle, { color: textColor }]}>{title}</Text>
       <Text style={styles.tokenValue}>{value}</Text>
     </View>
   );

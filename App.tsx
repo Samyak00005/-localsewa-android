@@ -1,15 +1,12 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
-import {StatusBar} from 'react-native';
-import {SafeAreaProvider} from 'react-native-safe-area-context';
-import {
-  QueryClient,
-  QueryClientProvider,
-} from '@tanstack/react-query';
+import { StatusBar } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import {AppShellProvider} from './src/app/AppShellProvider';
-import {AuthProvider} from './src/auth';
-import {RootNavigator} from './src/navigation/RootNavigator';
-import {ThemeProvider, useAppTheme} from './src/theme';
+import { AppShellProvider } from './src/app/AppShellProvider';
+import { AuthProvider } from './src/auth';
+import { RootNavigator } from './src/navigation/RootNavigator';
+import { ThemeProvider, useAppTheme } from './src/theme';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,7 +19,7 @@ const queryClient = new QueryClient({
 });
 
 function AppContent(): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
 
   return (
     <>

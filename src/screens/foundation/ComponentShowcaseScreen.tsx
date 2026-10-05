@@ -1,10 +1,6 @@
-import React, {useState} from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   AppSwitch,
@@ -27,40 +23,35 @@ import {
   useAppTheme,
 } from '../../theme';
 
-const modes: Array<{label: string; value: AppThemeMode}> = [
-  {label: 'Customer', value: 'customer'},
-  {label: 'Provider', value: 'providerStandard'},
-  {label: 'Localsewa+', value: 'providerPremium'},
+const modes: Array<{ label: string; value: AppThemeMode }> = [
+  { label: 'Customer', value: 'customer' },
+  { label: 'Provider', value: 'providerStandard' },
+  { label: 'Localsewa+', value: 'providerPremium' },
 ];
 
 export function ComponentShowcaseScreen(): React.JSX.Element {
-  const {mode, setMode, theme} = useAppTheme();
+  const { mode, setMode, theme } = useAppTheme();
   const [available, setAvailable] = useState(true);
 
   return (
     <SafeAreaView
-      style={[
-        styles.safeArea,
-        {backgroundColor: theme.colors.background},
-      ]}>
+      style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
+    >
       <ScrollView
         contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+      >
         <AppText
           variant="overline"
           color={theme.colors.primary}
-          style={styles.eyebrow}>
+          style={styles.eyebrow}
+        >
           LOCALSEWA ANDROID • v1.3.0
         </AppText>
 
-        <AppText variant="h1">
-          UI Component Foundation
-        </AppText>
+        <AppText variant="h1">UI Component Foundation</AppText>
 
-        <AppText
-          variant="body"
-          muted
-          style={styles.intro}>
+        <AppText variant="body" muted style={styles.intro}>
           Reusable React Native primitives driven by the active Customer,
           Provider or Localsewa+ theme.
         </AppText>
@@ -96,31 +87,15 @@ export function ComponentShowcaseScreen(): React.JSX.Element {
         <Section title="Buttons">
           <View style={styles.buttonStack}>
             <Button label="Primary action" fullWidth />
-            <Button
-              label="Secondary action"
-              variant="secondary"
-              fullWidth
-            />
-            <Button
-              label="Outline action"
-              variant="outline"
-              fullWidth
-            />
-            <Button
-              label="Ghost action"
-              variant="ghost"
-              fullWidth
-            />
+            <Button label="Secondary action" variant="secondary" fullWidth />
+            <Button label="Outline action" variant="outline" fullWidth />
+            <Button label="Ghost action" variant="ghost" fullWidth />
             <Button
               label="Destructive action"
               variant="destructive"
               fullWidth
             />
-            <Button
-              label="Loading"
-              loading
-              fullWidth
-            />
+            <Button label="Loading" loading fullWidth />
           </View>
         </Section>
 
@@ -165,9 +140,7 @@ export function ComponentShowcaseScreen(): React.JSX.Element {
               <IconButton
                 accessibilityLabel="More options"
                 icon={
-                  <AppText
-                    variant="title"
-                    color={theme.colors.primary}>
+                  <AppText variant="title" color={theme.colors.primary}>
                     •••
                   </AppText>
                 }
@@ -199,16 +172,8 @@ export function ComponentShowcaseScreen(): React.JSX.Element {
             <View style={styles.largeGap} />
 
             <Skeleton width="62%" height={20} />
-            <Skeleton
-              width="100%"
-              height={14}
-              style={styles.skeletonGap}
-            />
-            <Skeleton
-              width="84%"
-              height={14}
-              style={styles.skeletonGap}
-            />
+            <Skeleton width="100%" height={14} style={styles.skeletonGap} />
+            <Skeleton width="84%" height={14} style={styles.skeletonGap} />
           </Card>
         </Section>
 
@@ -221,14 +186,12 @@ export function ComponentShowcaseScreen(): React.JSX.Element {
                   ? theme.colors.accent
                   : theme.colors.border,
             },
-          ]}>
-          <AppText variant="title">
-            v1.3.0 Foundation
-          </AppText>
+          ]}
+        >
+          <AppText variant="title">v1.3.0 Foundation</AppText>
           <AppText variant="bodySmall" muted style={styles.stackGap}>
-            These primitives will be used to build Authentication,
-            Customer and Provider screens instead of styling each page
-            independently.
+            These primitives will be used to build Authentication, Customer and
+            Provider screens instead of styling each page independently.
           </AppText>
         </Card>
       </ScrollView>
@@ -239,7 +202,7 @@ export function ComponentShowcaseScreen(): React.JSX.Element {
 function Section({
   title,
   children,
-}: React.PropsWithChildren<{title: string}>): React.JSX.Element {
+}: React.PropsWithChildren<{ title: string }>): React.JSX.Element {
   return (
     <View style={styles.section}>
       <AppText variant="title" style={styles.sectionTitle}>

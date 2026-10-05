@@ -7,10 +7,7 @@ import {
   statusColors,
 } from './colors';
 
-export type AppThemeMode =
-  | 'customer'
-  | 'providerStandard'
-  | 'providerPremium';
+export type AppThemeMode = 'customer' | 'providerStandard' | 'providerPremium';
 
 type BrandPalette = {
   text: string;

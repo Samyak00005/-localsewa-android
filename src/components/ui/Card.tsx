@@ -1,12 +1,7 @@
-import React, {PropsWithChildren} from 'react';
-import {
-  StyleProp,
-  StyleSheet,
-  View,
-  ViewStyle,
-} from 'react-native';
+import React, { PropsWithChildren } from 'react';
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 
-import {radius, shadows, spacing, useAppTheme} from '../../theme';
+import { radius, shadows, spacing, useAppTheme } from '../../theme';
 
 type CardProps = PropsWithChildren<{
   variant?: 'surface' | 'muted';
@@ -20,7 +15,7 @@ export function Card({
   elevated = false,
   style,
 }: CardProps): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
 
   return (
     <View
@@ -35,7 +30,8 @@ export function Card({
         },
         elevated && shadows.sm,
         style,
-      ]}>
+      ]}
+    >
       {children}
     </View>
   );

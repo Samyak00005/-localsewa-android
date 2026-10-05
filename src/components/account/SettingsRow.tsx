@@ -1,9 +1,9 @@
 import React from 'react';
-import {Pressable, StyleSheet, View} from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import {AppIcon, AppIconName, iconSize} from '../icons';
-import {AppText} from '../ui';
-import {radius, spacing, useAppTheme} from '../../theme';
+import { radius, spacing, useAppTheme } from '../../theme';
+import { AppIcon, AppIconName, iconSize } from '../icons';
+import { AppText } from '../ui';
 
 type Props = {
   title: string;
@@ -22,31 +22,31 @@ export function SettingsRow({
   icon,
   onPress,
 }: Props): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
   const accent = danger ? theme.colors.error : theme.colors.primary;
 
   return (
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
-      style={({pressed}) => [
+      style={({ pressed }) => [
         styles.row,
         {
           borderColor: theme.colors.border,
           backgroundColor: theme.colors.surface,
           opacity: pressed ? 0.9 : 1,
         },
-      ]}>
+      ]}
+    >
       {icon ? (
         <View
           style={[
             styles.iconWrap,
             {
-              backgroundColor: danger
-                ? '#FEE2E2'
-                : theme.colors.secondary,
+              backgroundColor: danger ? '#FEE2E2' : theme.colors.secondary,
             },
-          ]}>
+          ]}
+        >
           <AppIcon name={icon} size={iconSize.sm} color={accent} />
         </View>
       ) : null}
@@ -54,7 +54,8 @@ export function SettingsRow({
       <View style={styles.copy}>
         <AppText
           variant="label"
-          color={danger ? theme.colors.error : theme.colors.text}>
+          color={danger ? theme.colors.error : theme.colors.text}
+        >
           {title}
         </AppText>
 
@@ -67,7 +68,12 @@ export function SettingsRow({
 
       <View style={styles.right}>
         {value ? (
-          <AppText variant="caption" muted numberOfLines={1} style={styles.value}>
+          <AppText
+            variant="caption"
+            muted
+            numberOfLines={1}
+            style={styles.value}
+          >
             {value}
           </AppText>
         ) : null}

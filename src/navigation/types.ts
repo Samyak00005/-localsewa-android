@@ -59,10 +59,6 @@ export type CustomerStackParamList = {
     bookingId: number;
   };
 
-  BookingReview: {
-    bookingId: number;
-  };
-
   EditCustomerProfile: undefined;
   DefaultLocation: undefined;
   AccountSecurity: undefined;

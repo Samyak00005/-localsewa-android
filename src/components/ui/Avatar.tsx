@@ -1,13 +1,8 @@
 import React from 'react';
-import {
-  Image,
-  ImageSourcePropType,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Image, ImageSourcePropType, StyleSheet, View } from 'react-native';
 
-import {useAppTheme} from '../../theme';
-import {AppText} from './AppText';
+import { useAppTheme } from '../../theme';
+import { AppText } from './AppText';
 
 type AvatarSize = 'sm' | 'md' | 'lg';
 
@@ -28,7 +23,7 @@ export function Avatar({
   initials = 'LS',
   size = 'md',
 }: AvatarProps): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
   const dimension = sizes[size];
 
   if (source) {
@@ -55,10 +50,12 @@ export function Avatar({
           backgroundColor: theme.colors.secondary,
           borderColor: theme.colors.border,
         },
-      ]}>
+      ]}
+    >
       <AppText
         variant={size === 'lg' ? 'title' : 'label'}
-        color={theme.colors.primary}>
+        color={theme.colors.primary}
+      >
         {initials.slice(0, 2).toUpperCase()}
       </AppText>
     </View>

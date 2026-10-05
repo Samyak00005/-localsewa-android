@@ -1,7 +1,4 @@
-import {
-  ApiError,
-  apiRequest,
-} from './apiClient';
+import { ApiError, apiRequest } from './apiClient';
 
 export type AuthUser = {
   id: number;
@@ -34,10 +31,9 @@ export type RegistrationDraft = {
   password: string;
 };
 
-export type RegistrationPayload =
-  RegistrationDraft & {
-    registration_otp: string;
-  };
+export type RegistrationPayload = RegistrationDraft & {
+  registration_otp: string;
+};
 
 function validateUser(user: AuthUser): AuthUser {
   if (
@@ -59,9 +55,7 @@ function validateUser(user: AuthUser): AuthUser {
   };
 }
 
-function validateAuth(
-  result: AuthResult,
-): AuthResult {
+function validateAuth(result: AuthResult): AuthResult {
   const user = validateUser(result.user);
 
   if (
@@ -80,73 +74,51 @@ function validateAuth(
 }
 
 export const authApi = {
-  checkAccount: (
-    identifier: string,
-  ) =>
+  checkAccount: (identifier: string) =>
     apiRequest<{
       success: true;
       account_exists: boolean;
       identifier: string;
     }>('/api/auth/account/check', {
       method: 'POST',
-      body: {identifier},
+      body: { identifier },
     }),
 
-  login: async (
-    identifier: string,
-    password: string,
-  ) =>
+  login: async (identifier: string, password: string) =>
     validateAuth(
-      await apiRequest<AuthResult>(
-        '/api/auth/login',
-        {
-          method: 'POST',
-          body: {identifier, password},
-        },
-      ),
+      await apiRequest<AuthResult>('/api/auth/login', {
+        method: 'POST',
+        body: { identifier, password },
+      }),
     ),
 
   registrationOtp: (
-    details: Pick<
-      RegistrationDraft,
-      'full_name' | 'phone' | 'email'
-    >,
+    details: Pick<RegistrationDraft, 'full_name' | 'phone' | 'email'>,
   ) =>
-    apiRequest<OtpResult>(
-      '/api/auth/registration/otp/request',
-      {
-        method: 'POST',
-        body: {
-          ...details,
-          intent: 'customer_signup',
-        },
+    apiRequest<OtpResult>('/api/auth/registration/otp/request', {
+      method: 'POST',
+      body: {
+        ...details,
+        intent: 'customer_signup',
       },
-    ),
+    }),
 
-  register: async (
-    details: RegistrationPayload,
-  ) =>
+  register: async (details: RegistrationPayload) =>
     validateAuth(
-      await apiRequest<AuthResult>(
-        '/api/auth/customer/register',
-        {
-          method: 'POST',
-          body: details,
-        },
-      ),
+      await apiRequest<AuthResult>('/api/auth/customer/register', {
+        method: 'POST',
+        body: details,
+      }),
     ),
 
   passwordOtp: (email: string) =>
-    apiRequest<OtpResult>(
-      '/api/auth/password/otp/request',
-      {
-        method: 'POST',
-        body: {
-          purpose: 'forgot',
-          email,
-        },
+    apiRequest<OtpResult>('/api/auth/password/otp/request', {
+      method: 'POST',
+      body: {
+        purpose: 'forgot',
+        email,
       },
-    ),
+    }),
 
   resetPassword: (
     email: string,
@@ -173,7 +145,7 @@ export const authApi = {
       success: true;
       user: AuthUser;
       expires_at: string | null;
-    }>('/api/auth/session', {token});
+    }>('/api/auth/session', { token });
 
     return {
       ...result,

@@ -1,75 +1,32 @@
-import React, {
-  useState,
-} from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
-import {
-  errorMessage,
-} from '../../api/apiClient';
-import {
-  locationApi,
-} from '../../api/locationApi';
-import {
-  AlertBanner,
-  AppText,
-  Button,
-  Card,
-  Input,
-} from '../../components/ui';
+import { errorMessage } from '../../api/apiClient';
+import { locationApi } from '../../api/locationApi';
+import { AlertBanner, AppText, Button, Card, Input } from '../../components/ui';
 import {
   useCustomerProfile,
   useUpdateDefaultLocation,
 } from '../../hooks/useAccount';
-import {
-  VerifiedLocation,
-} from '../../types/location';
-import {
-  layout,
-  spacing,
-  useAppTheme,
-} from '../../theme';
+import { layout, spacing, useAppTheme } from '../../theme';
+import { VerifiedLocation } from '../../types/location';
 
 export function DefaultLocationScreen(): React.JSX.Element {
-  const {theme} =
-    useAppTheme();
+  const { theme } = useAppTheme();
 
-  const {
-    data: profile,
-  } = useCustomerProfile();
+  const { data: profile } = useCustomerProfile();
 
-  const update =
-    useUpdateDefaultLocation();
+  const update = useUpdateDefaultLocation();
 
-  const [address, setAddress] =
-    useState(
-      profile?.location ??
-        '',
-    );
+  const [address, setAddress] = useState(profile?.location ?? '');
 
-  const [
-    verified,
-    setVerified,
-  ] =
-    useState<VerifiedLocation | null>(
-      null,
-    );
+  const [verified, setVerified] = useState<VerifiedLocation | null>(null);
 
-  const [
-    verifying,
-    setVerifying,
-  ] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
-  const [message, setMessage] =
-    useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
-  const [screenError, setScreenError] =
-    useState<string | null>(
-      null,
-    );
+  const [screenError, setScreenError] = useState<string | null>(null);
 
   async function verify() {
     setMessage(null);
@@ -77,26 +34,13 @@ export function DefaultLocationScreen(): React.JSX.Element {
     setVerifying(true);
 
     try {
-      const result =
-        await locationApi.validateAddress(
-          address,
-        );
+      const result = await locationApi.validateAddress(address);
 
-      setAddress(
-        result.address,
-      );
-      setVerified(
-        result,
-      );
-    } catch (
-      verificationError
-    ) {
+      setAddress(result.address);
+      setVerified(result);
+    } catch (verificationError) {
       setVerified(null);
-      setScreenError(
-        errorMessage(
-          verificationError,
-        ),
-      );
+      setScreenError(errorMessage(verificationError));
     } finally {
       setVerifying(false);
     }
@@ -104,9 +48,7 @@ export function DefaultLocationScreen(): React.JSX.Element {
 
   async function save() {
     if (!verified) {
-      setScreenError(
-        'Verify the address first.',
-      );
+      setScreenError('Verify the address first.');
       return;
     }
 
@@ -114,58 +56,37 @@ export function DefaultLocationScreen(): React.JSX.Element {
     setMessage(null);
 
     try {
-      await update.mutateAsync(
-        verified,
-      );
+      await update.mutateAsync(verified);
 
-      setMessage(
-        'Default location saved.',
-      );
-    } catch (
-      mutationError
-    ) {
-      setScreenError(
-        errorMessage(
-          mutationError,
-        ),
-      );
+      setMessage('Default location saved.');
+    } catch (mutationError) {
+      setScreenError(errorMessage(mutationError));
     }
   }
 
   return (
     <ScrollView
       style={{
-        backgroundColor:
-          theme.colors.background,
+        backgroundColor: theme.colors.background,
       }}
-      contentContainerStyle={
-        styles.content
-      }
-      keyboardShouldPersistTaps="handled">
-      <AppText variant="h1">
-        Default location
-      </AppText>
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
+      <AppText variant="h1">Default location</AppText>
 
-      <AppText
-        variant="body"
-        muted
-        style={styles.subtitle}>
+      <AppText variant="body" muted style={styles.subtitle}>
         Save a verified service address for faster future bookings.
       </AppText>
 
       {message ? (
         <View style={styles.section}>
-          <AlertBanner variant="success">
-            {message}
-          </AlertBanner>
+          <AlertBanner variant="success">{message}</AlertBanner>
         </View>
       ) : null}
 
       {screenError ? (
         <View style={styles.section}>
-          <AlertBanner variant="error">
-            {screenError}
-          </AlertBanner>
+          <AlertBanner variant="error">{screenError}</AlertBanner>
         </View>
       ) : null}
 
@@ -186,11 +107,7 @@ export function DefaultLocationScreen(): React.JSX.Element {
           />
 
           <Button
-            label={
-              verified
-                ? 'Verify again'
-                : 'Verify address'
-            }
+            label={verified ? 'Verify again' : 'Verify address'}
             variant="outline"
             loading={verifying}
             onPress={verify}
@@ -206,9 +123,7 @@ export function DefaultLocationScreen(): React.JSX.Element {
           <Button
             label="Save default location"
             disabled={!verified}
-            loading={
-              update.isPending
-            }
+            loading={update.isPending}
             onPress={save}
             fullWidth
           />
@@ -216,14 +131,9 @@ export function DefaultLocationScreen(): React.JSX.Element {
       </Card>
 
       <Card style={styles.infoCard}>
-        <AppText variant="label">
-          Location integrity
-        </AppText>
+        <AppText variant="label">Location integrity</AppText>
 
-        <AppText
-          variant="bodySmall"
-          muted
-          style={styles.subtitle}>
+        <AppText variant="bodySmall" muted style={styles.subtitle}>
           Coordinates are saved from Localsewa's verification proof rather than
           being guessed from the text you entered.
         </AppText>
@@ -234,34 +144,27 @@ export function DefaultLocationScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal:
-      layout.screenHorizontal,
+    paddingHorizontal: layout.screenHorizontal,
     paddingTop: spacing[6],
-    paddingBottom:
-      spacing[12],
+    paddingBottom: spacing[12],
   },
   subtitle: {
-    marginTop:
-      spacing[2],
+    marginTop: spacing[2],
   },
   section: {
-    marginTop:
-      spacing[4],
+    marginTop: spacing[4],
   },
   card: {
-    marginTop:
-      spacing[6],
+    marginTop: spacing[6],
   },
   form: {
     gap: spacing[4],
   },
   address: {
     minHeight: 96,
-    textAlignVertical:
-      'top',
+    textAlignVertical: 'top',
   },
   infoCard: {
-    marginTop:
-      spacing[4],
+    marginTop: spacing[4],
   },
 });

@@ -1,11 +1,8 @@
 import React from 'react';
-import {StyleSheet, View} from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import {
-  Card,
-  Skeleton,
-} from '../ui';
-import {spacing} from '../../theme';
+import { spacing } from '../../theme';
+import { Card, Skeleton } from '../ui';
 
 export function ProviderListSkeleton(): React.JSX.Element {
   return (
@@ -13,27 +10,12 @@ export function ProviderListSkeleton(): React.JSX.Element {
       {[0, 1, 2].map(index => (
         <Card key={index}>
           <View style={styles.row}>
-            <Skeleton
-              width={72}
-              height={72}
-              radiusValue={16}
-            />
+            <Skeleton width={72} height={72} radiusValue={16} />
 
             <View style={styles.copy}>
-              <Skeleton
-                width="70%"
-                height={18}
-              />
-              <Skeleton
-                width="48%"
-                height={14}
-                style={styles.gap}
-              />
-              <Skeleton
-                width="85%"
-                height={12}
-                style={styles.gap}
-              />
+              <Skeleton width="70%" height={18} />
+              <Skeleton width="48%" height={14} style={styles.gap} />
+              <Skeleton width="85%" height={12} style={styles.gap} />
             </View>
           </View>
         </Card>

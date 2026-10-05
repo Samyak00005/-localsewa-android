@@ -195,7 +195,8 @@ export function HomeServiceCard({
 const styles =
   StyleSheet.create({
     card: {
-      width: '48.5%',
+      flex: 1,
+      minWidth: 0,
       minHeight: 132,
       borderRadius:
         radius.lg,

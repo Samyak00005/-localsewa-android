@@ -1,0 +1,10 @@
+v1.10.19 restores these files intentionally:
+
+src/screens/customer/ChangePasswordScreen.tsx
+src/screens/customer/SetPasswordScreen.tsx
+src/screens/customer/ChangeEmailScreen.tsx
+
+DO NOT DELETE THEM.
+
+They are compatibility modules only. The Account Security UI continues to use
+the popup flows from v1.10.18.

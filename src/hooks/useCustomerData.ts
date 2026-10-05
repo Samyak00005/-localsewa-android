@@ -1,43 +1,22 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import {
-  bookingApi,
-} from '../api/bookingApi';
-import {
-  categoryApi,
-} from '../api/categoryApi';
-import {
-  customerApi,
-} from '../api/customerApi';
-import {
-  providerApi,
-  ProviderListOptions,
-} from '../api/providerApi';
-import {useAuth} from '../auth';
-import {
-  VerifiedLocation,
-} from '../types/location';
+import { bookingApi } from '../api/bookingApi';
+import { categoryApi } from '../api/categoryApi';
+import { customerApi } from '../api/customerApi';
+import { providerApi, ProviderListOptions } from '../api/providerApi';
+import { useAuth } from '../auth';
+import { VerifiedLocation } from '../types/location';
 
 export function useCategories() {
   return useQuery({
-    queryKey: [
-      'categories',
-    ],
-    queryFn:
-      categoryApi.list,
-    staleTime:
-      5 * 60_000,
+    queryKey: ['categories'],
+    queryFn: categoryApi.list,
+    staleTime: 5 * 60_000,
   });
 }
 
-export function useProviders(
-  options: ProviderListOptions = {},
-) {
-  const {token} = useAuth();
+export function useProviders(options: ProviderListOptions = {}) {
+  const { token } = useAuth();
 
   return useQuery({
     queryKey: [
@@ -48,242 +27,152 @@ export function useProviders(
       options.longitude ?? null,
       options.limit ?? 150,
     ],
-    queryFn: () =>
-      providerApi.list(
-        token,
-        options,
-      ),
-    staleTime:
-      60_000,
+    queryFn: () => providerApi.list(token, options),
+    staleTime: 60_000,
   });
 }
 
-export function useProviderDetails(
-  providerId: string,
-) {
-  const {token} = useAuth();
+export function useProviderDetails(providerId: string) {
+  const { token } = useAuth();
 
   return useQuery({
-    queryKey: [
-      'provider',
-      providerId,
-    ],
-    queryFn: () =>
-      providerApi.details(
-        providerId,
-        token,
-      ),
-    enabled:
-      Boolean(providerId),
+    queryKey: ['provider', providerId],
+    queryFn: () => providerApi.details(providerId, token),
+    enabled: Boolean(providerId),
   });
 }
 
 export function useSavedProviders() {
-  const {
-    token,
-    user,
-  } = useAuth();
+  const { token, user } = useAuth();
 
   return useQuery({
-    queryKey: [
-      'saved-providers',
-      user?.id ??
-        'guest',
-    ],
+    queryKey: ['saved-providers', user?.id ?? 'guest'],
     queryFn: () => {
       if (!token) {
-        return Promise.resolve(
-          [],
-        );
+        return Promise.resolve([]);
       }
 
-      return customerApi.savedProviders(
-        token,
-      );
+      return customerApi.savedProviders(token);
     },
-    enabled:
-      Boolean(
-        token &&
-          user?.id,
-      ),
-    staleTime:
-      30_000,
+    enabled: Boolean(token && user?.id),
+    staleTime: 30_000,
   });
 }
 
 export function useSaveProvider() {
-  const {
-    token,
-    user,
-  } = useAuth();
+  const { token, user } = useAuth();
 
-  const queryClient =
-    useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (
-      providerRef: string,
-    ) => {
+    mutationFn: async (providerRef: string) => {
       if (!token) {
-        throw new Error(
-          'Your session is unavailable. Sign in again.',
-        );
+        throw new Error('Your session is unavailable. Sign in again.');
       }
 
-      await customerApi.saveProvider(
-        providerRef,
-        token,
-      );
+      await customerApi.saveProvider(providerRef, token);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [
-          'saved-providers',
-          user?.id ??
-            'guest',
-        ],
+        queryKey: ['saved-providers', user?.id ?? 'guest'],
       });
     },
   });
 }
 
 export function useRemoveSavedProvider() {
-  const {
-    token,
-    user,
-  } = useAuth();
+  const { token, user } = useAuth();
 
-  const queryClient =
-    useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (
-      providerRef: string,
-    ) => {
+    mutationFn: async (providerRef: string) => {
       if (!token) {
-        throw new Error(
-          'Your session is unavailable. Sign in again.',
-        );
+        throw new Error('Your session is unavailable. Sign in again.');
       }
 
-      await customerApi.removeSavedProvider(
-        providerRef,
-        token,
-      );
+      await customerApi.removeSavedProvider(providerRef, token);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [
-          'saved-providers',
-          user?.id ??
-            'guest',
-        ],
+        queryKey: ['saved-providers', user?.id ?? 'guest'],
       });
     },
   });
 }
 
 export function useCustomerBookings() {
-  const {token} = useAuth();
+  const { token } = useAuth();
 
   return useQuery({
-    queryKey: [
-      'customer-bookings',
-    ],
+    queryKey: ['customer-bookings'],
     queryFn: () => {
       if (!token) {
-        return Promise.resolve(
-          [],
-        );
+        return Promise.resolve([]);
       }
 
-      return bookingApi.listCustomer(
-        token,
-      );
+      return bookingApi.listCustomer(token);
     },
-    enabled:
-      Boolean(token),
-    staleTime:
-      30_000,
+    enabled: Boolean(token),
+    staleTime: 30_000,
   });
 }
 
 export function useCreateBooking() {
-  const {token} = useAuth();
+  const { token } = useAuth();
 
-  const queryClient =
-    useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (
-      input: {
-        providerId: string;
-        providerServiceId?: number;
-        customServiceName?: string;
-        bookingDate: string;
-        bookingTime: string;
-        note?: string;
-        location: VerifiedLocation;
-        requestId: string;
-      },
-    ) => {
+    mutationFn: async (input: {
+      providerId: string;
+      providerServiceId?: number;
+      customServiceName?: string;
+      bookingDate: string;
+      bookingTime: string;
+      note?: string;
+      location: VerifiedLocation;
+      requestId: string;
+    }) => {
       if (!token) {
-        throw new Error(
-          'Your session is unavailable. Sign in again.',
-        );
+        throw new Error('Your session is unavailable. Sign in again.');
       }
 
-      return bookingApi.create(
-        input,
-        token,
-      );
+      return bookingApi.create(input, token);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [
-          'customer-bookings',
-        ],
+        queryKey: ['customer-bookings'],
       });
     },
   });
 }
 
 export function useCancelBooking() {
-  const {token} = useAuth();
+  const { token } = useAuth();
 
-  const queryClient =
-    useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (
-      bookingId: number,
-    ) => {
+    mutationFn: async (bookingId: number) => {
       if (!token) {
-        throw new Error(
-          'Your session is unavailable. Sign in again.',
-        );
+        throw new Error('Your session is unavailable. Sign in again.');
       }
 
-      await bookingApi.cancel(
-        bookingId,
-        token,
-      );
+      await bookingApi.cancel(bookingId, token);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [
-          'customer-bookings',
-        ],
+        queryKey: ['customer-bookings'],
       });
     },
   });
 }
 
 export function useReviewBooking() {
-  const {token} = useAuth();
+  const { token } = useAuth();
 
-  const queryClient =
-    useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
@@ -296,39 +185,24 @@ export function useReviewBooking() {
       comment: string;
     }) => {
       if (!token) {
-        throw new Error(
-          'Your session is unavailable. Sign in again.',
-        );
+        throw new Error('Your session is unavailable. Sign in again.');
       }
 
-      await bookingApi.review(
-        bookingId,
-        rating,
-        comment,
-        token,
-      );
+      await bookingApi.review(bookingId, rating, comment, token);
     },
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: [
-            'customer-bookings',
-          ],
+          queryKey: ['customer-bookings'],
         }),
         queryClient.invalidateQueries({
-          queryKey: [
-            'providers',
-          ],
+          queryKey: ['providers'],
         }),
         queryClient.invalidateQueries({
-          queryKey: [
-            'provider',
-          ],
+          queryKey: ['provider'],
         }),
         queryClient.invalidateQueries({
-          queryKey: [
-            'home-review-highlights',
-          ],
+          queryKey: ['home-review-highlights'],
         }),
       ]);
     },

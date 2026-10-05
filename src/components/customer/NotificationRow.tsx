@@ -1,10 +1,10 @@
 import React from 'react';
-import {Pressable, StyleSheet, View} from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import {AppIcon, AppIconName, iconSize} from '../icons';
-import {AppText} from '../ui';
-import {radius, spacing, useAppTheme} from '../../theme';
-import {AppNotification} from '../../types/notification';
+import { radius, spacing, useAppTheme } from '../../theme';
+import { AppNotification } from '../../types/notification';
+import { AppIcon, AppIconName, iconSize } from '../icons';
+import { AppText } from '../ui';
 
 type Props = {
   notification: AppNotification;
@@ -41,13 +41,13 @@ export function NotificationRow({
   notification,
   onPress,
 }: Props): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
 
   return (
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
-      style={({pressed}) => [
+      style={({ pressed }) => [
         styles.row,
         {
           backgroundColor: notification.read
@@ -58,7 +58,8 @@ export function NotificationRow({
             : theme.colors.primary,
           opacity: pressed ? 0.9 : 1,
         },
-      ]}>
+      ]}
+    >
       <View
         style={[
           styles.iconWrap,
@@ -67,14 +68,13 @@ export function NotificationRow({
               ? theme.colors.surfaceMuted
               : theme.colors.surface,
           },
-        ]}>
+        ]}
+      >
         <AppIcon
           name={notificationIcon(notification.type)}
           size={iconSize.sm}
           color={
-            notification.read
-              ? theme.colors.textMuted
-              : theme.colors.primary
+            notification.read ? theme.colors.textMuted : theme.colors.primary
           }
         />
       </View>
@@ -97,7 +97,8 @@ export function NotificationRow({
             variant="bodySmall"
             muted
             numberOfLines={3}
-            style={styles.message}>
+            style={styles.message}
+          >
             {notification.message}
           </AppText>
         ) : null}

@@ -7,14 +7,11 @@ import React, {
   useState,
 } from 'react';
 
-import {useAuth} from '../auth';
-import {ProviderTier} from '../types/roles';
-import {useAppTheme} from '../theme';
+import { useAuth } from '../auth';
+import { useAppTheme } from '../theme';
+import { ProviderTier } from '../types/roles';
 
-export type AppArea =
-  | 'auth'
-  | 'customer'
-  | 'provider';
+export type AppArea = 'auth' | 'customer' | 'provider';
 
 type AppShellContextValue = {
   area: AppArea;
@@ -24,51 +21,35 @@ type AppShellContextValue = {
   enterProvider: () => boolean;
 };
 
-const AppShellContext =
-  createContext<AppShellContextValue>({
-    area: 'auth',
-    providerTier: 'STANDARD',
-    canUseProvider: false,
-    enterCustomer: () => undefined,
-    enterProvider: () => false,
-  });
+const AppShellContext = createContext<AppShellContextValue>({
+  area: 'auth',
+  providerTier: 'STANDARD',
+  canUseProvider: false,
+  enterCustomer: () => undefined,
+  enterProvider: () => false,
+});
 
-function hasRole(
-  roles: string[] | undefined,
-  role: string,
-): boolean {
+function hasRole(roles: string[] | undefined, role: string): boolean {
   return Boolean(
-    roles?.some(
-      value =>
-        value.toUpperCase() ===
-        role.toUpperCase(),
-    ),
+    roles?.some(value => value.toUpperCase() === role.toUpperCase()),
   );
 }
 
 export function AppShellProvider({
   children,
 }: PropsWithChildren): React.JSX.Element {
-  const {user, restoring} = useAuth();
-  const [area, setArea] =
-    useState<AppArea>('auth');
+  const { user, restoring } = useAuth();
+  const [area, setArea] = useState<AppArea>('auth');
 
   // Premium entitlement is not connected in v1.6.0.
   // Authenticated Providers use STANDARD until subscription integration.
-  const providerTier: ProviderTier =
-    'STANDARD';
+  const providerTier: ProviderTier = 'STANDARD';
 
-  const {setMode} = useAppTheme();
+  const { setMode } = useAppTheme();
 
-  const canUseProvider = hasRole(
-    user?.roles,
-    'PROVIDER',
-  );
+  const canUseProvider = hasRole(user?.roles, 'PROVIDER');
 
-  const canUseCustomer = hasRole(
-    user?.roles,
-    'CUSTOMER',
-  );
+  const canUseCustomer = hasRole(user?.roles, 'CUSTOMER');
 
   useEffect(() => {
     if (restoring) {
@@ -81,17 +62,11 @@ export function AppShellProvider({
     }
 
     // Keep a valid selected workspace after session refresh.
-    if (
-      area === 'provider' &&
-      canUseProvider
-    ) {
+    if (area === 'provider' && canUseProvider) {
       return;
     }
 
-    if (
-      area === 'customer' &&
-      (canUseCustomer || !canUseProvider)
-    ) {
+    if (area === 'customer' && (canUseCustomer || !canUseProvider)) {
       return;
     }
 
@@ -108,13 +83,7 @@ export function AppShellProvider({
 
     // Defensive fallback for legacy accounts with no normalized role.
     setArea('customer');
-  }, [
-    area,
-    canUseCustomer,
-    canUseProvider,
-    restoring,
-    user,
-  ]);
+  }, [area, canUseCustomer, canUseProvider, restoring, user]);
 
   useEffect(() => {
     if (area === 'provider') {
@@ -125,42 +94,32 @@ export function AppShellProvider({
     setMode('customer');
   }, [area, setMode]);
 
-  const value =
-    useMemo<AppShellContextValue>(
-      () => ({
-        area,
-        providerTier,
-        canUseProvider,
+  const value = useMemo<AppShellContextValue>(
+    () => ({
+      area,
+      providerTier,
+      canUseProvider,
 
-        enterCustomer: () => {
-          if (user) {
-            setArea('customer');
-          }
-        },
+      enterCustomer: () => {
+        if (user) {
+          setArea('customer');
+        }
+      },
 
-        enterProvider: () => {
-          if (
-            !user ||
-            !canUseProvider
-          ) {
-            return false;
-          }
+      enterProvider: () => {
+        if (!user || !canUseProvider) {
+          return false;
+        }
 
-          setArea('provider');
-          return true;
-        },
-      }),
-      [
-        area,
-        canUseProvider,
-        providerTier,
-        user,
-      ],
-    );
+        setArea('provider');
+        return true;
+      },
+    }),
+    [area, canUseProvider, providerTier, user],
+  );
 
   return (
-    <AppShellContext.Provider
-      value={value}>
+    <AppShellContext.Provider value={value}>
       {children}
     </AppShellContext.Provider>
   );

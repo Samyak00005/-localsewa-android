@@ -1,0 +1,7 @@
+Delete these obsolete files in Android Studio Project view:
+
+src/screens/customer/ChangePasswordScreen.tsx
+src/screens/customer/SetPasswordScreen.tsx
+src/screens/customer/ChangeEmailScreen.tsx
+
+Their routes, imports and exports are removed by v1.10.18.

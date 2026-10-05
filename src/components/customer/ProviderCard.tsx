@@ -1,10 +1,10 @@
 import React from 'react';
-import {Image, Pressable, StyleSheet, View} from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 
-import {AppIcon, iconSize} from '../icons';
-import {Provider} from '../../types/provider';
-import {radius, spacing, useAppTheme} from '../../theme';
-import {AppText, Avatar, Badge, Card} from '../ui';
+import { spacing, useAppTheme } from '../../theme';
+import { Provider } from '../../types/provider';
+import { AppIcon, iconSize } from '../icons';
+import { AppText, Avatar, Badge, Card } from '../ui';
 
 type ProviderCardProps = {
   provider: Provider;
@@ -23,26 +23,23 @@ export function ProviderCard({
   provider,
   onPress,
 }: ProviderCardProps): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
   const price = money(provider.startingPrice);
 
   return (
     <Pressable accessibilityRole="button" onPress={onPress}>
-      {({pressed}) => (
-        <Card style={[styles.card, {opacity: pressed ? 0.92 : 1}]}>
+      {({ pressed }) => (
+        <Card style={[styles.card, { opacity: pressed ? 0.92 : 1 }]}>
           <View style={styles.row}>
             {provider.imageUrl ? (
-              <Image source={{uri: provider.imageUrl}} style={styles.image} />
+              <Image source={{ uri: provider.imageUrl }} style={styles.image} />
             ) : (
               <Avatar initials={provider.name} size="lg" />
             )}
 
             <View style={styles.copy}>
               <View style={styles.titleRow}>
-                <AppText
-                  variant="title"
-                  numberOfLines={1}
-                  style={styles.name}>
+                <AppText variant="title" numberOfLines={1} style={styles.name}>
                   {provider.name}
                 </AppText>
 
@@ -54,7 +51,8 @@ export function ProviderCard({
               <AppText
                 variant="bodySmall"
                 color={theme.colors.primary}
-                numberOfLines={1}>
+                numberOfLines={1}
+              >
                 {provider.category}
               </AppText>
 
@@ -62,7 +60,8 @@ export function ProviderCard({
                 variant="caption"
                 muted
                 numberOfLines={1}
-                style={styles.meta}>
+                style={styles.meta}
+              >
                 {provider.location}
               </AppText>
 
@@ -101,8 +100,7 @@ export function ProviderCard({
                       </AppText>
                     </>
                   ) : (
-                    <Badge
-                      variant={provider.available ? 'success' : 'default'}>
+                    <Badge variant={provider.available ? 'success' : 'default'}>
                       {provider.available ? 'AVAILABLE' : 'UNAVAILABLE'}
                     </Badge>
                   )}
@@ -128,7 +126,7 @@ const styles = StyleSheet.create({
   image: {
     width: 72,
     height: 72,
-    borderRadius: radius.lg,
+    borderRadius: 36,
   },
   copy: {
     flex: 1,

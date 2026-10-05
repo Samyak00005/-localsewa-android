@@ -8,9 +8,9 @@ import {
   ViewStyle,
 } from 'react-native';
 
-import {AppIcon, AppIconName, iconSize} from '../icons';
-import {layout, radius, spacing, useAppTheme} from '../../theme';
-import {AppText} from './AppText';
+import { layout, radius, spacing, useAppTheme } from '../../theme';
+import { AppIcon, AppIconName, iconSize } from '../icons';
+import { AppText } from './AppText';
 
 export type ButtonVariant =
   | 'primary'
@@ -40,7 +40,7 @@ export function Button({
   iconPosition = 'left',
   ...props
 }: ButtonProps): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
   const isDisabled = disabled || loading;
   const palette = getButtonPalette(variant, theme.colors);
 
@@ -48,9 +48,9 @@ export function Button({
     <Pressable
       {...props}
       accessibilityRole="button"
-      accessibilityState={{disabled: isDisabled, busy: loading}}
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
       disabled={isDisabled}
-      style={({pressed}) => [
+      style={({ pressed }) => [
         styles.base,
         fullWidth && styles.fullWidth,
         {
@@ -62,7 +62,8 @@ export function Button({
           opacity: isDisabled ? 0.5 : 1,
         },
         style,
-      ]}>
+      ]}
+    >
       {loading ? (
         <ActivityIndicator size="small" color={palette.text} />
       ) : (

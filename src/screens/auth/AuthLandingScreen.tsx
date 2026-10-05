@@ -1,45 +1,26 @@
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
-import {
-  Image,
-  StyleSheet,
-  View,
-} from 'react-native';
-import {
-  NativeStackScreenProps,
-} from '@react-navigation/native-stack';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import { Image, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {
-  AppText,
-  Button,
-} from '../../components/ui';
-import {
-  layout,
-  radius,
-  spacing,
-  useAppTheme,
-} from '../../theme';
-import {AuthStackParamList} from '../../navigation/types';
+import { AppText, Button } from '../../components/ui';
+import { AuthStackParamList } from '../../navigation/types';
+import { layout, radius, spacing, useAppTheme } from '../../theme';
 
-type Props = NativeStackScreenProps<
-  AuthStackParamList,
-  'AuthLanding'
->;
+type Props = NativeStackScreenProps<AuthStackParamList, 'AuthLanding'>;
 
-export function AuthLandingScreen({
-  navigation,
-}: Props): React.JSX.Element {
-  const {theme} = useAppTheme();
+export function AuthLandingScreen({ navigation }: Props): React.JSX.Element {
+  const { theme } = useAppTheme();
 
   return (
     <SafeAreaView
       style={[
         styles.safeArea,
         {
-          backgroundColor:
-            theme.colors.background,
+          backgroundColor: theme.colors.background,
         },
-      ]}>
+      ]}
+    >
       <View style={styles.content}>
         <View style={styles.hero}>
           <Image
@@ -48,16 +29,11 @@ export function AuthLandingScreen({
             resizeMode="contain"
           />
 
-          <AppText
-            variant="h1"
-            style={styles.title}>
+          <AppText variant="h1" style={styles.title}>
             Local help, without the hassle.
           </AppText>
 
-          <AppText
-            variant="body"
-            muted
-            style={styles.description}>
+          <AppText variant="body" muted style={styles.description}>
             Discover trusted local professionals, manage bookings and stay
             connected from one place.
           </AppText>
@@ -66,29 +42,18 @@ export function AuthLandingScreen({
         <View style={styles.actions}>
           <Button
             label="Sign in"
-            onPress={() =>
-              navigation.navigate(
-                'Login',
-              )
-            }
+            onPress={() => navigation.navigate('Login')}
             fullWidth
           />
 
           <Button
             label="Create an account"
             variant="outline"
-            onPress={() =>
-              navigation.navigate(
-                'Register',
-              )
-            }
+            onPress={() => navigation.navigate('Register')}
             fullWidth
           />
 
-          <AppText
-            variant="caption"
-            muted
-            style={styles.legal}>
+          <AppText variant="caption" muted style={styles.legal}>
             By continuing, you agree to Localsewa's Terms & Conditions and
             Privacy Policy.
           </AppText>
@@ -104,8 +69,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal:
-      layout.screenHorizontal,
+    paddingHorizontal: layout.screenHorizontal,
     paddingTop: spacing[8],
     paddingBottom: spacing[8],
     justifyContent: 'space-between',

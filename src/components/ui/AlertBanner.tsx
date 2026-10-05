@@ -1,18 +1,10 @@
-import React, {PropsWithChildren} from 'react';
-import {StyleSheet, View} from 'react-native';
+import React, { PropsWithChildren } from 'react';
+import { StyleSheet, View } from 'react-native';
 
-import {
-  radius,
-  spacing,
-  useAppTheme,
-} from '../../theme';
-import {AppText} from './AppText';
+import { radius, spacing, useAppTheme } from '../../theme';
+import { AppText } from './AppText';
 
-type AlertVariant =
-  | 'error'
-  | 'success'
-  | 'info'
-  | 'warning';
+type AlertVariant = 'error' | 'success' | 'info' | 'warning';
 
 type AlertBannerProps = PropsWithChildren<{
   variant?: AlertVariant;
@@ -22,7 +14,7 @@ export function AlertBanner({
   children,
   variant = 'info',
 }: AlertBannerProps): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
 
   const palette =
     variant === 'error'
@@ -32,22 +24,22 @@ export function AlertBanner({
           text: theme.colors.error,
         }
       : variant === 'success'
-        ? {
-            background: '#DCFCE7',
-            border: theme.colors.success,
-            text: theme.colors.success,
-          }
-        : variant === 'warning'
-          ? {
-              background: '#FEF3C7',
-              border: theme.colors.warning,
-              text: theme.colors.warning,
-            }
-          : {
-              background: '#DBEAFE',
-              border: theme.colors.info,
-              text: theme.colors.info,
-            };
+      ? {
+          background: '#DCFCE7',
+          border: theme.colors.success,
+          text: theme.colors.success,
+        }
+      : variant === 'warning'
+      ? {
+          background: '#FEF3C7',
+          border: theme.colors.warning,
+          text: theme.colors.warning,
+        }
+      : {
+          background: '#DBEAFE',
+          border: theme.colors.info,
+          text: theme.colors.info,
+        };
 
   return (
     <View
@@ -55,15 +47,12 @@ export function AlertBanner({
       style={[
         styles.container,
         {
-          backgroundColor:
-            palette.background,
-          borderColor:
-            palette.border,
+          backgroundColor: palette.background,
+          borderColor: palette.border,
         },
-      ]}>
-      <AppText
-        variant="bodySmall"
-        color={palette.text}>
+      ]}
+    >
+      <AppText variant="bodySmall" color={palette.text}>
         {children}
       </AppText>
     </View>

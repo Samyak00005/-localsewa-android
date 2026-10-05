@@ -12,18 +12,15 @@ const TOKEN_PATTERN = /^[a-f0-9]{64}$/i;
  */
 export const sessionStorage = {
   async read(): Promise<string | null> {
-    const saved =
-      await Keychain.getGenericPassword({
-        service: SERVICE,
-      });
+    const saved = await Keychain.getGenericPassword({
+      service: SERVICE,
+    });
 
     if (!saved) {
       return null;
     }
 
-    return TOKEN_PATTERN.test(saved.password)
-      ? saved.password
-      : null;
+    return TOKEN_PATTERN.test(saved.password) ? saved.password : null;
   },
 
   async save(token: string): Promise<void> {
@@ -33,13 +30,9 @@ export const sessionStorage = {
       );
     }
 
-    await Keychain.setGenericPassword(
-      USERNAME,
-      token,
-      {
-        service: SERVICE,
-      },
-    );
+    await Keychain.setGenericPassword(USERNAME, token, {
+      service: SERVICE,
+    });
   },
 
   async clear(): Promise<void> {

@@ -1,8 +1,8 @@
 import React from 'react';
-import {StyleSheet, Switch, View} from 'react-native';
+import { StyleSheet, Switch, View } from 'react-native';
 
-import {spacing, useAppTheme} from '../../theme';
-import {AppText} from './AppText';
+import { spacing, useAppTheme } from '../../theme';
+import { AppText } from './AppText';
 
 type AppSwitchProps = {
   value: boolean;
@@ -19,19 +19,18 @@ export function AppSwitch({
   description,
   disabled = false,
 }: AppSwitchProps): React.JSX.Element {
-  const {theme} = useAppTheme();
+  const { theme } = useAppTheme();
 
   return (
     <View style={styles.row}>
       <View style={styles.copy}>
-        {label ? (
-          <AppText variant="label">{label}</AppText>
-        ) : null}
+        {label ? <AppText variant="label">{label}</AppText> : null}
         {description ? (
           <AppText
             variant="caption"
             muted
-            style={label ? styles.description : undefined}>
+            style={label ? styles.description : undefined}
+          >
             {description}
           </AppText>
         ) : null}
