@@ -1,9 +1,11 @@
 import React, {
+  useEffect,
   useMemo,
   useState,
 } from 'react';
 import {
   Modal,
+  NativeModules,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,10 +20,6 @@ import {
 import {
   useNavigation,
 } from '@react-navigation/native';
-import {
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
-
 import {
   errorMessage,
 } from '../../api/apiClient';
@@ -81,8 +79,13 @@ export function CustomerNotificationsModal({
   const {theme} =
     useAppTheme();
 
-  const insets =
-    useSafeAreaInsets();
+  useEffect(() => {
+    NativeModules.NotificationBackdrop?.setBlurred?.(visible);
+
+    return () => {
+      NativeModules.NotificationBackdrop?.setBlurred?.(false);
+    };
+  }, [visible]);
 
   const navigation =
     useNavigation<
@@ -269,18 +272,6 @@ export function CustomerNotificationsModal({
           style={[
             styles.sheet,
             {
-              marginTop:
-                Math.max(
-                  insets.top +
-                    28,
-                  62,
-                ),
-              marginBottom:
-                Math.max(
-                  insets.bottom +
-                    18,
-                  24,
-                ),
               backgroundColor:
                 theme.colors.surface,
             },
@@ -518,6 +509,22 @@ function NotificationPopupRow({
   const {theme} =
     useAppTheme();
 
+  const workspace =
+    resolveNotificationTarget(item).workspace;
+
+  const providerNotification =
+    workspace === 'provider';
+
+  const roleBackground =
+    providerNotification
+      ? '#EDF3F0'
+      : '#F2FBF6';
+
+  const roleBorder =
+    providerNotification
+      ? '#CEDBD5'
+      : '#CDE9D8';
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -527,15 +534,15 @@ function NotificationPopupRow({
         {
           borderColor:
             item.read
-              ? theme.colors.border
-              : '#CBE9D7',
+              ? roleBorder
+              : providerNotification
+                ? '#B8CCC3'
+                : '#B7DEC7',
           backgroundColor:
-            item.read
-              ? theme.colors.surface
-              : '#FBFFFC',
+            roleBackground,
           opacity:
             pressed
-              ? 0.86
+              ? 0.84
               : 1,
         },
       ]}>
@@ -552,14 +559,31 @@ function NotificationPopupRow({
           {item.title}
         </AppText>
 
-        <AppText
-          variant="caption"
-          color="#8492A8">
-          {formatTime(
-            item.createdAt,
-          )}
-        </AppText>
+        {!item.read ? (
+          <View
+            style={[
+              styles.notificationUnreadDot,
+              {
+                backgroundColor:
+                  providerNotification
+                    ? '#214035'
+                    : theme.colors.primary,
+              },
+            ]}
+          />
+        ) : null}
       </View>
+
+      <AppText
+        variant="caption"
+        color="#8492A8"
+        style={
+          styles.notificationTime
+        }>
+        {formatTime(
+          item.createdAt,
+        )}
+      </AppText>
 
       {item.message ? (
         <AppText
@@ -736,18 +760,19 @@ const styles =
     overlay: {
       flex: 1,
       backgroundColor:
-        'rgba(7,24,17,0.46)',
+        'rgba(7,24,17,0.24)',
       alignItems: 'center',
       justifyContent:
-        'center',
-      paddingHorizontal:
-        spacing[3],
+        'flex-end',
+      paddingHorizontal: 8,
+      paddingBottom: 8,
     },
     sheet: {
       width: '100%',
-      maxWidth: 430,
-      flex: 1,
-      borderRadius: 24,
+      maxWidth: 460,
+      height: '90%',
+      maxHeight: '90%',
+      borderRadius: 26,
       overflow: 'hidden',
     },
     header: {
@@ -797,11 +822,11 @@ const styles =
     },
     content: {
       paddingHorizontal:
-        spacing[4],
+        spacing[3],
       paddingTop:
         spacing[3],
       paddingBottom:
-        spacing[6],
+        spacing[5],
     },
     group: {
       marginBottom:
@@ -817,10 +842,8 @@ const styles =
       borderWidth: 1,
       borderRadius:
         radius.lg,
-      paddingHorizontal:
-        spacing[3],
-      paddingVertical:
-        spacing[3],
+      paddingHorizontal: 10,
+      paddingVertical: 10,
     },
     notificationTitleRow: {
       flexDirection: 'row',
@@ -830,6 +853,16 @@ const styles =
     },
     notificationTitle: {
       flex: 1,
+    },
+    notificationUnreadDot: {
+      width: 7,
+      height: 7,
+      borderRadius: 4,
+      marginTop: 5,
+      flexShrink: 0,
+    },
+    notificationTime: {
+      marginTop: 4,
     },
     message: {
       marginTop:

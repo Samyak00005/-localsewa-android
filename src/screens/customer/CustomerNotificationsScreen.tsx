@@ -5,6 +5,11 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { errorMessage } from '../../api/apiClient';
 import { useAppShell } from '../../app/AppShellProvider';
 import { NotificationRow } from '../../components/customer';
+import { AppIcon, iconSize } from '../../components/icons';
+import {
+  CustomerDetailBottomBar,
+  CustomerHeader,
+} from '../../components/navigation';
 import {
   AlertBanner,
   AppText,
@@ -29,17 +34,11 @@ export function CustomerNotificationsScreen({
   navigation,
 }: Props): React.JSX.Element {
   const { theme } = useAppTheme();
-
   const { canUseProvider, enterProvider } = useAppShell();
-
   const { data, isLoading, error, refetch, isRefetching } = useNotifications();
-
   const { data: bookings = [] } = useCustomerBookings();
-
   const markRead = useMarkNotificationRead();
-
   const markAll = useMarkAllNotificationsRead();
-
   const [actionError, setActionError] = useState<string | null>(null);
 
   async function openNotification(item: AppNotification) {
@@ -49,7 +48,7 @@ export function CustomerNotificationsScreen({
       try {
         await markRead.mutateAsync(item.id);
       } catch {
-        // Navigation is still useful even if read-state mutation fails.
+        // Navigation remains useful even if read-state mutation fails.
       }
     }
 
@@ -58,7 +57,7 @@ export function CustomerNotificationsScreen({
     if (target.workspace === 'provider') {
       if (!canUseProvider) {
         setActionError(
-          'This notification targets the Provider workspace, but this account does not currently have Provider access.',
+          'This update belongs to the Provider workspace, but this account does not currently have Provider access.',
         );
         return;
       }
@@ -107,114 +106,175 @@ export function CustomerNotificationsScreen({
     }
   }
 
-  return (
-    <ScrollView
-      style={{
-        backgroundColor: theme.colors.background,
-      }}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.headingRow}>
-        <View style={styles.headingCopy}>
-          <AppText variant="h1">Notifications</AppText>
+  function navigateTab(
+    tab:
+      | 'CustomerHome'
+      | 'CustomerServices'
+      | 'CustomerBookings'
+      | 'CustomerSaved'
+      | 'CustomerProfile',
+  ) {
+    navigation.navigate('CustomerTabs', {
+      screen: tab,
+    });
+  }
 
-          <AppText variant="body" muted style={styles.subtitle}>
-            Booking, chat and account activity from Localsewa.
-          </AppText>
+  const unread = data?.unreadCount ?? 0;
+
+  return (
+    <View
+      style={[
+        styles.screen,
+        {
+          backgroundColor: theme.colors.background,
+        },
+      ]}
+    >
+      <CustomerHeader routeName="CustomerHome" />
+
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.headingRow}>
+          <View style={styles.headingCopy}>
+            <AppText variant="h1">Notifications</AppText>
+            <AppText variant="body" muted style={styles.subtitle}>
+              Booking, chat and account updates from Localsewa.
+            </AppText>
+          </View>
+
+          <View
+            style={[
+              styles.unreadPill,
+              {
+                backgroundColor: unread > 0
+                  ? theme.colors.secondary
+                  : theme.colors.surfaceMuted,
+              },
+            ]}
+          >
+            <AppIcon
+              name="bell"
+              size={iconSize.xs}
+              color={unread > 0 ? theme.colors.primary : theme.colors.textMuted}
+            />
+            <AppText
+              variant="label"
+              color={unread > 0 ? theme.colors.primary : theme.colors.textMuted}
+            >
+              {unread}
+            </AppText>
+          </View>
         </View>
 
-        {(data?.unreadCount ?? 0) > 0 ? (
-          <View style={styles.readAll}>
+        {unread > 0 ? (
+          <View style={styles.readAllRow}>
+            <AppText variant="caption" muted>
+              {unread} unread {unread === 1 ? 'update' : 'updates'}
+            </AppText>
+
             <Button
-              label="Read all"
+              label="Mark all read"
               variant="secondary"
               loading={markAll.isPending}
               onPress={readAll}
             />
           </View>
-        ) : null}
-      </View>
-
-      <View style={styles.summaryRow}>
-        <AppText variant="label" color={theme.colors.primary}>
-          {data?.unreadCount ?? 0} unread
-        </AppText>
-
-        {data?.serverTime ? (
-          <AppText variant="caption" muted>
-            Synced
-          </AppText>
-        ) : null}
-      </View>
-
-      {actionError ? (
-        <View style={styles.sectionGap}>
-          <AlertBanner variant="error">{actionError}</AlertBanner>
-        </View>
-      ) : null}
-
-      <View style={styles.list}>
-        {isLoading ? (
-          [0, 1, 2, 3].map(index => (
-            <Card key={index}>
-              <Skeleton width="65%" height={20} />
-              <Skeleton width="95%" height={14} style={styles.skeletonGap} />
-              <Skeleton width="45%" height={12} style={styles.skeletonGap} />
-            </Card>
-          ))
-        ) : error ? (
-          <>
-            <AlertBanner variant="error">{errorMessage(error)}</AlertBanner>
-
-            <Button
-              label="Retry"
-              loading={isRefetching}
-              onPress={() => {
-                refetch();
-              }}
-              fullWidth
-            />
-          </>
-        ) : data?.notifications.length ? (
-          data.notifications.map(item => (
-            <NotificationRow
-              key={item.id}
-              notification={item}
-              onPress={() => {
-                openNotification(item);
-              }}
-            />
-          ))
         ) : (
-          <Card>
-            <AppText variant="title">You're all caught up</AppText>
-
-            <AppText variant="bodySmall" muted style={styles.subtitle}>
-              New Localsewa activity will appear here while you use the app.
+          <View style={styles.readAllRow}>
+            <AppText variant="caption" muted>
+              You're all caught up
             </AppText>
-          </Card>
+          </View>
         )}
-      </View>
 
-      <Card style={styles.infoCard}>
-        <AppText variant="label">In-app notifications</AppText>
+        {actionError ? (
+          <View style={styles.sectionGap}>
+            <AlertBanner variant="error">{actionError}</AlertBanner>
+          </View>
+        ) : null}
 
-        <AppText variant="caption" muted style={styles.subtitle}>
-          Android push notifications are intentionally on hold. This screen
-          refreshes the existing Localsewa notification feed while the app is
-          running.
-        </AppText>
-      </Card>
-    </ScrollView>
+        <View style={styles.list}>
+          {isLoading ? (
+            [0, 1, 2, 3].map(index => (
+              <Card key={index} style={styles.skeletonCard}>
+                <Skeleton width="62%" height={18} />
+                <Skeleton width="94%" height={14} style={styles.skeletonGap} />
+                <Skeleton width="46%" height={12} style={styles.skeletonGap} />
+              </Card>
+            ))
+          ) : error ? (
+            <>
+              <AlertBanner variant="error">{errorMessage(error)}</AlertBanner>
+              <Button
+                label="Retry"
+                loading={isRefetching}
+                onPress={() => {
+                  refetch();
+                }}
+                fullWidth
+              />
+            </>
+          ) : data?.notifications.length ? (
+            data.notifications.map(item => (
+              <NotificationRow
+                key={item.id}
+                notification={item}
+                onPress={() => {
+                  openNotification(item);
+                }}
+              />
+            ))
+          ) : (
+            <Card style={styles.emptyCard}>
+              <View
+                style={[
+                  styles.emptyIcon,
+                  {
+                    backgroundColor: theme.colors.secondary,
+                  },
+                ]}
+              >
+                <AppIcon
+                  name="bell"
+                  size={iconSize.lg}
+                  color={theme.colors.primary}
+                />
+              </View>
+
+              <AppText variant="title" style={styles.emptyTitle}>
+                You're all caught up
+              </AppText>
+
+              <AppText variant="bodySmall" muted style={styles.emptyText}>
+                New booking, chat and account activity will appear here.
+              </AppText>
+            </Card>
+          )}
+        </View>
+      </ScrollView>
+
+      <CustomerDetailBottomBar
+        activeRoute="CustomerHome"
+        onNavigate={navigateTab}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
+  scroll: {
+    flex: 1,
+  },
   content: {
     paddingHorizontal: layout.screenHorizontal,
-    paddingTop: spacing[6],
-    paddingBottom: spacing[12],
+    paddingTop: spacing[5],
+    paddingBottom: spacing[10],
   },
   headingRow: {
     flexDirection: 'row',
@@ -223,30 +283,61 @@ const styles = StyleSheet.create({
   },
   headingCopy: {
     flex: 1,
+    minWidth: 0,
   },
   subtitle: {
     marginTop: spacing[2],
   },
-  readAll: {
-    minWidth: 96,
-  },
-  summaryRow: {
+  unreadPill: {
+    minWidth: 48,
+    height: 38,
+    borderRadius: 999,
+    paddingHorizontal: spacing[3],
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: spacing[5],
+    justifyContent: 'center',
+    gap: spacing[1],
+  },
+  readAllRow: {
+    minHeight: 48,
+    marginTop: spacing[4],
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing[3],
   },
   sectionGap: {
-    marginTop: spacing[4],
+    marginTop: spacing[3],
   },
   list: {
     gap: spacing[3],
-    marginTop: spacing[5],
+    marginTop: spacing[4],
+  },
+  skeletonCard: {
+    borderRadius: 18,
   },
   skeletonGap: {
     marginTop: spacing[3],
   },
-  infoCard: {
-    marginTop: spacing[6],
+  emptyCard: {
+    borderRadius: 22,
+    alignItems: 'center',
+    paddingVertical: spacing[7],
+  },
+  emptyIcon: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyTitle: {
+    marginTop: spacing[4],
+    textAlign: 'center',
+  },
+  emptyText: {
+    marginTop: spacing[2],
+    textAlign: 'center',
+    maxWidth: 280,
   },
 });

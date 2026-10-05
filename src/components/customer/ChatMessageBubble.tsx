@@ -17,7 +17,11 @@ function displayTime(value: string): string {
   const match = value.match(/(?:T|\s)(\d{2}):(\d{2})/);
 
   if (match) {
-    return `${match[1]}:${match[2]}`;
+    const hours = Number(match[1]);
+    const minutes = match[2];
+    const suffix = hours >= 12 ? 'pm' : 'am';
+    const hour12 = hours % 12 || 12;
+    return `${hour12}:${minutes} ${suffix}`;
   }
 
   return value;
@@ -25,7 +29,6 @@ function displayTime(value: string): string {
 
 export function ChatMessageBubble({ item }: Props): React.JSX.Element {
   const { theme } = useAppTheme();
-
   const mine = item.sentByMe;
 
   return (
@@ -34,14 +37,19 @@ export function ChatMessageBubble({ item }: Props): React.JSX.Element {
         style={[
           styles.bubble,
           mine
-            ? {
-                backgroundColor: theme.colors.primary,
-              }
-            : {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.border,
-                borderWidth: 1,
-              },
+            ? [
+                styles.mineBubble,
+                {
+                  backgroundColor: theme.colors.primary,
+                },
+              ]
+            : [
+                styles.theirBubble,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                },
+              ],
         ]}
       >
         <AppText variant="body" color={mine ? '#FFFFFF' : theme.colors.text}>
@@ -70,7 +78,7 @@ export function ChatMessageBubble({ item }: Props): React.JSX.Element {
 const styles = StyleSheet.create({
   row: {
     width: '100%',
-    marginVertical: spacing[1],
+    marginVertical: 3,
   },
   mineRow: {
     alignItems: 'flex-end',
@@ -79,10 +87,18 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   bubble: {
-    maxWidth: '82%',
-    borderRadius: radius.lg,
+    maxWidth: '84%',
     paddingHorizontal: spacing[3],
-    paddingVertical: spacing[2],
+    paddingVertical: 10,
+  },
+  mineBubble: {
+    borderRadius: radius.lg,
+    borderBottomRightRadius: 6,
+  },
+  theirBubble: {
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    borderBottomLeftRadius: 6,
   },
   meta: {
     flexDirection: 'row',

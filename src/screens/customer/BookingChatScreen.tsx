@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -10,12 +11,15 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { errorMessage } from '../../api/apiClient';
 import { isAmbiguousChatSendError } from '../../api/chatApi';
 import { ChatMessageBubble } from '../../components/customer';
 import { AppIcon, iconSize } from '../../components/icons';
+import {
+  CustomerDetailBottomBar,
+  CustomerHeader,
+} from '../../components/navigation';
 import {
   AlertBanner,
   AppText,
@@ -32,17 +36,65 @@ import { ChatMessage } from '../../types/chat';
 
 type Props = NativeStackScreenProps<CustomerStackParamList, 'BookingChat'>;
 
+function chatDateKey(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+
+  if (match) {
+    return `${match[1]}-${match[2]}-${match[3]}`;
+  }
+
+  const parsed = new Date(value);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return value.slice(0, 10);
+  }
+
+  return [
+    parsed.getFullYear(),
+    String(parsed.getMonth() + 1).padStart(2, '0'),
+    String(parsed.getDate()).padStart(2, '0'),
+  ].join('-');
+}
+
+function chatDateLabel(value: string): string {
+  const key = chatDateKey(value);
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(key);
+
+  if (!match) {
+    return key;
+  }
+
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  const month = Number(match[2]);
+  const year = Number(match[1]);
+  const currentYear = new Date().getFullYear();
+
+  return `${Number(match[3])} ${months[month - 1] ?? match[2]}${
+    year === currentYear ? '' : ` ${year}`
+  }`;
+}
+
 export function BookingChatScreen({
   navigation,
   route,
 }: Props): React.JSX.Element {
   const { theme } = useAppTheme();
-  const insets = useSafeAreaInsets();
-
   const listRef = useRef<FlatList<ChatMessage>>(null);
-
   const bookingId = route.params.bookingId;
-
   const { data: bookings = [] } = useCustomerBookings();
 
   const booking = useMemo(
@@ -52,20 +104,31 @@ export function BookingChatScreen({
 
   const { data, isLoading, error, refetch, isRefetching } =
     useBookingChat(bookingId);
-
   const send = useSendChatMessage(bookingId);
 
   const [draft, setDraft] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
   const [deliveryUncertain, setDeliveryUncertain] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   const messages = data?.messages ?? [];
-
   const counterpartName =
     data?.counterpart?.name || booking?.providerName || 'Service provider';
+  const counterpartImage = data?.counterpart?.imageUrl || booking?.providerImage;
 
-  const counterpartImage =
-    data?.counterpart?.imageUrl || booking?.providerImage;
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardVisible(true);
+    });
+    const hide = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (!messages.length) {
@@ -73,9 +136,7 @@ export function BookingChatScreen({
     }
 
     const timer = setTimeout(() => {
-      listRef.current?.scrollToEnd({
-        animated: false,
-      });
+      listRef.current?.scrollToEnd({ animated: false });
     }, 80);
 
     return () => clearTimeout(timer);
@@ -98,7 +159,7 @@ export function BookingChatScreen({
       if (isAmbiguousChatSendError(mutationError)) {
         setDeliveryUncertain(true);
         setLocalError(
-          'Message delivery is uncertain because the network response was lost. Refresh the chat and check history before sending it again.',
+          'Message delivery is uncertain. Refresh the chat and check history before sending the same message again.',
         );
         return;
       }
@@ -112,11 +173,9 @@ export function BookingChatScreen({
 
     try {
       const result = await refetch();
-
       const myMessages = (result.data?.messages ?? []).filter(
         item => item.sentByMe,
       );
-
       const latest = myMessages[myMessages.length - 1];
 
       if (latest && latest.message.trim() === draft.trim()) {
@@ -129,217 +188,327 @@ export function BookingChatScreen({
     }
   }
 
+  function navigateTab(
+    tab:
+      | 'CustomerHome'
+      | 'CustomerServices'
+      | 'CustomerBookings'
+      | 'CustomerSaved'
+      | 'CustomerProfile',
+  ) {
+    navigation.navigate('CustomerTabs', {
+      screen: tab,
+    });
+  }
+
   const chatAllowed = booking?.chatEnabled ?? true;
 
   return (
-    <KeyboardAvoidingView
+    <View
       style={[
         styles.screen,
         {
           backgroundColor: theme.colors.background,
         },
       ]}
-      behavior={Platform.OS === 'android' ? 'height' : 'padding'}
     >
-      <View
-        style={[
-          styles.header,
-          {
-            borderBottomColor: theme.colors.border,
-            backgroundColor: theme.colors.surface,
-            paddingTop: Math.max(insets.top, spacing[2]),
-          },
-        ]}
+      <CustomerHeader routeName="CustomerBookings" />
+
+      <KeyboardAvoidingView
+        style={styles.chatShell}
+        behavior={Platform.OS === 'android' ? 'height' : 'padding'}
       >
-        {counterpartImage ? (
-          <Image
-            source={{
-              uri: counterpartImage,
-            }}
-            style={styles.avatar}
-          />
-        ) : (
-          <Avatar initials={counterpartName} size="md" />
-        )}
-
-        <View style={styles.headerCopy}>
-          <AppText variant="title" numberOfLines={1}>
-            {counterpartName}
-          </AppText>
-
-          <AppText variant="caption" muted numberOfLines={1}>
-            {booking
-              ? `${booking.serviceName} · ${booking.bookingCode}`
-              : 'Booking chat'}
-          </AppText>
-        </View>
-
-        {booking?.chatEnabled ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Voice call preview"
-            onPress={() =>
-              navigation.navigate('VoiceCallPreview', {
-                bookingId,
-              })
-            }
-            style={({ pressed }) => [
-              styles.callButton,
-              {
-                backgroundColor: theme.colors.secondary,
-                borderColor: theme.colors.primary,
-                opacity: pressed ? 0.82 : 1,
-              },
-            ]}
-          >
-            <AppIcon
-              name="phone"
-              size={iconSize.sm}
-              color={theme.colors.primary}
+        <View
+          style={[
+            styles.header,
+            {
+              borderBottomColor: theme.colors.border,
+              backgroundColor: theme.colors.surface,
+            },
+          ]}
+        >
+          {counterpartImage ? (
+            <Image
+              source={{ uri: counterpartImage }}
+              style={styles.avatar}
             />
-          </Pressable>
-        ) : null}
-      </View>
+          ) : (
+            <Avatar initials={counterpartName} size="md" />
+          )}
 
-      {!chatAllowed ? (
-        <View style={styles.centerContent}>
-          <Card>
-            <AppText variant="title">Chat unavailable</AppText>
-
-            <AppText variant="bodySmall" muted style={styles.smallGap}>
-              This booking is no longer in a chat-enabled state.
+          <View style={styles.headerCopy}>
+            <AppText variant="title" numberOfLines={1}>
+              {counterpartName}
             </AppText>
-          </Card>
-        </View>
-      ) : isLoading ? (
-        <View style={styles.loading}>
-          <Skeleton width="62%" height={64} />
-          <Skeleton width="70%" height={76} style={styles.rightSkeleton} />
-          <Skeleton width="55%" height={58} />
-        </View>
-      ) : error ? (
-        <View style={styles.centerContent}>
-          <AlertBanner variant="error">{errorMessage(error)}</AlertBanner>
 
-          <Button
-            label="Retry"
-            loading={isRefetching}
-            onPress={() => {
-              refetch();
-            }}
-            fullWidth
-          />
-        </View>
-      ) : (
-        <>
-          {localError ? (
-            <View style={styles.bannerWrap}>
-              <AlertBanner variant={deliveryUncertain ? 'warning' : 'error'}>
-                {localError}
-              </AlertBanner>
+            <AppText variant="caption" muted numberOfLines={1}>
+              {booking
+                ? booking.serviceName
+                : 'Private booking chat'}
+            </AppText>
+          </View>
 
-              {deliveryUncertain ? (
-                <Button
-                  label="Refresh chat before retrying"
-                  variant="outline"
-                  loading={isRefetching}
-                  onPress={refreshAfterUncertain}
-                  fullWidth
-                />
-              ) : null}
-            </View>
-          ) : null}
-
-          <FlatList
-            ref={listRef}
-            data={messages}
-            keyExtractor={item => String(item.id)}
-            renderItem={({ item }) => <ChatMessageBubble item={item} />}
-            style={styles.list}
-            contentContainerStyle={[
-              styles.listContent,
-              !messages.length && styles.emptyList,
-            ]}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            onContentSizeChange={() => {
-              if (messages.length) {
-                listRef.current?.scrollToEnd({
-                  animated: true,
-                });
-              }
-            }}
-            ListEmptyComponent={
-              <View style={styles.empty}>
-                <AppText variant="title">Start the conversation</AppText>
-
-                <AppText variant="bodySmall" muted style={styles.smallGap}>
-                  Chat is private to this booking and its participants.
-                </AppText>
-              </View>
-            }
-          />
-
-          <View
-            style={[
-              styles.composer,
-              {
-                borderTopColor: theme.colors.border,
-                backgroundColor: theme.colors.surface,
-                paddingBottom: Math.max(insets.bottom, spacing[2]),
-              },
-            ]}
-          >
-            <View
-              style={[
-                styles.inputWrap,
-                {
-                  borderColor: theme.colors.border,
-                  backgroundColor: theme.colors.background,
-                },
-              ]}
-            >
-              <TextInput
-                value={draft}
-                onChangeText={setDraft}
-                placeholder="Message"
-                placeholderTextColor={theme.colors.textMuted}
-                multiline
-                maxLength={1000}
-                editable={!send.isPending && !deliveryUncertain}
-                style={[
-                  styles.input,
-                  {
-                    color: theme.colors.text,
-                  },
-                ]}
-              />
-            </View>
-
+          {booking?.chatEnabled ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Send message"
-              disabled={send.isPending || deliveryUncertain || !draft.trim()}
-              onPress={sendMessage}
+              accessibilityLabel="Voice call preview"
+              onPress={() =>
+                navigation.navigate('VoiceCallPreview', {
+                  bookingId,
+                })
+              }
               style={({ pressed }) => [
-                styles.sendButton,
+                styles.callButton,
                 {
-                  backgroundColor: theme.colors.primary,
-                  opacity:
-                    send.isPending || deliveryUncertain || !draft.trim()
-                      ? 0.45
-                      : pressed
-                      ? 0.8
-                      : 1,
+                  backgroundColor: theme.colors.secondary,
+                  opacity: pressed ? 0.72 : 1,
                 },
               ]}
             >
-              <AppIcon name="send" size={iconSize.sm} color="#FFFFFF" />
+              <AppIcon
+                name="phone"
+                size={iconSize.sm}
+                color={theme.colors.primary}
+              />
             </Pressable>
+          ) : null}
+        </View>
+
+        {!chatAllowed ? (
+          <View style={styles.centerContent}>
+            <Card style={styles.stateCard}>
+              <View
+                style={[
+                  styles.stateIcon,
+                  {
+                    backgroundColor: theme.colors.surfaceMuted,
+                  },
+                ]}
+              >
+                <AppIcon
+                  name="message"
+                  size={iconSize.md}
+                  color={theme.colors.textMuted}
+                />
+              </View>
+
+              <AppText variant="title" style={styles.stateTitle}>
+                Chat unavailable
+              </AppText>
+              <AppText variant="bodySmall" muted style={styles.stateText}>
+                This booking is no longer in a chat-enabled state. Open Booking
+                Details to review its current status.
+              </AppText>
+
+              <Button
+                label="Open booking details"
+                variant="outline"
+                onPress={() =>
+                  navigation.navigate('BookingDetails', {
+                    bookingId,
+                  })
+                }
+                fullWidth
+                style={styles.stateAction}
+              />
+            </Card>
           </View>
-        </>
-      )}
-    </KeyboardAvoidingView>
+        ) : isLoading ? (
+          <View style={styles.loading}>
+            <Skeleton width="62%" height={64} />
+            <Skeleton width="70%" height={76} style={styles.rightSkeleton} />
+            <Skeleton width="55%" height={58} />
+          </View>
+        ) : error ? (
+          <View style={styles.centerContent}>
+            <AlertBanner variant="error">{errorMessage(error)}</AlertBanner>
+            <Button
+              label="Retry"
+              loading={isRefetching}
+              onPress={() => {
+                refetch();
+              }}
+              fullWidth
+            />
+          </View>
+        ) : (
+          <>
+            {localError ? (
+              <View style={styles.bannerWrap}>
+                <AlertBanner variant={deliveryUncertain ? 'warning' : 'error'}>
+                  {localError}
+                </AlertBanner>
+
+                {deliveryUncertain ? (
+                  <Button
+                    label="Refresh chat before retrying"
+                    variant="outline"
+                    loading={isRefetching}
+                    onPress={refreshAfterUncertain}
+                    fullWidth
+                  />
+                ) : null}
+              </View>
+            ) : null}
+
+            <FlatList
+              ref={listRef}
+              data={messages}
+              keyExtractor={item => String(item.id)}
+              renderItem={({ item, index }) => {
+                const previous = index > 0 ? messages[index - 1] : null;
+                const showDate =
+                  !previous ||
+                  chatDateKey(previous.createdAt) !== chatDateKey(item.createdAt);
+
+                return (
+                  <>
+                    {showDate ? (
+                      <ChatDateSeparator label={chatDateLabel(item.createdAt)} />
+                    ) : null}
+                    <ChatMessageBubble item={item} />
+                  </>
+                );
+              }}
+              style={styles.list}
+              contentContainerStyle={[
+                styles.listContent,
+                !messages.length && styles.emptyList,
+              ]}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              onContentSizeChange={() => {
+                if (messages.length) {
+                  listRef.current?.scrollToEnd({ animated: true });
+                }
+              }}
+              ListEmptyComponent={
+                <View style={styles.empty}>
+                  <View
+                    style={[
+                      styles.emptyIcon,
+                      {
+                        backgroundColor: theme.colors.secondary,
+                      },
+                    ]}
+                  >
+                    <AppIcon
+                      name="message"
+                      size={iconSize.lg}
+                      color={theme.colors.primary}
+                    />
+                  </View>
+                  <AppText variant="title" style={styles.stateTitle}>
+                    Start the conversation
+                  </AppText>
+                  <AppText variant="bodySmall" muted style={styles.stateText}>
+                    This chat is private to this booking and its participants.
+                  </AppText>
+                </View>
+              }
+            />
+
+            <View
+              style={[
+                styles.composer,
+                {
+                  borderTopColor: theme.colors.border,
+                  backgroundColor: theme.colors.surface,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.inputWrap,
+                  {
+                    borderColor: theme.colors.border,
+                    backgroundColor: theme.colors.background,
+                  },
+                ]}
+              >
+                <TextInput
+                  value={draft}
+                  onChangeText={setDraft}
+                  placeholder="Message"
+                  placeholderTextColor={theme.colors.textMuted}
+                  multiline
+                  maxLength={1000}
+                  editable={!send.isPending && !deliveryUncertain}
+                  style={[
+                    styles.input,
+                    {
+                      color: theme.colors.text,
+                    },
+                  ]}
+                />
+              </View>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Send message"
+                disabled={send.isPending || deliveryUncertain || !draft.trim()}
+                onPress={sendMessage}
+                style={({ pressed }) => [
+                  styles.sendButton,
+                  {
+                    backgroundColor: theme.colors.primary,
+                    opacity:
+                      send.isPending || deliveryUncertain || !draft.trim()
+                        ? 0.42
+                        : pressed
+                        ? 0.76
+                        : 1,
+                  },
+                ]}
+              >
+                <AppIcon name="send" size={iconSize.sm} color="#FFFFFF" />
+              </Pressable>
+            </View>
+          </>
+        )}
+      </KeyboardAvoidingView>
+
+      {!keyboardVisible ? (
+        <CustomerDetailBottomBar
+          activeRoute="CustomerBookings"
+          onNavigate={navigateTab}
+        />
+      ) : null}
+    </View>
+  );
+}
+
+function ChatDateSeparator({
+  label,
+}: {
+  label: string;
+}): React.JSX.Element {
+  const { theme } = useAppTheme();
+
+  return (
+    <View style={styles.dateSeparator}>
+      <View
+        style={[
+          styles.dateLine,
+          {
+            backgroundColor: theme.colors.border,
+          },
+        ]}
+      />
+
+      <AppText variant="caption" muted style={styles.dateLabel}>
+        {label}
+      </AppText>
+
+      <View
+        style={[
+          styles.dateLine,
+          {
+            backgroundColor: theme.colors.border,
+          },
+        ]}
+      />
+    </View>
   );
 }
 
@@ -347,11 +516,14 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
   },
+  chatShell: {
+    flex: 1,
+  },
   header: {
-    minHeight: 76,
+    minHeight: 72,
     borderBottomWidth: 1,
     paddingHorizontal: layout.screenHorizontal,
-    paddingBottom: spacing[3],
+    paddingVertical: spacing[3],
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing[3],
@@ -363,12 +535,12 @@ const styles = StyleSheet.create({
   },
   headerCopy: {
     flex: 1,
+    minWidth: 0,
   },
   callButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 1,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -386,6 +558,37 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing[3],
     paddingHorizontal: layout.screenHorizontal,
+  },
+  stateCard: {
+    borderRadius: 22,
+    alignItems: 'center',
+    paddingVertical: spacing[6],
+  },
+  stateIcon: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyIcon: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stateTitle: {
+    marginTop: spacing[3],
+    textAlign: 'center',
+  },
+  stateText: {
+    marginTop: spacing[2],
+    textAlign: 'center',
+    maxWidth: 290,
+  },
+  stateAction: {
+    marginTop: spacing[4],
   },
   bannerWrap: {
     gap: spacing[2],
@@ -407,8 +610,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing[5],
   },
-  smallGap: {
-    marginTop: spacing[1],
+  dateSeparator: {
+    marginVertical: spacing[4],
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[3],
+  },
+  dateLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+  },
+  dateLabel: {
+    flexShrink: 0,
   },
   composer: {
     borderTopWidth: 1,
@@ -416,7 +629,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     gap: spacing[2],
     paddingHorizontal: layout.screenHorizontal,
-    paddingTop: spacing[2],
+    paddingVertical: spacing[2],
   },
   inputWrap: {
     flex: 1,
