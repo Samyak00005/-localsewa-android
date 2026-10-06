@@ -1,11 +1,10 @@
 <resources>
 
-    <!-- Android 12+ native system splash -->
     <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
         <item name="android:windowSplashScreenBackground">@color/localsewa_splash_background</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
-        <item name="android:windowSplashScreenIconBackgroundColor">@color/localsewa_splash_background</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/localsewa_splash_icon_background</item>
     </style>
 
 </resources>

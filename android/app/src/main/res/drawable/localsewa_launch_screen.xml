@@ -3,8 +3,8 @@
     <item android:drawable="@color/localsewa_splash_background" />
 
     <item
-        android:width="192dp"
-        android:height="192dp"
+        android:width="160dp"
+        android:height="160dp"
         android:gravity="center">
         <bitmap
             android:gravity="fill"

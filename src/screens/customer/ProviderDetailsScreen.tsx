@@ -27,13 +27,10 @@ import {
 } from '../../components/ui';
 import { useProviderDetails } from '../../hooks/useCustomerData';
 import { CustomerStackParamList } from '../../navigation/types';
-import { ProviderService } from '../../types/provider';
 import { layout, spacing, useAppTheme } from '../../theme';
+import { ProviderService } from '../../types/provider';
 
-type Props = NativeStackScreenProps<
-  CustomerStackParamList,
-  'ProviderDetails'
->;
+type Props = NativeStackScreenProps<CustomerStackParamList, 'ProviderDetails'>;
 
 type MediaViewerState = {
   images: string[];
@@ -41,10 +38,7 @@ type MediaViewerState = {
 };
 
 function money(value?: number): string | null {
-  if (
-    value == null ||
-    !Number.isFinite(value)
-  ) {
+  if (value == null || !Number.isFinite(value)) {
     return null;
   }
 
@@ -172,7 +166,8 @@ export function ProviderDetailsScreen({
                     <>
                       <View style={styles.galleryCount}>
                         <AppText variant="caption" color="#FFFFFF">
-                          {galleryIndex + 1} / {provider.businessImageUrls.length}
+                          {galleryIndex + 1} /{' '}
+                          {provider.businessImageUrls.length}
                         </AppText>
                       </View>
 
@@ -403,9 +398,7 @@ export function ProviderDetailsScreen({
                     <ServiceRow
                       key={service.id}
                       service={service}
-                      showDivider={
-                        index < provider.services.length - 1
-                      }
+                      showDivider={index < provider.services.length - 1}
                     />
                   ))}
                 </View>
@@ -449,11 +442,7 @@ export function ProviderDetailsScreen({
                     : 'Provider currently unavailable'}
                 </AppText>
 
-                <AppText
-                  variant="bodySmall"
-                  muted
-                  style={styles.bookingText}
-                >
+                <AppText variant="bodySmall" muted style={styles.bookingText}>
                   {provider.available
                     ? 'Choose a service, verify the job address and send your request. In-app chat becomes available after the provider accepts.'
                     : 'This provider is not accepting new booking requests right now.'}
@@ -490,10 +479,7 @@ export function ProviderDetailsScreen({
         }
       />
 
-      <ProviderMediaViewer
-        state={viewer}
-        onClose={() => setViewer(null)}
-      />
+      <ProviderMediaViewer state={viewer} onClose={() => setViewer(null)} />
     </View>
   );
 }
@@ -518,11 +504,7 @@ function ProviderStat({
         },
       ]}
     >
-      <AppIcon
-        name={icon}
-        size={15}
-        color={theme.colors.primary}
-      />
+      <AppIcon name={icon} size={15} color={theme.colors.primary} />
 
       <AppText variant="label" style={styles.statValue}>
         {value}
@@ -550,16 +532,10 @@ function ServiceRow({
     <View>
       <View style={styles.serviceRow}>
         <View style={styles.serviceCopy}>
-          <AppText variant="label">
-            {service.name}
-          </AppText>
+          <AppText variant="label">{service.name}</AppText>
 
           {service.description ? (
-            <AppText
-              variant="caption"
-              muted
-              style={styles.smallGap}
-            >
+            <AppText variant="caption" muted style={styles.smallGap}>
               {service.description}
             </AppText>
           ) : null}
@@ -608,12 +584,7 @@ function ProviderMediaViewer({
   }, [state]);
 
   if (!state) {
-    return (
-      <Modal
-        visible={false}
-        transparent
-      />
-    );
+    return <Modal visible={false} transparent />;
   }
 
   return (
@@ -641,11 +612,7 @@ function ProviderMediaViewer({
               },
             ]}
           >
-            <AppIcon
-              name="x"
-              size={iconSize.md}
-              color="#FFFFFF"
-            />
+            <AppIcon name="x" size={iconSize.md} color="#FFFFFF" />
           </Pressable>
         </View>
 
@@ -659,9 +626,7 @@ function ProviderMediaViewer({
           }}
           onMomentumScrollEnd={event => {
             setVisibleIndex(
-              Math.round(
-                event.nativeEvent.contentOffset.x / width,
-              ),
+              Math.round(event.nativeEvent.contentOffset.x / width),
             );
           }}
         >
@@ -695,53 +660,29 @@ function ProviderDetailsSkeleton(): React.JSX.Element {
   return (
     <>
       <Card style={styles.profileSkeletonCard}>
-        <Skeleton
-          width="100%"
-          height={170}
-          radiusValue={18}
-        />
+        <Skeleton width="100%" height={170} radiusValue={18} />
 
         <View style={styles.skeletonProfileRow}>
-          <Skeleton
-            width={72}
-            height={72}
-            radiusValue={36}
-          />
+          <Skeleton width={72} height={72} radiusValue={36} />
 
           <View style={styles.skeletonProfileCopy}>
             <Skeleton width="68%" height={24} />
 
-            <Skeleton
-              width="42%"
-              height={14}
-              style={styles.skeletonSmallGap}
-            />
+            <Skeleton width="42%" height={14} style={styles.skeletonSmallGap} />
 
-            <Skeleton
-              width="56%"
-              height={12}
-              style={styles.skeletonSmallGap}
-            />
+            <Skeleton width="56%" height={12} style={styles.skeletonSmallGap} />
           </View>
         </View>
 
         <View style={styles.skeletonStats}>
           {[0, 1, 2].map(index => (
-            <Skeleton
-              key={index}
-              width="31%"
-              height={66}
-              radiusValue={14}
-            />
+            <Skeleton key={index} width="31%" height={66} radiusValue={14} />
           ))}
         </View>
       </Card>
 
       {[0, 1].map(index => (
-        <Card
-          key={index}
-          style={styles.skeletonSection}
-        >
+        <Card key={index} style={styles.skeletonSection}>
           <Skeleton width="38%" height={20} />
           <Skeleton
             width="100%"
