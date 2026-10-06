@@ -2,6 +2,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Image,
+  NativeModules,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -36,6 +37,58 @@ import { layout, radius, spacing, useAppTheme } from '../../theme';
 import { VerifiedLocation } from '../../types/location';
 
 type Props = NativeStackScreenProps<CustomerStackParamList, 'BookingRequest'>;
+
+type NativeDateResult = {
+  year: number;
+  month: number;
+  day: number;
+};
+
+type NativeTimeResult = {
+  hour: number;
+  minute: number;
+};
+
+const nativeDateTimePicker =
+  NativeModules.LocalsewaDateTimePicker as
+    | {
+        pickDate: (
+          year: number,
+          month: number,
+          day: number,
+        ) => Promise<NativeDateResult | null>;
+        pickTime: (
+          hour: number,
+          minute: number,
+        ) => Promise<NativeTimeResult | null>;
+      }
+    | undefined;
+
+function twoDigits(
+  value: number,
+): string {
+  return String(value).padStart(
+    2,
+    '0',
+  );
+}
+
+function displayTime(
+  hour: number,
+  minute: number,
+): string {
+  const suffix =
+    hour >= 12
+      ? 'PM'
+      : 'AM';
+
+  const twelveHour =
+    hour % 12 || 12;
+
+  return `${twelveHour}:${twoDigits(
+    minute,
+  )} ${suffix}`;
+}
 
 function requestId(): string {
   return `and_${Date.now().toString(36)}_${Math.random()
@@ -197,6 +250,116 @@ export function BookingRequestScreen({
       setError(errorMessage(verificationError));
     } finally {
       setVerifying(false);
+    }
+  }
+
+  async function chooseDate() {
+    setError(null);
+
+    if (!nativeDateTimePicker) {
+      setError(
+        'Date picker is unavailable. Rebuild the Android app and try again.',
+      );
+      return;
+    }
+
+    const parsed =
+      bookingDateValue(date);
+
+    const initial =
+      parsed
+        ? new Date(
+            `${parsed}T12:00:00`,
+          )
+        : new Date(
+            Date.now() +
+              24 * 60 * 60 * 1000,
+          );
+
+    try {
+      const result =
+        await nativeDateTimePicker.pickDate(
+          initial.getFullYear(),
+          initial.getMonth() + 1,
+          initial.getDate(),
+        );
+
+      if (!result) {
+        return;
+      }
+
+      setDate(
+        `${twoDigits(result.day)}/${twoDigits(result.month)}/${result.year}`,
+      );
+      payloadChanged();
+    } catch (pickerError) {
+      setError(
+        errorMessage(
+          pickerError,
+        ),
+      );
+    }
+  }
+
+  async function chooseTime() {
+    setError(null);
+
+    if (!nativeDateTimePicker) {
+      setError(
+        'Time picker is unavailable. Rebuild the Android app and try again.',
+      );
+      return;
+    }
+
+    const parsed =
+      bookingTimeValue(time);
+
+    const now =
+      new Date();
+
+    let initialHour =
+      now.getHours();
+
+    let initialMinute =
+      now.getMinutes();
+
+    if (parsed) {
+      const [
+        hours,
+        minutes,
+      ] =
+        parsed.split(':');
+
+      initialHour =
+        Number(hours);
+      initialMinute =
+        Number(minutes);
+    }
+
+    try {
+      const result =
+        await nativeDateTimePicker.pickTime(
+          initialHour,
+          initialMinute,
+        );
+
+      if (!result) {
+        return;
+      }
+
+      setTime(
+        displayTime(
+          result.hour,
+          result.minute,
+        ),
+      );
+      payloadChanged();
+    } catch (pickerError) {
+      setError(
+        errorMessage(
+          pickerError,
+        ),
+      );
     }
   }
 
@@ -668,30 +831,22 @@ export function BookingRequestScreen({
             <>
             <View style={styles.scheduleRow}>
               <View style={styles.scheduleField}>
-                <Input
+                <SchedulePickerField
                   label="Date"
-                  placeholder="DD/MM/YYYY"
                   value={date}
-                  onChangeText={value => {
-                    setDate(value);
-                    payloadChanged();
-                  }}
-                  keyboardType="numbers-and-punctuation"
-                  maxLength={10}
+                  placeholder="DD/MM/YYYY"
+                  icon="calendar"
+                  onPress={chooseDate}
                 />
               </View>
 
               <View style={styles.scheduleField}>
-                <Input
+                <SchedulePickerField
                   label="Time"
-                  placeholder="3:45 PM"
                   value={time}
-                  onChangeText={value => {
-                    setTime(value);
-                    payloadChanged();
-                  }}
-                  autoCapitalize="characters"
-                  maxLength={8}
+                  placeholder="3:45 PM"
+                  icon="clock"
+                  onPress={chooseTime}
                 />
               </View>
             </View>
@@ -860,6 +1015,77 @@ function StepHeader({
         <AppIcon
           name={expanded ? 'chevronUp' : 'chevronDown'}
           size={iconSize.sm}
+          color={theme.colors.textMuted}
+        />
+      </View>
+    </Pressable>
+  );
+}
+
+function SchedulePickerField({
+  label,
+  value,
+  placeholder,
+  icon,
+  onPress,
+}: {
+  label: string;
+  value: string;
+  placeholder: string;
+  icon: 'calendar' | 'clock';
+  onPress: () => void;
+}): React.JSX.Element {
+  const {theme} =
+    useAppTheme();
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${label}: ${value || placeholder}`}
+      onPress={onPress}
+      style={({pressed}) => [
+        styles.schedulePicker,
+        {
+          borderColor:
+            theme.colors.border,
+          backgroundColor:
+            theme.colors.surface,
+          opacity:
+            pressed
+              ? 0.78
+              : 1,
+        },
+      ]}>
+      <AppText
+        variant="caption"
+        color={
+          theme.colors.textSecondary
+        }>
+        {label}
+      </AppText>
+
+      <View style={styles.schedulePickerValueRow}>
+        <AppIcon
+          name={icon}
+          size={iconSize.sm}
+          color={theme.colors.primary}
+        />
+
+        <AppText
+          variant="bodySmall"
+          color={
+            value
+              ? theme.colors.text
+              : theme.colors.textMuted
+          }
+          numberOfLines={1}
+          style={styles.flex}>
+          {value || placeholder}
+        </AppText>
+
+        <AppIcon
+          name="chevronDown"
+          size={iconSize.xs}
           color={theme.colors.textMuted}
         />
       </View>
@@ -1048,6 +1274,20 @@ const styles = StyleSheet.create({
   scheduleField: {
     flex: 1,
     minWidth: 0,
+  },
+  schedulePicker: {
+    minHeight: 72,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
+    justifyContent: 'center',
+  },
+  schedulePickerValueRow: {
+    marginTop: spacing[2],
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
   },
   multiline: {
     minHeight: 96,

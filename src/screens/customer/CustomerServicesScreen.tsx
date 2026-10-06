@@ -62,8 +62,6 @@ export function CustomerServicesScreen({
   const { theme } = useAppTheme();
 
   const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] =
-    useState<string | null>(null);
   const [categoryLimit, setCategoryLimit] =
     useState(CATEGORY_PAGE_SIZE);
   const [providerLimit, setProviderLimit] =
@@ -171,19 +169,6 @@ export function CustomerServicesScreen({
 
       return source.filter(
         provider => {
-          const categoryMatches =
-            !selectedCategory ||
-            provider.category
-              .trim()
-              .toLowerCase() ===
-              selectedCategory
-                .trim()
-                .toLowerCase();
-
-          if (!categoryMatches) {
-            return false;
-          }
-
           if (!normalizedSearch) {
             return true;
           }
@@ -208,7 +193,6 @@ export function CustomerServicesScreen({
     }, [
       normalizedSearch,
       providers,
-      selectedCategory,
     ]);
 
   const visibleProviders =
@@ -241,19 +225,7 @@ export function CustomerServicesScreen({
     );
   }, [
     normalizedSearch,
-    selectedCategory,
   ]);
-
-  function selectCategory(
-    name: string,
-  ) {
-    setSelectedCategory(
-      current =>
-        current === name
-          ? null
-          : name,
-    );
-  }
 
   async function toggleSaved(
     provider: Provider,
@@ -338,53 +310,6 @@ export function CustomerServicesScreen({
           style={styles.search}
         />
 
-        {selectedCategory ? (
-          <View
-            style={
-              styles.filterRow
-            }>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Clear ${selectedCategory} filter`}
-              onPress={() =>
-                setSelectedCategory(
-                  null,
-                )
-              }
-              style={({pressed}) => [
-                styles.filterChip,
-                {
-                  backgroundColor:
-                    theme.colors.secondary,
-                  borderColor:
-                    '#BFE4CE',
-                  opacity:
-                    pressed
-                      ? 0.78
-                      : 1,
-                },
-              ]}>
-              <AppText
-                variant="label"
-                color={
-                  theme.colors.primary
-                }
-                numberOfLines={1}>
-                {selectedCategory}
-              </AppText>
-
-              <AppIcon
-                name="x"
-                size={
-                  iconSize.xs
-                }
-                color={
-                  theme.colors.primary
-                }
-              />
-            </Pressable>
-          </View>
-        ) : null}
       </View>
 
       <View
@@ -479,19 +404,22 @@ export function CustomerServicesScreen({
                         key={
                           item.id
                         }
+                        slug={
+                          item.slug
+                        }
                         name={
                           item.name
                         }
                         providerCount={
                           item.providerCount
                         }
-                        selected={
-                          selectedCategory ===
-                          item.name
-                        }
                         onPress={() =>
-                          selectCategory(
-                            item.name,
+                          stack?.navigate(
+                            'ServiceCategoryProviders',
+                            {
+                              categoryName:
+                                item.name,
+                            },
                           )
                         }
                       />
@@ -582,8 +510,7 @@ export function CustomerServicesScreen({
               styles.sectionCopy
             }>
             <AppText variant="h2">
-              {normalizedSearch ||
-              selectedCategory
+              {normalizedSearch
                 ? 'Matching providers'
                 : 'Available providers'}
             </AppText>
@@ -740,9 +667,6 @@ export function CustomerServicesScreen({
         <EmergencyServiceCard
           onPress={() => {
             setSearch('');
-            setSelectedCategory(
-              null,
-            );
             setCategoryLimit(
               CATEGORY_PAGE_SIZE,
             );
@@ -896,33 +820,10 @@ const styles =
       marginTop:
         spacing[5],
     },
-    filterRow: {
-      marginTop:
-        spacing[3],
-      flexDirection:
-        'row',
-      alignItems:
-        'center',
-    },
-    filterChip: {
-      maxWidth: '100%',
-      minHeight: 34,
-      borderWidth: 1,
-      borderRadius:
-        radius.pill,
-      paddingHorizontal:
-        spacing[3],
-      flexDirection:
-        'row',
-      alignItems:
-        'center',
-      gap: spacing[2],
-    },
     categoriesSection: {
       paddingHorizontal:
         layout.screenHorizontal,
-      marginTop:
-        spacing[7],
+      marginTop: 36,
       gap: spacing[4],
     },
     sectionHeader: {

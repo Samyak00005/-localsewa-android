@@ -7,7 +7,6 @@ import {
 
 import {
   AppIcon,
-  AppIconName,
   iconSize,
 } from '../icons';
 import {
@@ -18,68 +17,20 @@ import {
   spacing,
   useAppTheme,
 } from '../../theme';
+import {
+  ServiceCategoryIcon,
+} from './ServiceCategoryIcon';
 
 type Props = {
+  slug?: string;
   name: string;
   providerCount: number;
   selected?: boolean;
   onPress: () => void;
 };
 
-function categoryIcon(
-  name: string,
-): AppIconName {
-  const value =
-    name.toLowerCase();
-
-  if (
-    value.includes(
-      'electric',
-    )
-  ) {
-    return 'zap';
-  }
-
-  if (
-    value.includes(
-      'clean',
-    ) ||
-    value.includes(
-      'washing',
-    )
-  ) {
-    return 'sparkles';
-  }
-
-  if (
-    value.includes(
-      'carpenter',
-    ) ||
-    value.includes(
-      'wood',
-    )
-  ) {
-    return 'hammer';
-  }
-
-  if (
-    value.includes(
-      'plumb',
-    ) ||
-    value.includes(
-      'repair',
-    ) ||
-    value.includes(
-      'mechanic',
-    )
-  ) {
-    return 'wrench';
-  }
-
-  return 'grid';
-}
-
 export function HomeServiceCard({
+  slug,
   name,
   providerCount,
   selected = false,
@@ -91,76 +42,82 @@ export function HomeServiceCard({
   const available =
     providerCount > 0;
 
+  const iconColor =
+    '#2B6549';
+
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityState={{
+        selected,
+      }}
       onPress={onPress}
       style={({pressed}) => [
         styles.card,
         {
           backgroundColor:
             selected
-              ? '#D9F1E3'
-              : '#E1F4E9',
+              ? '#E2F3E7'
+              : '#EDF8F1',
           borderColor:
             selected
-              ? theme.colors.primary
-              : '#CAE9D7',
+              ? '#86C79E'
+              : '#CAE4D3',
           borderWidth:
             selected
               ? 1.5
               : 1,
           opacity:
             pressed
-              ? 0.9
+              ? 0.88
               : 1,
         },
       ]}>
       <View
+        pointerEvents="none"
         style={[
-          styles.decor,
+          styles.softShape,
           {
             backgroundColor:
-              '#D2EDDE',
+              selected
+                ? '#CFE9D8'
+                : '#DCEFE3',
           },
         ]}
       />
 
       <View
+        pointerEvents="none"
         style={[
-          styles.iconWrap,
+          styles.softRing,
           {
-            backgroundColor:
-              '#FFFFFF',
+            borderColor:
+              selected
+                ? '#AFCFBB'
+                : '#BDDCC8',
           },
-        ]}>
-        <AppIcon
-          name={
-            categoryIcon(
-              name,
-            )
-          }
-          size={
-            iconSize.sm
-          }
-          color={
-            theme.colors.primary
-          }
+        ]}
+      />
+
+      <View
+        pointerEvents="none"
+        style={
+          styles.iconAnchor
+        }>
+        <ServiceCategoryIcon
+          slug={slug}
+          name={name}
+          size={35}
+          color={iconColor}
         />
       </View>
 
       <AppText
-        variant="overline"
-        color={
-          theme.colors.primary
-        }>
-        LOCAL SERVICES
-      </AppText>
-
-      <AppText
         variant="title"
         numberOfLines={2}
-        style={styles.name}>
+        style={
+          styles.name
+        }>
         {name}
       </AppText>
 
@@ -169,7 +126,7 @@ export function HomeServiceCard({
           styles.footer,
           {
             borderTopColor:
-              '#BFE2CC',
+              '#DDEDE3',
           },
         ]}>
         <AppText
@@ -177,8 +134,7 @@ export function HomeServiceCard({
           color={
             available
               ? theme.colors.primary
-              : theme.colors
-                  .textMuted
+              : '#667A6F'
           }>
           {available
             ? `${providerCount} ${providerCount === 1 ? 'provider' : 'providers'}`
@@ -187,9 +143,7 @@ export function HomeServiceCard({
 
         <AppIcon
           name="arrowRight"
-          size={
-            iconSize.xs
-          }
+          size={iconSize.xs}
           color={
             available
               ? theme.colors.primary
@@ -211,43 +165,75 @@ const styles =
       borderRadius:
         radius.lg,
       borderWidth: 1,
-      paddingHorizontal: spacing[3],
-      paddingVertical: spacing[2],
-      overflow: 'hidden',
+      paddingHorizontal:
+        spacing[3],
+      paddingVertical:
+        spacing[3],
+      justifyContent:
+        'space-between',
+      position:
+        'relative',
+      overflow:
+        'hidden',
     },
-    decor: {
-      position: 'absolute',
-      width: 76,
-      height: 76,
-      borderRadius: 38,
-      right: -22,
-      top: -24,
+    softShape: {
+      position:
+        'absolute',
+      width: 88,
+      height: 88,
+      borderRadius: 44,
+      right: -28,
+      top: '50%',
+      transform: [
+        {
+          translateY: -44,
+        },
+      ],
+      opacity: 0.78,
     },
-    iconWrap: {
-      position: 'absolute',
-      right: spacing[3],
-      top: spacing[3],
-      width: 34,
-      height: 34,
-      borderRadius:
-        radius.md,
+    softRing: {
+      position:
+        'absolute',
+      width: 58,
+      height: 58,
+      borderRadius: 29,
+      borderWidth: 1,
+      right: -17,
+      top: '50%',
+      transform: [
+        {
+          translateY: -29,
+        },
+      ],
+      opacity: 0.46,
+    },
+    iconAnchor: {
+      position:
+        'absolute',
+      right: 15,
+      top: '50%',
+      transform: [
+        {
+          translateY: -18,
+        },
+      ],
       alignItems:
         'center',
       justifyContent:
         'center',
     },
     name: {
-      marginTop:
-        spacing[2],
-      paddingRight: 28,
-      minHeight: 38,
+      maxWidth: '66%',
+      paddingRight:
+        spacing[1],
     },
     footer: {
-      marginTop: 'auto',
       paddingTop:
-        spacing[1],
-      borderTopWidth: 1,
-      flexDirection: 'row',
+        spacing[2],
+      borderTopWidth:
+        StyleSheet.hairlineWidth,
+      flexDirection:
+        'row',
       alignItems:
         'center',
       justifyContent:

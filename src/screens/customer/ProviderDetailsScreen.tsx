@@ -20,17 +20,19 @@ import {
   AlertBanner,
   AppText,
   Avatar,
-  Badge,
   Button,
   Card,
   Skeleton,
 } from '../../components/ui';
 import { useProviderDetails } from '../../hooks/useCustomerData';
 import { CustomerStackParamList } from '../../navigation/types';
-import { layout, spacing, useAppTheme } from '../../theme';
 import { ProviderService } from '../../types/provider';
+import { layout, spacing, useAppTheme } from '../../theme';
 
-type Props = NativeStackScreenProps<CustomerStackParamList, 'ProviderDetails'>;
+type Props = NativeStackScreenProps<
+  CustomerStackParamList,
+  'ProviderDetails'
+>;
 
 type MediaViewerState = {
   images: string[];
@@ -38,7 +40,10 @@ type MediaViewerState = {
 };
 
 function money(value?: number): string | null {
-  if (value == null || !Number.isFinite(value)) {
+  if (
+    value == null ||
+    !Number.isFinite(value)
+  ) {
     return null;
   }
 
@@ -50,9 +55,8 @@ export function ProviderDetailsScreen({
   route,
 }: Props): React.JSX.Element {
   const { theme } = useAppTheme();
-  const { width: windowWidth } = useWindowDimensions();
-
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [galleryWidth, setGalleryWidth] = useState(1);
   const [viewer, setViewer] = useState<MediaViewerState | null>(null);
 
   const {
@@ -63,10 +67,6 @@ export function ProviderDetailsScreen({
     isRefetching,
   } = useProviderDetails(route.params.providerId);
 
-  const galleryWidth = Math.max(
-    1,
-    windowWidth - layout.screenHorizontal * 2 - 2,
-  );
 
   return (
     <View
@@ -107,88 +107,82 @@ export function ProviderDetailsScreen({
           <>
             <Card style={styles.profileCard}>
               {provider.businessImageUrls.length ? (
-                <View style={styles.gallery}>
-                  <ScrollView
-                    horizontal
-                    pagingEnabled
-                    showsHorizontalScrollIndicator={false}
-                    onMomentumScrollEnd={event => {
-                      const nextIndex = Math.round(
-                        event.nativeEvent.contentOffset.x / galleryWidth,
-                      );
+                <View style={styles.galleryInset}>
+                  <View
+                    style={styles.gallery}
+                    onLayout={event => {
+                      const measuredWidth =
+                        event.nativeEvent.layout.width;
 
-                      setGalleryIndex(
-                        Math.max(
-                          0,
-                          Math.min(
-                            provider.businessImageUrls.length - 1,
-                            nextIndex,
-                          ),
-                        ),
-                      );
+                      if (measuredWidth > 0) {
+                        setGalleryWidth(
+                          measuredWidth,
+                        );
+                      }
                     }}
                   >
-                    {provider.businessImageUrls.map((imageUrl, index) => (
-                      <Pressable
-                        key={`${imageUrl}-${index}`}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Open business photo ${index + 1}`}
-                        onPress={() =>
-                          setViewer({
-                            images: provider.businessImageUrls,
-                            index,
-                          })
-                        }
-                        style={{
-                          width: galleryWidth,
-                        }}
-                      >
-                        <Image
-                          source={{
-                            uri: imageUrl,
+                    <ScrollView
+                      horizontal
+                      pagingEnabled
+                      showsHorizontalScrollIndicator={false}
+                      onMomentumScrollEnd={event => {
+                        const nextIndex = Math.round(
+                          event.nativeEvent.contentOffset.x / galleryWidth,
+                        );
+
+                        setGalleryIndex(
+                          Math.max(
+                            0,
+                            Math.min(
+                              provider.businessImageUrls.length - 1,
+                              nextIndex,
+                            ),
+                          ),
+                        );
+                      }}
+                    >
+                      {provider.businessImageUrls.map((imageUrl, index) => (
+                        <Pressable
+                          key={`${imageUrl}-${index}`}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Open business photo ${index + 1}`}
+                          onPress={() =>
+                            setViewer({
+                              images: provider.businessImageUrls,
+                              index,
+                            })
+                          }
+                          style={{
+                            width: galleryWidth,
                           }}
-                          resizeMode="cover"
-                          style={styles.businessImage}
-                        />
-
-                        <View style={styles.galleryOpenBadge}>
-                          <AppIcon
-                            name="externalLink"
-                            size={iconSize.xs}
-                            color="#FFFFFF"
+                        >
+                          <Image
+                            source={{
+                              uri: imageUrl,
+                            }}
+                            resizeMode="cover"
+                            style={styles.businessImage}
                           />
-                        </View>
-                      </Pressable>
-                    ))}
-                  </ScrollView>
 
-                  {provider.businessImageUrls.length > 1 ? (
-                    <>
+                          <View style={styles.galleryOpenBadge}>
+                            <AppIcon
+                              name="externalLink"
+                              size={iconSize.xs}
+                              color="#FFFFFF"
+                            />
+                          </View>
+                        </Pressable>
+                      ))}
+                    </ScrollView>
+
+                    {provider.businessImageUrls.length > 1 ? (
                       <View style={styles.galleryCount}>
                         <AppText variant="caption" color="#FFFFFF">
-                          {galleryIndex + 1} /{' '}
-                          {provider.businessImageUrls.length}
+                          {galleryIndex + 1} / {provider.businessImageUrls.length}
                         </AppText>
                       </View>
-
-                      <View style={styles.galleryDots}>
-                        {provider.businessImageUrls.map((_, index) => (
-                          <View
-                            key={index}
-                            style={[
-                              styles.galleryDot,
-                              {
-                                backgroundColor:
-                                  index === galleryIndex
-                                    ? '#FFFFFF'
-                                    : 'rgba(255,255,255,0.46)',
-                              },
-                            ]}
-                          />
-                        ))}
-                      </View>
-                    </>
-                  ) : null}
+                    ) : null}
+                  </View>
                 </View>
               ) : null}
 
@@ -248,9 +242,46 @@ export function ProviderDetailsScreen({
                         {provider.name}
                       </AppText>
 
-                      {provider.verified ? (
-                        <Badge variant="success">VERIFIED</Badge>
-                      ) : null}
+                      <View
+                        style={[
+                          styles.availabilityChip,
+                          {
+                            backgroundColor:
+                              provider.available
+                                ? '#E5F7EB'
+                                : '#EEF1EF',
+                            borderColor:
+                              provider.available
+                                ? '#C4EACF'
+                                : '#DCE3DF',
+                          },
+                        ]}
+                      >
+                        <View
+                          style={[
+                            styles.availabilityDot,
+                            {
+                              backgroundColor:
+                                provider.available
+                                  ? '#22B863'
+                                  : '#8A9991',
+                            },
+                          ]}
+                        />
+
+                        <AppText
+                          variant="caption"
+                          color={
+                            provider.available
+                              ? theme.colors.primary
+                              : theme.colors.textMuted
+                          }
+                        >
+                          {provider.available
+                            ? 'Available'
+                            : 'Unavailable'}
+                        </AppText>
+                      </View>
                     </View>
 
                     <AppText
@@ -288,29 +319,6 @@ export function ProviderDetailsScreen({
                       </AppText>
                     ) : null}
 
-                    <View style={styles.availabilityRow}>
-                      <View
-                        style={[
-                          styles.availabilityDot,
-                          {
-                            backgroundColor: provider.available
-                              ? '#24C56A'
-                              : theme.colors.disabled,
-                          },
-                        ]}
-                      />
-
-                      <AppText
-                        variant="caption"
-                        color={
-                          provider.available
-                            ? theme.colors.primary
-                            : theme.colors.textMuted
-                        }
-                      >
-                        {provider.available ? 'Available' : 'Unavailable'}
-                      </AppText>
-                    </View>
                   </View>
                 </View>
 
@@ -397,8 +405,11 @@ export function ProviderDetailsScreen({
                   {provider.services.map((service, index) => (
                     <ServiceRow
                       key={service.id}
+                      index={index + 1}
                       service={service}
-                      showDivider={index < provider.services.length - 1}
+                      showDivider={
+                        index < provider.services.length - 1
+                      }
                     />
                   ))}
                 </View>
@@ -442,7 +453,11 @@ export function ProviderDetailsScreen({
                     : 'Provider currently unavailable'}
                 </AppText>
 
-                <AppText variant="bodySmall" muted style={styles.bookingText}>
+                <AppText
+                  variant="bodySmall"
+                  muted
+                  style={styles.bookingText}
+                >
                   {provider.available
                     ? 'Choose a service, verify the job address and send your request. In-app chat becomes available after the provider accepts.'
                     : 'This provider is not accepting new booking requests right now.'}
@@ -479,7 +494,10 @@ export function ProviderDetailsScreen({
         }
       />
 
-      <ProviderMediaViewer state={viewer} onClose={() => setViewer(null)} />
+      <ProviderMediaViewer
+        state={viewer}
+        onClose={() => setViewer(null)}
+      />
     </View>
   );
 }
@@ -504,7 +522,11 @@ function ProviderStat({
         },
       ]}
     >
-      <AppIcon name={icon} size={15} color={theme.colors.primary} />
+      <AppIcon
+        name={icon}
+        size={15}
+        color={theme.colors.primary}
+      />
 
       <AppText variant="label" style={styles.statValue}>
         {value}
@@ -518,9 +540,11 @@ function ProviderStat({
 }
 
 function ServiceRow({
+  index,
   service,
   showDivider,
 }: {
+  index: number;
   service: ProviderService;
   showDivider: boolean;
 }): React.JSX.Element {
@@ -531,11 +555,36 @@ function ServiceRow({
   return (
     <View>
       <View style={styles.serviceRow}>
+        <View
+          style={[
+            styles.serviceNumber,
+            {
+              backgroundColor:
+                theme.colors.secondary,
+            },
+          ]}
+        >
+          <AppText
+            variant="caption"
+            color={
+              theme.colors.primary
+            }
+          >
+            {index}
+          </AppText>
+        </View>
+
         <View style={styles.serviceCopy}>
-          <AppText variant="label">{service.name}</AppText>
+          <AppText variant="label">
+            {service.name}
+          </AppText>
 
           {service.description ? (
-            <AppText variant="caption" muted style={styles.smallGap}>
+            <AppText
+              variant="caption"
+              muted
+              style={styles.smallGap}
+            >
               {service.description}
             </AppText>
           ) : null}
@@ -584,7 +633,12 @@ function ProviderMediaViewer({
   }, [state]);
 
   if (!state) {
-    return <Modal visible={false} transparent />;
+    return (
+      <Modal
+        visible={false}
+        transparent
+      />
+    );
   }
 
   return (
@@ -612,7 +666,11 @@ function ProviderMediaViewer({
               },
             ]}
           >
-            <AppIcon name="x" size={iconSize.md} color="#FFFFFF" />
+            <AppIcon
+              name="x"
+              size={iconSize.md}
+              color="#FFFFFF"
+            />
           </Pressable>
         </View>
 
@@ -626,7 +684,9 @@ function ProviderMediaViewer({
           }}
           onMomentumScrollEnd={event => {
             setVisibleIndex(
-              Math.round(event.nativeEvent.contentOffset.x / width),
+              Math.round(
+                event.nativeEvent.contentOffset.x / width,
+              ),
             );
           }}
         >
@@ -660,29 +720,53 @@ function ProviderDetailsSkeleton(): React.JSX.Element {
   return (
     <>
       <Card style={styles.profileSkeletonCard}>
-        <Skeleton width="100%" height={170} radiusValue={18} />
+        <Skeleton
+          width="100%"
+          height={170}
+          radiusValue={18}
+        />
 
         <View style={styles.skeletonProfileRow}>
-          <Skeleton width={72} height={72} radiusValue={36} />
+          <Skeleton
+            width={72}
+            height={72}
+            radiusValue={36}
+          />
 
           <View style={styles.skeletonProfileCopy}>
             <Skeleton width="68%" height={24} />
 
-            <Skeleton width="42%" height={14} style={styles.skeletonSmallGap} />
+            <Skeleton
+              width="42%"
+              height={14}
+              style={styles.skeletonSmallGap}
+            />
 
-            <Skeleton width="56%" height={12} style={styles.skeletonSmallGap} />
+            <Skeleton
+              width="56%"
+              height={12}
+              style={styles.skeletonSmallGap}
+            />
           </View>
         </View>
 
         <View style={styles.skeletonStats}>
           {[0, 1, 2].map(index => (
-            <Skeleton key={index} width="31%" height={66} radiusValue={14} />
+            <Skeleton
+              key={index}
+              width="31%"
+              height={66}
+              radiusValue={14}
+            />
           ))}
         </View>
       </Card>
 
       {[0, 1].map(index => (
-        <Card key={index} style={styles.skeletonSection}>
+        <Card
+          key={index}
+          style={styles.skeletonSection}
+        >
           <Skeleton width="38%" height={20} />
           <Skeleton
             width="100%"
@@ -713,13 +797,24 @@ const styles = StyleSheet.create({
     marginTop: spacing[4],
   },
   profileCard: {
-    borderRadius: 22,
+    // Radius rule:
+    // inner gallery radius (18) + gallery inset/padding (12) = outer radius (30)
+    borderRadius: 30,
     padding: 0,
     overflow: 'hidden',
   },
+  galleryInset: {
+    width: '100%',
+    paddingTop: spacing[3],
+    paddingHorizontal: spacing[3],
+  },
   gallery: {
     width: '100%',
+    alignSelf: 'stretch',
     aspectRatio: 16 / 9,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#DCE8E1',
     backgroundColor: '#E8EEEB',
     position: 'relative',
     overflow: 'hidden',
@@ -730,39 +825,30 @@ const styles = StyleSheet.create({
   },
   galleryOpenBadge: {
     position: 'absolute',
-    top: 12,
-    right: 12,
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: 'rgba(8,31,22,0.58)',
+    top: 10,
+    right: 10,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(8,31,22,0.56)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   galleryCount: {
     position: 'absolute',
-    right: 12,
+    right: 10,
     bottom: 10,
-    borderRadius: 999,
-    backgroundColor: 'rgba(8,31,22,0.62)',
+    minHeight: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(8,31,22,0.64)',
     paddingHorizontal: 9,
-    paddingVertical: 4,
-  },
-  galleryDots: {
-    position: 'absolute',
-    left: 14,
-    bottom: 14,
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-  },
-  galleryDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    justifyContent: 'center',
   },
   profileBody: {
-    padding: spacing[4],
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[3],
+    paddingBottom: spacing[3],
   },
   profileRow: {
     flexDirection: 'row',
@@ -818,11 +904,15 @@ const styles = StyleSheet.create({
   distance: {
     marginTop: spacing[1],
   },
-  availabilityRow: {
-    marginTop: spacing[2],
+  availabilityChip: {
+    minHeight: 28,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 9,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    flexShrink: 0,
   },
   availabilityDot: {
     width: 7,
@@ -830,7 +920,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   stats: {
-    marginTop: spacing[5],
+    marginTop: spacing[3],
     flexDirection: 'row',
     gap: spacing[2],
   },
@@ -849,14 +939,14 @@ const styles = StyleSheet.create({
   },
   aboutDivider: {
     height: StyleSheet.hairlineWidth,
-    marginTop: spacing[5],
+    marginTop: spacing[3],
   },
   aboutBlock: {
-    paddingTop: spacing[4],
+    paddingTop: spacing[3],
   },
   aboutText: {
-    marginTop: spacing[2],
-    lineHeight: 21,
+    marginTop: 6,
+    lineHeight: 20,
   },
   servicesCard: {
     marginTop: spacing[4],
@@ -889,6 +979,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: spacing[3],
+  },
+  serviceNumber: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
   serviceCopy: {
     flex: 1,

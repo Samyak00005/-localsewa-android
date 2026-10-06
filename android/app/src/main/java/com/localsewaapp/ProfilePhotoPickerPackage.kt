@@ -13,6 +13,7 @@ class ProfilePhotoPickerPackage : ReactPackage {
   ): MutableList<NativeModule> = mutableListOf(
     ProfilePhotoPickerModule(reactContext),
     NotificationBackdropModule(reactContext),
+    LocalsewaDateTimePickerModule(reactContext),
   )
 
   override fun createViewManagers(

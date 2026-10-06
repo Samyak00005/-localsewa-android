@@ -109,9 +109,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   mark: {
-    width: 42,
-    height: 42,
-    borderRadius: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 9,
   },
   actions: {
     flexDirection: 'row',

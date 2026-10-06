@@ -257,6 +257,7 @@ export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
                   {row.map(item => (
                     <HomeServiceCard
                       key={item.id}
+                      slug={item.slug}
                       name={item.name}
                       providerCount={item.providerCount}
                       onPress={() =>
