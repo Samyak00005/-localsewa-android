@@ -15,6 +15,27 @@ function text(value: unknown, fallback = ''): string {
   return typeof value === 'string' ? value : fallback;
 }
 
+export function normalizeProviderRef(value: unknown): string {
+  const raw =
+    typeof value === 'number'
+      ? String(value)
+      : text(value).trim();
+
+  if (!raw) {
+    return '';
+  }
+
+  if (/^provider-\d+$/i.test(raw)) {
+    return raw.toLowerCase();
+  }
+
+  if (/^\d+$/.test(raw)) {
+    return `provider-${raw}`;
+  }
+
+  return raw;
+}
+
 function number(value: unknown, fallback = 0): number {
   const parsed = typeof value === 'number' ? value : Number(value);
 
@@ -137,8 +158,12 @@ export function parseProvider(value: ApiRecord): Provider {
 
   const rawRating = number(value.rating, NaN);
 
+  const providerRef = normalizeProviderRef(
+    value.provider_ref ?? value.providerRef ?? value.id,
+  );
+
   return {
-    id: text(value.id),
+    id: providerRef,
     name: text(value.name, 'Service provider'),
     category: titleCase(text(value.category, 'Local service')),
     location: text(value.location, 'Service area unavailable'),
@@ -221,14 +246,16 @@ export const providerApi = {
   },
 
   async details(providerId: string, token?: string | null): Promise<Provider> {
-    if (!providerId) {
+    const providerRef = normalizeProviderRef(providerId);
+
+    if (!providerRef) {
       throw new ApiError('Provider ID is missing.');
     }
 
     const result = await apiRequest<{
       success: true;
       provider: ApiRecord;
-    }>(`/api/providers/${encodeURIComponent(providerId)}`, { token });
+    }>(`/api/providers/${encodeURIComponent(providerRef)}`, { token });
 
     return parseProvider(result.provider);
   },

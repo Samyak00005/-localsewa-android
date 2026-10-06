@@ -6,10 +6,9 @@ import { CUSTOMER_HOME_GREEN } from '../../constants/customerUi';
 import { useNotifications } from '../../hooks/useNotifications';
 import { CustomerTabParamList } from '../../navigation/types';
 import { spacing, useAppTheme } from '../../theme';
-import { AppIcon, iconSize } from '../icons';
+import { AppIcon } from '../icons';
 import { AppText } from '../ui';
 import { CustomerNotificationsModal } from './CustomerNotificationsModal';
-import { CustomerSidebar } from './CustomerSidebar';
 
 type Props = {
   routeName: keyof CustomerTabParamList;
@@ -25,8 +24,6 @@ export function CustomerHeader({
   const { data: notifications } = useNotifications();
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const background = CUSTOMER_HOME_GREEN;
 
@@ -88,21 +85,6 @@ export function CustomerHeader({
                 </View>
               ) : null}
             </Pressable>
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Open menu"
-              hitSlop={8}
-              onPress={() => setSidebarOpen(true)}
-              style={({ pressed }) => [
-                styles.bareButton,
-                {
-                  opacity: pressed ? 0.65 : 1,
-                },
-              ]}
-            >
-              <AppIcon name="menu" size={iconSize.md} color={iconColor} />
-            </Pressable>
           </View>
         </View>
       </View>
@@ -110,11 +92,6 @@ export function CustomerHeader({
       <CustomerNotificationsModal
         visible={notificationsOpen}
         onClose={() => setNotificationsOpen(false)}
-      />
-
-      <CustomerSidebar
-        visible={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
       />
     </>
   );

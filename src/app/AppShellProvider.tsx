@@ -8,6 +8,12 @@ import React, {
 } from 'react';
 
 import { useAuth } from '../auth';
+import {
+  WorkspaceSwitchModal,
+} from '../components/navigation/WorkspaceSwitchModal';
+import type {
+  WorkspaceSwitchTarget,
+} from '../components/navigation/WorkspaceSwitchModal';
 import { useAppTheme } from '../theme';
 import { ProviderTier } from '../types/roles';
 
@@ -41,6 +47,14 @@ export function AppShellProvider({
   const { user, restoring } = useAuth();
   const [area, setArea] = useState<AppArea>('auth');
 
+  const [
+    switchTarget,
+    setSwitchTarget,
+  ] =
+    useState<WorkspaceSwitchTarget | null>(
+      null,
+    );
+
   // Premium entitlement is not connected in v1.6.0.
   // Authenticated Providers use STANDARD until subscription integration.
   const providerTier: ProviderTier = 'STANDARD';
@@ -57,6 +71,9 @@ export function AppShellProvider({
     }
 
     if (!user) {
+      setSwitchTarget(
+        null,
+      );
       setArea('auth');
       return;
     }
@@ -86,6 +103,35 @@ export function AppShellProvider({
   }, [area, canUseCustomer, canUseProvider, restoring, user]);
 
   useEffect(() => {
+    if (!switchTarget) {
+      return;
+    }
+
+    const switchTimer =
+      setTimeout(() => {
+        setArea(
+          switchTarget,
+        );
+      }, 850);
+
+    const closeTimer =
+      setTimeout(() => {
+        setSwitchTarget(
+          null,
+        );
+      }, 1080);
+
+    return () => {
+      clearTimeout(
+        switchTimer,
+      );
+      clearTimeout(
+        closeTimer,
+      );
+    };
+  }, [switchTarget]);
+
+  useEffect(() => {
     if (area === 'provider') {
       setMode('providerStandard');
       return;
@@ -101,26 +147,62 @@ export function AppShellProvider({
       canUseProvider,
 
       enterCustomer: () => {
-        if (user) {
-          setArea('customer');
+        if (
+          user &&
+          area !==
+            'customer' &&
+          !switchTarget
+        ) {
+          setSwitchTarget(
+            'customer',
+          );
         }
       },
 
       enterProvider: () => {
-        if (!user || !canUseProvider) {
+        if (
+          !user ||
+          !canUseProvider
+        ) {
           return false;
         }
 
-        setArea('provider');
+        if (
+          area !==
+            'provider' &&
+          !switchTarget
+        ) {
+          setSwitchTarget(
+            'provider',
+          );
+        }
+
         return true;
       },
     }),
-    [area, canUseProvider, providerTier, user],
+    [
+      area,
+      canUseProvider,
+      providerTier,
+      switchTarget,
+      user,
+    ],
   );
 
   return (
     <AppShellContext.Provider value={value}>
       {children}
+
+      <WorkspaceSwitchModal
+        visible={
+          switchTarget !=
+          null
+        }
+        target={
+          switchTarget ??
+          'customer'
+        }
+      />
     </AppShellContext.Provider>
   );
 }

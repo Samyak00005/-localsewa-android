@@ -12,6 +12,7 @@ import {
 import {
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   errorMessage,
@@ -57,6 +58,8 @@ export function DefaultLocationScreen({
 }: Props): React.JSX.Element {
   const {theme} =
     useAppTheme();
+
+  const insets = useSafeAreaInsets();
 
   const {
     data: profile,
@@ -163,20 +166,13 @@ export function DefaultLocationScreen({
 
   return (
     <KeyboardAvoidingView
-      behavior={
-        Platform.OS === 'ios'
-          ? 'padding'
-          : undefined
-      }
-      style={
-        styles.overlay
-      }>
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={styles.overlay}
+    >
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Close default location popup"
-        style={
-          StyleSheet.absoluteFillObject
-        }
+        accessibilityLabel="Close location popup"
+        style={StyleSheet.absoluteFillObject}
         onPress={close}
       />
 
@@ -184,36 +180,32 @@ export function DefaultLocationScreen({
         style={[
           styles.sheet,
           {
-            backgroundColor:
-              theme.colors.surface,
-            borderColor:
-              theme.colors.border,
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+            marginBottom: Math.max(insets.bottom, 8),
           },
           shadows.md,
-        ]}>
+        ]}
+      >
         <View
           style={[
             styles.header,
             {
-              borderBottomColor:
-                theme.colors.border,
+              borderBottomColor: theme.colors.border,
             },
-          ]}>
-          <View
-            style={
-              styles.headerCopy
-            }>
-            <AppText variant="h2">
-              Default location
+          ]}
+        >
+          <View style={styles.headerCopy}>
+            <AppText variant="overline" color={theme.colors.primary}>
+              SERVICE AREA
             </AppText>
 
-            <AppText
-              variant="caption"
-              muted
-              style={
-                styles.subtitle
-              }>
-              Verify your usual service address for faster bookings.
+            <AppText variant="h2" style={styles.title}>
+              Set your location
+            </AppText>
+
+            <AppText variant="caption" muted style={styles.subtitle}>
+              Only verified Indian cities, areas and 6-digit PIN codes can be saved.
             </AppText>
           </View>
 
@@ -225,68 +217,94 @@ export function DefaultLocationScreen({
             style={({pressed}) => [
               styles.close,
               {
-                backgroundColor:
-                  theme.colors.surfaceMuted,
-                opacity:
-                  busy
-                    ? 0.45
-                    : pressed
-                      ? 0.72
-                      : 1,
+                backgroundColor: theme.colors.surfaceMuted,
+                opacity: busy ? 0.45 : pressed ? 0.72 : 1,
               },
-            ]}>
-            <AppIcon
-              name="x"
-              size={
-                iconSize.sm
-              }
-              color={
-                theme.colors.textMuted
-              }
-            />
+            ]}
+          >
+            <AppIcon name="x" size={iconSize.sm} color={theme.colors.textMuted} />
           </Pressable>
         </View>
 
         <ScrollView
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={
-            styles.content
-          }>
+          contentContainerStyle={styles.content}
+        >
           {screenError ? (
-            <AlertBanner variant="error">
-              {screenError}
-            </AlertBanner>
+            <AlertBanner variant="error">{screenError}</AlertBanner>
           ) : null}
 
+          <View
+            style={[
+              styles.currentLocation,
+              {
+                backgroundColor: '#F2FFF7',
+                borderColor: '#99DEB7',
+              },
+            ]}
+          >
+            <View style={styles.currentLocationIcon}>
+              <AppIcon name="mapPin" size={iconSize.sm} color={theme.colors.primary} />
+            </View>
+
+            <View style={styles.currentLocationCopy}>
+              <AppText variant="label" color={theme.colors.primary}>
+                Use current location
+              </AppText>
+
+              <AppText variant="caption" muted style={styles.smallGap}>
+                GPS se area, city, state aur PIN code pata kare
+              </AppText>
+            </View>
+          </View>
+
+          <View style={styles.dividerRow}>
+            <View
+              style={[
+                styles.divider,
+                {
+                  backgroundColor: theme.colors.border,
+                },
+              ]}
+            />
+
+            <AppText variant="overline" muted>
+              OR ENTER MANUALLY
+            </AppText>
+
+            <View
+              style={[
+                styles.divider,
+                {
+                  backgroundColor: theme.colors.border,
+                },
+              ]}
+            />
+          </View>
+
           <Input
-            label="Address"
-            placeholder="House/road, area, city, state, PIN"
+            label="City, area or PIN code"
+            placeholder="Example: Chandrapur or 442401"
             value={address}
             onChangeText={value => {
               setAddress(value);
               setVerified(null);
               setScreenError(null);
             }}
-            multiline
             editable={!busy}
             maxLength={240}
-            style={
-              styles.address
+            leftAccessory={
+              <AppIcon name="search" size={iconSize.xs} color={theme.colors.textMuted} />
             }
+            helperText="Type a city, area or PIN code, then verify the location."
           />
 
           <Button
-            label={
-              verified
-                ? 'Verify again'
-                : 'Verify address'
-            }
+            label={verified ? 'Verify again' : 'Verify location'}
             variant="outline"
             loading={verifying}
-            disabled={
-              update.isPending
-            }
+            disabled={update.isPending}
             onPress={verify}
             fullWidth
           />
@@ -299,124 +317,96 @@ export function DefaultLocationScreen({
 
           <Button
             label="Save location"
-            disabled={
-              !verified ||
-              verifying
-            }
-            loading={
-              update.isPending
-            }
+            disabled={!verified || verifying}
+            loading={update.isPending}
             onPress={save}
             fullWidth
           />
-
-          <View
-            style={[
-              styles.integrity,
-              {
-                backgroundColor:
-                  theme.colors.surfaceMuted,
-              },
-            ]}>
-            <AppIcon
-              name="shieldCheck"
-              size={
-                iconSize.sm
-              }
-              color={
-                theme.colors.primary
-              }
-            />
-
-            <AppText
-              variant="caption"
-              muted
-              style={
-                styles.integrityText
-              }>
-              Localsewa saves the verified address and matching coordinates,
-              not a guessed map point.
-            </AppText>
-          </View>
         </ScrollView>
       </View>
     </KeyboardAvoidingView>
   );
 }
 
-const styles =
-  StyleSheet.create({
-    overlay: {
-      flex: 1,
-      backgroundColor:
-        'rgba(7,24,17,0.46)',
-      justifyContent:
-        'center',
-      paddingHorizontal:
-        spacing[3],
-      paddingVertical:
-        spacing[6],
-    },
-    sheet: {
-      width: '100%',
-      maxWidth: 430,
-      maxHeight: '82%',
-      alignSelf: 'center',
-      borderWidth: 1,
-      borderRadius: 24,
-      overflow: 'hidden',
-    },
-    header: {
-      minHeight: 82,
-      paddingHorizontal:
-        spacing[4],
-      paddingVertical:
-        spacing[3],
-      borderBottomWidth: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing[3],
-    },
-    headerCopy: {
-      flex: 1,
-      minWidth: 0,
-    },
-    subtitle: {
-      marginTop:
-        spacing[1],
-    },
-    close: {
-      width: 42,
-      height: 42,
-      borderRadius: 21,
-      alignItems: 'center',
-      justifyContent:
-        'center',
-    },
-    content: {
-      padding:
-        spacing[4],
-      paddingBottom:
-        spacing[6],
-      gap: spacing[4],
-    },
-    address: {
-      minHeight: 96,
-      textAlignVertical:
-        'top',
-    },
-    integrity: {
-      borderRadius:
-        radius.md,
-      padding:
-        spacing[3],
-      flexDirection: 'row',
-      alignItems:
-        'flex-start',
-      gap: spacing[2],
-    },
-    integrityText: {
-      flex: 1,
-      lineHeight: 18,
-    },
-  });
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(7,24,17,0.42)',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 8,
+  },
+  sheet: {
+    width: '100%',
+    maxWidth: 520,
+    maxHeight: '86%',
+    alignSelf: 'center',
+    borderWidth: 1,
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  header: {
+    minHeight: 112,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[4],
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing[3],
+  },
+  headerCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  title: {
+    marginTop: spacing[1],
+  },
+  subtitle: {
+    marginTop: spacing[1],
+    lineHeight: 18,
+  },
+  close: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  content: {
+    padding: spacing[4],
+    paddingBottom: spacing[5],
+    gap: spacing[4],
+  },
+  currentLocation: {
+    minHeight: 70,
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    padding: spacing[3],
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[3],
+  },
+  currentLocationIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  currentLocationCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  smallGap: {
+    marginTop: 2,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+  },
+  divider: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+  },
+});

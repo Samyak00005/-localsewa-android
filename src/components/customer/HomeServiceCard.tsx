@@ -197,7 +197,7 @@ const styles =
     card: {
       flex: 1,
       minWidth: 0,
-      minHeight: 132,
+      aspectRatio: 1,
       borderRadius:
         radius.lg,
       borderWidth: 1,
@@ -229,7 +229,7 @@ const styles =
       marginTop:
         spacing[4],
       paddingRight: 30,
-      minHeight: 48,
+      minHeight: 42,
     },
     footer: {
       marginTop: 'auto',

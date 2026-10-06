@@ -3,6 +3,7 @@ import React, {
 } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -554,6 +555,47 @@ export function CustomerProfileScreen({
               onPress={() =>
                 stack?.navigate(
                   'AccountSecurity',
+                )
+              }
+            />
+          </ProfileSection>
+
+
+          <ProfileSection
+            title="App settings">
+            <ProfileMenuRow
+              icon="fileText"
+              title="App language"
+              subtitle="Language used across Localsewa"
+              value="English"
+              onPress={() =>
+                Alert.alert(
+                  'App language',
+                  'English is currently selected for the app.',
+                )
+              }
+            />
+
+            <ProfileMenuRow
+              icon="sparkles"
+              title="App theme"
+              subtitle="Appearance used across the app"
+              value="Light"
+              onPress={() =>
+                Alert.alert(
+                  'App theme',
+                  'Light theme is currently selected.',
+                )
+              }
+            />
+
+            <ProfileMenuRow
+              icon="bell"
+              title="Notifications"
+              subtitle="View your in-app notifications"
+              onPress={() =>
+                stack?.navigate(
+                  'Notifications',
                 )
               }
             />

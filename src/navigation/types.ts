@@ -38,6 +38,7 @@ export type CustomerStackParamList = {
     | undefined;
 
   Notifications: undefined;
+  NearbyServices: undefined;
 
   ProviderDetails: {
     providerId: string;

@@ -296,7 +296,7 @@ export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
               : 'Browse local providers and send a booking request'
           }
           action="See all"
-          onPress={() => navigation.navigate('CustomerServices')}
+          onPress={() => stack?.navigate('NearbyServices')}
         />
 
         <View style={styles.providerList}>

@@ -7,6 +7,7 @@ export * from './ChangeEmailScreen';
 export * from './ChangePasswordScreen';
 export * from './CustomerBookingsScreen';
 export * from './CustomerHomeScreen';
+export * from './CustomerNearbyServicesScreen';
 export * from './CustomerNotificationsScreen';
 export * from './CustomerProfileScreen';
 export * from './CustomerSavedScreen';

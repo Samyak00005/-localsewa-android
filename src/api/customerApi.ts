@@ -1,6 +1,6 @@
 import { Provider } from '../types/provider';
 import { apiRequest } from './apiClient';
-import { parseProvider } from './providerApi';
+import { normalizeProviderRef, parseProvider } from './providerApi';
 
 type ApiRecord = Record<string, unknown>;
 
@@ -21,17 +21,29 @@ export const customerApi = {
   },
 
   async saveProvider(providerRef: string, token: string): Promise<void> {
+    const normalizedRef = normalizeProviderRef(providerRef);
+
+    if (!normalizedRef) {
+      throw new Error('Provider reference is unavailable.');
+    }
+
     await apiRequest('/api/saved', {
       method: 'POST',
       token,
       body: {
-        provider_ref: providerRef,
+        provider_id: normalizedRef,
       },
     });
   },
 
   async removeSavedProvider(providerRef: string, token: string): Promise<void> {
-    await apiRequest(`/api/saved/${encodeURIComponent(providerRef)}`, {
+    const normalizedRef = normalizeProviderRef(providerRef);
+
+    if (!normalizedRef) {
+      throw new Error('Provider reference is unavailable.');
+    }
+
+    await apiRequest(`/api/saved/${encodeURIComponent(normalizedRef)}`, {
       method: 'DELETE',
       token,
     });

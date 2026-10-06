@@ -11,6 +11,7 @@ import {
   BookingRequestScreen,
   ChangeEmailScreen,
   ChangePasswordScreen,
+  CustomerNearbyServicesScreen,
   CustomerNotificationsScreen,
   DefaultLocationScreen,
   EditCustomerProfileScreen,
@@ -45,6 +46,13 @@ export function CustomerNavigator(): React.JSX.Element {
         name="Notifications"
         component={
           CustomerNotificationsScreen
+        }
+      />
+
+      <Stack.Screen
+        name="NearbyServices"
+        component={
+          CustomerNearbyServicesScreen
         }
       />
 
