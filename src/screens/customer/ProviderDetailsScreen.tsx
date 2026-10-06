@@ -1,9 +1,12 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Image,
+  Modal,
+  Pressable,
   ScrollView,
   StyleSheet,
+  useWindowDimensions,
   View,
 } from 'react-native';
 
@@ -24,13 +27,18 @@ import {
 } from '../../components/ui';
 import { useProviderDetails } from '../../hooks/useCustomerData';
 import { CustomerStackParamList } from '../../navigation/types';
-import { ProviderReview, ProviderService } from '../../types/provider';
-import { layout, radius, spacing, useAppTheme } from '../../theme';
+import { ProviderService } from '../../types/provider';
+import { layout, spacing, useAppTheme } from '../../theme';
 
 type Props = NativeStackScreenProps<
   CustomerStackParamList,
   'ProviderDetails'
 >;
+
+type MediaViewerState = {
+  images: string[];
+  index: number;
+};
 
 function money(value?: number): string | null {
   if (
@@ -43,46 +51,15 @@ function money(value?: number): string | null {
   return `₹${Math.round(value).toLocaleString('en-IN')}`;
 }
 
-function reviewDate(value?: string): string | null {
-  if (!value) {
-    return null;
-  }
-
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
-
-  if (!match) {
-    return null;
-  }
-
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-
-  const month = Number(match[2]);
-
-  if (month < 1 || month > 12) {
-    return null;
-  }
-
-  return `${Number(match[3])} ${months[month - 1]} ${match[1]}`;
-}
-
 export function ProviderDetailsScreen({
   navigation,
   route,
 }: Props): React.JSX.Element {
   const { theme } = useAppTheme();
+  const { width: windowWidth } = useWindowDimensions();
+
+  const [galleryIndex, setGalleryIndex] = useState(0);
+  const [viewer, setViewer] = useState<MediaViewerState | null>(null);
 
   const {
     data: provider,
@@ -91,6 +68,11 @@ export function ProviderDetailsScreen({
     refetch,
     isRefetching,
   } = useProviderDetails(route.params.providerId);
+
+  const galleryWidth = Math.max(
+    1,
+    windowWidth - layout.screenHorizontal * 2 - 2,
+  );
 
   return (
     <View
@@ -129,129 +111,285 @@ export function ProviderDetailsScreen({
           </View>
         ) : (
           <>
-            <Card style={styles.heroCard}>
-              <View style={styles.profileRow}>
-                {provider.imageUrl ? (
-                  <Image
-                    source={{
-                      uri: provider.imageUrl,
+            <Card style={styles.profileCard}>
+              {provider.businessImageUrls.length ? (
+                <View style={styles.gallery}>
+                  <ScrollView
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    onMomentumScrollEnd={event => {
+                      const nextIndex = Math.round(
+                        event.nativeEvent.contentOffset.x / galleryWidth,
+                      );
+
+                      setGalleryIndex(
+                        Math.max(
+                          0,
+                          Math.min(
+                            provider.businessImageUrls.length - 1,
+                            nextIndex,
+                          ),
+                        ),
+                      );
                     }}
-                    style={styles.image}
-                  />
-                ) : (
-                  <Avatar initials={provider.name} size="lg" />
-                )}
-
-                <View style={styles.profileCopy}>
-                  <View style={styles.nameRow}>
-                    <AppText
-                      variant="h2"
-                      numberOfLines={2}
-                      style={styles.name}
-                    >
-                      {provider.name}
-                    </AppText>
-
-                    {provider.verified ? (
-                      <Badge variant="success">VERIFIED</Badge>
-                    ) : null}
-                  </View>
-
-                  <AppText
-                    variant="label"
-                    color={theme.colors.primary}
-                    style={styles.category}
                   >
-                    {provider.category}
-                  </AppText>
+                    {provider.businessImageUrls.map((imageUrl, index) => (
+                      <Pressable
+                        key={`${imageUrl}-${index}`}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Open business photo ${index + 1}`}
+                        onPress={() =>
+                          setViewer({
+                            images: provider.businessImageUrls,
+                            index,
+                          })
+                        }
+                        style={{
+                          width: galleryWidth,
+                        }}
+                      >
+                        <Image
+                          source={{
+                            uri: imageUrl,
+                          }}
+                          resizeMode="cover"
+                          style={styles.businessImage}
+                        />
 
-                  <View style={styles.locationRow}>
-                    <AppIcon
-                      name="mapPin"
-                      size={14}
-                      color={theme.colors.textMuted}
-                    />
+                        <View style={styles.galleryOpenBadge}>
+                          <AppIcon
+                            name="externalLink"
+                            size={iconSize.xs}
+                            color="#FFFFFF"
+                          />
+                        </View>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
 
-                    <AppText
-                      variant="caption"
-                      muted
-                      numberOfLines={1}
-                      style={styles.locationText}
-                    >
-                      {provider.location}
-                    </AppText>
-                  </View>
+                  {provider.businessImageUrls.length > 1 ? (
+                    <>
+                      <View style={styles.galleryCount}>
+                        <AppText variant="caption" color="#FFFFFF">
+                          {galleryIndex + 1} / {provider.businessImageUrls.length}
+                        </AppText>
+                      </View>
 
-                  {provider.distanceLabel ? (
-                    <AppText
-                      variant="caption"
-                      muted
-                      style={styles.distance}
-                    >
-                      {provider.distanceLabel}
-                    </AppText>
+                      <View style={styles.galleryDots}>
+                        {provider.businessImageUrls.map((_, index) => (
+                          <View
+                            key={index}
+                            style={[
+                              styles.galleryDot,
+                              {
+                                backgroundColor:
+                                  index === galleryIndex
+                                    ? '#FFFFFF'
+                                    : 'rgba(255,255,255,0.46)',
+                              },
+                            ]}
+                          />
+                        ))}
+                      </View>
+                    </>
                   ) : null}
                 </View>
-              </View>
+              ) : null}
 
-              <View style={styles.stats}>
-                <ProviderStat
-                  icon="star"
-                  label="Rating"
-                  value={
-                    provider.rating == null
-                      ? 'New'
-                      : provider.rating.toFixed(1)
-                  }
-                />
+              <View style={styles.profileBody}>
+                <View style={styles.profileRow}>
+                  {provider.profileImageUrl ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Open provider profile photo"
+                      onPress={() =>
+                        setViewer({
+                          images: [provider.profileImageUrl!],
+                          index: 0,
+                        })
+                      }
+                      style={({ pressed }) => [
+                        styles.profilePhotoPressable,
+                        {
+                          opacity: pressed ? 0.82 : 1,
+                        },
+                      ]}
+                    >
+                      <Image
+                        source={{
+                          uri: provider.profileImageUrl,
+                        }}
+                        style={styles.profileImage}
+                      />
 
-                <ProviderStat
-                  icon="message"
-                  label="Reviews"
-                  value={String(provider.reviewCount)}
-                />
+                      <View
+                        style={[
+                          styles.profileOpenBadge,
+                          {
+                            backgroundColor: theme.colors.surface,
+                            borderColor: theme.colors.border,
+                          },
+                        ]}
+                      >
+                        <AppIcon
+                          name="externalLink"
+                          size={12}
+                          color={theme.colors.primary}
+                        />
+                      </View>
+                    </Pressable>
+                  ) : (
+                    <Avatar initials={provider.name} size="lg" />
+                  )}
 
-                <ProviderStat
-                  icon="briefcase"
-                  label="Experience"
-                  value={`${provider.experienceYears} yr`}
-                />
+                  <View style={styles.profileCopy}>
+                    <View style={styles.nameRow}>
+                      <AppText
+                        variant="h2"
+                        numberOfLines={2}
+                        style={styles.name}
+                      >
+                        {provider.name}
+                      </AppText>
 
-                <ProviderStat
-                  icon="servicesGrid"
-                  label="Services"
-                  value={String(provider.serviceCount)}
-                />
-              </View>
+                      {provider.verified ? (
+                        <Badge variant="success">VERIFIED</Badge>
+                      ) : null}
+                    </View>
 
-              <View style={styles.statusRow}>
-                <Badge variant={provider.available ? 'success' : 'default'}>
-                  {provider.available ? 'AVAILABLE' : 'UNAVAILABLE'}
-                </Badge>
+                    <AppText
+                      variant="label"
+                      color={theme.colors.primary}
+                      style={styles.category}
+                    >
+                      {provider.category}
+                    </AppText>
 
-                {provider.homeService ? <Badge>HOME SERVICE</Badge> : null}
+                    <View style={styles.locationRow}>
+                      <AppIcon
+                        name="mapPin"
+                        size={14}
+                        color={theme.colors.textMuted}
+                      />
 
-                {provider.shopService ? <Badge>SHOP SERVICE</Badge> : null}
+                      <AppText
+                        variant="caption"
+                        muted
+                        numberOfLines={2}
+                        style={styles.locationText}
+                      >
+                        {provider.location}
+                      </AppText>
+                    </View>
+
+                    {provider.distanceLabel ? (
+                      <AppText
+                        variant="caption"
+                        color={theme.colors.primary}
+                        style={styles.distance}
+                      >
+                        {provider.distanceLabel}
+                      </AppText>
+                    ) : null}
+
+                    <View style={styles.availabilityRow}>
+                      <View
+                        style={[
+                          styles.availabilityDot,
+                          {
+                            backgroundColor: provider.available
+                              ? '#24C56A'
+                              : theme.colors.disabled,
+                          },
+                        ]}
+                      />
+
+                      <AppText
+                        variant="caption"
+                        color={
+                          provider.available
+                            ? theme.colors.primary
+                            : theme.colors.textMuted
+                        }
+                      >
+                        {provider.available ? 'Available' : 'Unavailable'}
+                      </AppText>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.stats}>
+                  <ProviderStat
+                    icon="star"
+                    label="Rating"
+                    value={
+                      provider.rating == null
+                        ? 'New'
+                        : provider.rating.toFixed(1)
+                    }
+                  />
+
+                  <ProviderStat
+                    icon="message"
+                    label="Reviews"
+                    value={String(provider.reviewCount)}
+                  />
+
+                  <ProviderStat
+                    icon="briefcase"
+                    label="Experience"
+                    value={`${provider.experienceYears} yr`}
+                  />
+                </View>
+
+                {provider.description ? (
+                  <>
+                    <View
+                      style={[
+                        styles.aboutDivider,
+                        {
+                          backgroundColor: theme.colors.border,
+                        },
+                      ]}
+                    />
+
+                    <View style={styles.aboutBlock}>
+                      <AppText variant="title">About</AppText>
+
+                      <AppText
+                        variant="bodySmall"
+                        color={theme.colors.textSecondary}
+                        style={styles.aboutText}
+                      >
+                        {provider.description}
+                      </AppText>
+                    </View>
+                  </>
+                ) : null}
               </View>
             </Card>
 
-            {provider.description ? (
-              <Card style={styles.sectionCard}>
-                <SectionTitle title="About" icon="user" />
-
-                <AppText
-                  variant="bodySmall"
-                  color={theme.colors.textSecondary}
-                  style={styles.sectionText}
-                >
-                  {provider.description}
-                </AppText>
-              </Card>
-            ) : null}
-
-            <Card style={styles.sectionCard}>
+            <Card style={styles.servicesCard}>
               <View style={styles.sectionHeaderRow}>
-                <SectionTitle title="Services" icon="servicesGrid" />
+                <View style={styles.sectionTitle}>
+                  <View
+                    style={[
+                      styles.sectionIcon,
+                      {
+                        backgroundColor: theme.colors.secondary,
+                      },
+                    ]}
+                  >
+                    <AppIcon
+                      name="servicesGrid"
+                      size={iconSize.xs}
+                      color={theme.colors.primary}
+                    />
+                  </View>
+
+                  <AppText variant="title">Services</AppText>
+                </View>
 
                 <AppText variant="caption" muted>
                   {provider.serviceCount}{' '}
@@ -259,67 +397,33 @@ export function ProviderDetailsScreen({
                 </AppText>
               </View>
 
-              <View style={styles.serviceList}>
-                {provider.services.length ? (
-                  provider.services.map(service => (
-                    <ServiceRow key={service.id} service={service} />
-                  ))
-                ) : (
-                  <View
-                    style={[
-                      styles.emptyInset,
-                      {
-                        backgroundColor: theme.colors.surfaceMuted,
-                      },
-                    ]}
-                  >
-                    <AppText variant="bodySmall" muted>
-                      No published service list yet. You can still send a
-                      custom service request.
-                    </AppText>
-                  </View>
-                )}
-              </View>
-            </Card>
-
-            <Card style={styles.sectionCard}>
-              <View style={styles.sectionHeaderRow}>
-                <SectionTitle title="Reviews" icon="star" />
-
-                <AppText variant="caption" muted>
-                  {provider.rating == null
-                    ? `${provider.reviewCount} reviews`
-                    : `${provider.rating.toFixed(1)} · ${provider.reviewCount} ${
-                        provider.reviewCount === 1 ? 'review' : 'reviews'
-                      }`}
-                </AppText>
-              </View>
-
-              <View style={styles.reviewList}>
-                {provider.reviews.length ? (
-                  provider.reviews
-                    .slice(0, 5)
-                    .map(review => (
-                      <ReviewItem
-                        key={review.id}
-                        review={review}
-                      />
-                    ))
-                ) : (
-                  <View
-                    style={[
-                      styles.emptyInset,
-                      {
-                        backgroundColor: theme.colors.surfaceMuted,
-                      },
-                    ]}
-                  >
-                    <AppText variant="bodySmall" muted>
-                      No written reviews yet.
-                    </AppText>
-                  </View>
-                )}
-              </View>
+              {provider.services.length ? (
+                <View style={styles.serviceList}>
+                  {provider.services.map((service, index) => (
+                    <ServiceRow
+                      key={service.id}
+                      service={service}
+                      showDivider={
+                        index < provider.services.length - 1
+                      }
+                    />
+                  ))}
+                </View>
+              ) : (
+                <View
+                  style={[
+                    styles.emptyInset,
+                    {
+                      backgroundColor: theme.colors.surfaceMuted,
+                    },
+                  ]}
+                >
+                  <AppText variant="bodySmall" muted>
+                    No published service list yet. You can still send a custom
+                    service request.
+                  </AppText>
+                </View>
+              )}
             </Card>
 
             <Card style={styles.bookingCard}>
@@ -385,6 +489,11 @@ export function ProviderDetailsScreen({
           })
         }
       />
+
+      <ProviderMediaViewer
+        state={viewer}
+        onClose={() => setViewer(null)}
+      />
     </View>
   );
 }
@@ -394,7 +503,7 @@ function ProviderStat({
   label,
   value,
 }: {
-  icon: 'star' | 'message' | 'briefcase' | 'servicesGrid';
+  icon: 'star' | 'message' | 'briefcase';
   label: string;
   value: string;
 }): React.JSX.Element {
@@ -426,163 +535,177 @@ function ProviderStat({
   );
 }
 
-function SectionTitle({
-  title,
-  icon,
-}: {
-  title: string;
-  icon: 'user' | 'servicesGrid' | 'star';
-}): React.JSX.Element {
-  const { theme } = useAppTheme();
-
-  return (
-    <View style={styles.sectionTitle}>
-      <View
-        style={[
-          styles.sectionIcon,
-          {
-            backgroundColor: theme.colors.secondary,
-          },
-        ]}
-      >
-        <AppIcon
-          name={icon}
-          size={iconSize.xs}
-          color={theme.colors.primary}
-        />
-      </View>
-
-      <AppText variant="title">{title}</AppText>
-    </View>
-  );
-}
-
 function ServiceRow({
   service,
+  showDivider,
 }: {
   service: ProviderService;
+  showDivider: boolean;
 }): React.JSX.Element {
   const { theme } = useAppTheme();
 
   const servicePrice = money(service.price);
 
   return (
-    <View
-      style={[
-        styles.serviceRow,
-        {
-          backgroundColor: '#F7FBF9',
-          borderColor: theme.colors.border,
-        },
-      ]}
-    >
-      <View style={styles.serviceCopy}>
-        <AppText variant="label">
-          {service.name}
-        </AppText>
+    <View>
+      <View style={styles.serviceRow}>
+        <View style={styles.serviceCopy}>
+          <AppText variant="label">
+            {service.name}
+          </AppText>
 
-        {service.description ? (
+          {service.description ? (
+            <AppText
+              variant="caption"
+              muted
+              style={styles.smallGap}
+            >
+              {service.description}
+            </AppText>
+          ) : null}
+        </View>
+
+        {servicePrice ? (
           <AppText
-            variant="caption"
-            muted
-            style={styles.smallGap}
+            variant="label"
+            color={theme.colors.primary}
+            style={styles.servicePrice}
           >
-            {service.description}
+            {servicePrice}
           </AppText>
         ) : null}
       </View>
 
-      {servicePrice ? (
+      {showDivider ? (
         <View
           style={[
-            styles.pricePill,
+            styles.serviceDivider,
             {
-              backgroundColor: theme.colors.secondary,
+              backgroundColor: theme.colors.border,
             },
           ]}
-        >
-          <AppText
-            variant="label"
-            color={theme.colors.primary}
-          >
-            {servicePrice}
-          </AppText>
-        </View>
+        />
       ) : null}
     </View>
   );
 }
 
-function ReviewItem({
-  review,
+function ProviderMediaViewer({
+  state,
+  onClose,
 }: {
-  review: ProviderReview;
+  state: MediaViewerState | null;
+  onClose: () => void;
 }): React.JSX.Element {
-  const { theme } = useAppTheme();
+  const { width, height } = useWindowDimensions();
 
-  const date = reviewDate(review.createdAt);
+  const [visibleIndex, setVisibleIndex] = useState(0);
+
+  React.useEffect(() => {
+    if (state) {
+      setVisibleIndex(state.index);
+    }
+  }, [state]);
+
+  if (!state) {
+    return (
+      <Modal
+        visible={false}
+        transparent
+      />
+    );
+  }
 
   return (
-    <View
-      style={[
-        styles.review,
-        {
-          backgroundColor: '#F8FBF9',
-          borderColor: theme.colors.border,
-        },
-      ]}
+    <Modal
+      visible
+      animationType="fade"
+      statusBarTranslucent
+      onRequestClose={onClose}
     >
-      <View style={styles.reviewTop}>
-        <View style={styles.reviewRating}>
-          <AppIcon
-            name="star"
-            size={iconSize.xs}
-            color={theme.colors.warning}
-            fill={theme.colors.warning}
-          />
-
-          <AppText variant="label">
-            {review.rating.toFixed(1)}
+      <View style={styles.viewer}>
+        <View style={styles.viewerTopBar}>
+          <AppText variant="label" color="#FFFFFF">
+            {visibleIndex + 1} / {state.images.length}
           </AppText>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Close photo viewer"
+            hitSlop={8}
+            onPress={onClose}
+            style={({ pressed }) => [
+              styles.viewerClose,
+              {
+                opacity: pressed ? 0.7 : 1,
+              },
+            ]}
+          >
+            <AppIcon
+              name="x"
+              size={iconSize.md}
+              color="#FFFFFF"
+            />
+          </Pressable>
         </View>
 
-        {date ? (
-          <AppText variant="caption" muted>
-            {date}
-          </AppText>
-        ) : null}
+        <ScrollView
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          contentOffset={{
+            x: state.index * width,
+            y: 0,
+          }}
+          onMomentumScrollEnd={event => {
+            setVisibleIndex(
+              Math.round(
+                event.nativeEvent.contentOffset.x / width,
+              ),
+            );
+          }}
+        >
+          {state.images.map((imageUrl, index) => (
+            <View
+              key={`${imageUrl}-${index}`}
+              style={[
+                styles.viewerPage,
+                {
+                  width,
+                  height,
+                },
+              ]}
+            >
+              <Image
+                source={{
+                  uri: imageUrl,
+                }}
+                resizeMode="contain"
+                style={styles.viewerImage}
+              />
+            </View>
+          ))}
+        </ScrollView>
       </View>
-
-      {review.comment ? (
-        <AppText
-          variant="bodySmall"
-          color={theme.colors.textSecondary}
-          style={styles.reviewComment}
-        >
-          {review.comment}
-        </AppText>
-      ) : (
-        <AppText
-          variant="caption"
-          muted
-          style={styles.reviewComment}
-        >
-          Rating submitted without a written comment.
-        </AppText>
-      )}
-    </View>
+    </Modal>
   );
 }
 
 function ProviderDetailsSkeleton(): React.JSX.Element {
   return (
     <>
-      <Card style={styles.heroCard}>
-        <View style={styles.profileRow}>
+      <Card style={styles.profileSkeletonCard}>
+        <Skeleton
+          width="100%"
+          height={170}
+          radiusValue={18}
+        />
+
+        <View style={styles.skeletonProfileRow}>
           <Skeleton
-            width={76}
-            height={76}
-            radiusValue={38}
+            width={72}
+            height={72}
+            radiusValue={36}
           />
 
           <View style={styles.skeletonProfileCopy}>
@@ -603,10 +726,10 @@ function ProviderDetailsSkeleton(): React.JSX.Element {
         </View>
 
         <View style={styles.skeletonStats}>
-          {[0, 1, 2, 3].map(index => (
+          {[0, 1, 2].map(index => (
             <Skeleton
               key={index}
-              width="23%"
+              width="31%"
               height={66}
               radiusValue={14}
             />
@@ -614,7 +737,7 @@ function ProviderDetailsSkeleton(): React.JSX.Element {
         </View>
       </Card>
 
-      {[0, 1, 2].map(index => (
+      {[0, 1].map(index => (
         <Card
           key={index}
           style={styles.skeletonSection}
@@ -641,25 +764,90 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: layout.screenHorizontal,
-    paddingTop: spacing[5],
+    paddingTop: spacing[4],
     paddingBottom: spacing[10],
   },
   error: {
     gap: spacing[3],
     marginTop: spacing[4],
   },
-  heroCard: {
+  profileCard: {
     borderRadius: 22,
+    padding: 0,
+    overflow: 'hidden',
+  },
+  gallery: {
+    width: '100%',
+    aspectRatio: 16 / 9,
+    backgroundColor: '#E8EEEB',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  businessImage: {
+    width: '100%',
+    height: '100%',
+  },
+  galleryOpenBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(8,31,22,0.58)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  galleryCount: {
+    position: 'absolute',
+    right: 12,
+    bottom: 10,
+    borderRadius: 999,
+    backgroundColor: 'rgba(8,31,22,0.62)',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+  },
+  galleryDots: {
+    position: 'absolute',
+    left: 14,
+    bottom: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  galleryDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  profileBody: {
+    padding: spacing[4],
   },
   profileRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: spacing[3],
   },
-  image: {
+  profilePhotoPressable: {
+    position: 'relative',
+    width: 76,
+    height: 76,
+  },
+  profileImage: {
     width: 76,
     height: 76,
     borderRadius: 38,
+  },
+  profileOpenBadge: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
+    width: 25,
+    height: 25,
+    borderRadius: 13,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   profileCopy: {
     flex: 1,
@@ -680,7 +868,7 @@ const styles = StyleSheet.create({
   locationRow: {
     marginTop: spacing[2],
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 5,
   },
   locationText: {
@@ -688,6 +876,17 @@ const styles = StyleSheet.create({
   },
   distance: {
     marginTop: spacing[1],
+  },
+  availabilityRow: {
+    marginTop: spacing[2],
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  availabilityDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
   },
   stats: {
     marginTop: spacing[5],
@@ -697,7 +896,7 @@ const styles = StyleSheet.create({
   stat: {
     flex: 1,
     minWidth: 0,
-    minHeight: 72,
+    minHeight: 70,
     borderRadius: 14,
     paddingHorizontal: 7,
     paddingVertical: 9,
@@ -707,13 +906,18 @@ const styles = StyleSheet.create({
   statValue: {
     marginTop: 4,
   },
-  statusRow: {
-    marginTop: spacing[4],
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing[2],
+  aboutDivider: {
+    height: StyleSheet.hairlineWidth,
+    marginTop: spacing[5],
   },
-  sectionCard: {
+  aboutBlock: {
+    paddingTop: spacing[4],
+  },
+  aboutText: {
+    marginTop: spacing[2],
+    lineHeight: 21,
+  },
+  servicesCard: {
     marginTop: spacing[4],
     borderRadius: 20,
   },
@@ -735,18 +939,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sectionText: {
-    marginTop: spacing[3],
-    lineHeight: 21,
-  },
   serviceList: {
-    marginTop: spacing[4],
-    gap: spacing[3],
+    marginTop: spacing[3],
   },
   serviceRow: {
-    borderWidth: 1,
-    borderRadius: 14,
-    paddingHorizontal: spacing[3],
+    minHeight: 62,
     paddingVertical: spacing[3],
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -759,39 +956,17 @@ const styles = StyleSheet.create({
   smallGap: {
     marginTop: spacing[1],
   },
-  pricePill: {
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+  servicePrice: {
     flexShrink: 0,
+    marginLeft: spacing[2],
+  },
+  serviceDivider: {
+    height: StyleSheet.hairlineWidth,
   },
   emptyInset: {
+    marginTop: spacing[3],
     borderRadius: 14,
     padding: spacing[3],
-  },
-  reviewList: {
-    marginTop: spacing[4],
-    gap: spacing[3],
-  },
-  review: {
-    borderWidth: 1,
-    borderRadius: 14,
-    padding: spacing[3],
-  },
-  reviewTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing[3],
-  },
-  reviewRating: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  reviewComment: {
-    marginTop: spacing[2],
-    lineHeight: 20,
   },
   bookingCard: {
     marginTop: spacing[4],
@@ -815,6 +990,46 @@ const styles = StyleSheet.create({
   requestButton: {
     marginTop: spacing[4],
     borderRadius: 999,
+  },
+  viewer: {
+    flex: 1,
+    backgroundColor: '#050807',
+  },
+  viewerTopBar: {
+    position: 'absolute',
+    zIndex: 10,
+    top: 42,
+    left: 18,
+    right: 18,
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  viewerClose: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  viewerPage: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  viewerImage: {
+    width: '100%',
+    height: '82%',
+  },
+  profileSkeletonCard: {
+    borderRadius: 22,
+  },
+  skeletonProfileRow: {
+    marginTop: spacing[4],
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing[3],
   },
   skeletonProfileCopy: {
     flex: 1,

@@ -102,24 +102,56 @@ function parseReviews(value: unknown): ProviderReview[] {
     .filter(item => Boolean(item.id));
 }
 
-function parseImageUrls(value: ApiRecord, primary?: string): string[] {
-  const urls = Array.isArray(value.business_images)
-    ? value.business_images
-        .map(item =>
-          item && typeof item === 'object'
-            ? mediaUrl(
-                (item as ApiRecord).url ?? (item as ApiRecord).image_path,
-              )
-            : mediaUrl(item),
-        )
-        .filter((url): url is string => Boolean(url))
-    : [];
+function parseBusinessImageUrls(value: ApiRecord): string[] {
+  const primary =
+    mediaUrl(
+      value.business_image,
+    );
 
-  if (primary && !urls.includes(primary)) {
-    urls.unshift(primary);
-  }
+  const gallery =
+    Array.isArray(
+      value.business_images,
+    )
+      ? value.business_images
+          .map(item =>
+            item &&
+            typeof item ===
+              'object'
+              ? mediaUrl(
+                  (item as ApiRecord)
+                    .url ??
+                    (item as ApiRecord)
+                      .image_url ??
+                    (item as ApiRecord)
+                      .image_path ??
+                    (item as ApiRecord)
+                      .path,
+                )
+              : mediaUrl(
+                  item,
+                ),
+          )
+          .filter(
+            (
+              url,
+            ): url is string =>
+              Boolean(
+                url,
+              ),
+          )
+      : [];
 
-  return urls;
+  const urls =
+    primary
+      ? [
+          primary,
+          ...gallery,
+        ]
+      : gallery;
+
+  return [
+    ...new Set(urls),
+  ];
 }
 
 function distanceLabel(value: ApiRecord): string | undefined {
@@ -153,8 +185,31 @@ export function parseProvider(value: ApiRecord): Provider {
     Math.max(0, number(value.service_count)),
   );
 
+  const profileImageUrl =
+    mediaUrl(
+      value.profile_image,
+    );
+
+  const businessImageUrls =
+    parseBusinessImageUrls(
+      value,
+    );
+
+  // Preserve the old shared card behavior while exposing the two media
+  // types separately for Provider Details.
   const imageUrl =
-    mediaUrl(value.business_image) ?? mediaUrl(value.profile_image);
+    businessImageUrls[0] ??
+    profileImageUrl;
+
+  const imageUrls = [
+    ...businessImageUrls,
+    ...(profileImageUrl &&
+    !businessImageUrls.includes(
+      profileImageUrl,
+    )
+      ? [profileImageUrl]
+      : []),
+  ];
 
   const rawRating = number(value.rating, NaN);
 
@@ -182,7 +237,9 @@ export function parseProvider(value: ApiRecord): Provider {
     verified: Boolean(value.verified),
     available: value.available !== false && value.available !== 0,
     imageUrl,
-    imageUrls: parseImageUrls(value, imageUrl),
+    imageUrls,
+    profileImageUrl,
+    businessImageUrls,
     description: text(value.description) || undefined,
     services: parsedServices,
     serviceCount,

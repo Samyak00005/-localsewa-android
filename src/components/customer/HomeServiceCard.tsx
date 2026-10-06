@@ -22,6 +22,7 @@ import {
 type Props = {
   name: string;
   providerCount: number;
+  selected?: boolean;
   onPress: () => void;
 };
 
@@ -81,6 +82,7 @@ function categoryIcon(
 export function HomeServiceCard({
   name,
   providerCount,
+  selected = false,
   onPress,
 }: Props): React.JSX.Element {
   const {theme} =
@@ -97,9 +99,17 @@ export function HomeServiceCard({
         styles.card,
         {
           backgroundColor:
-            '#E1F4E9',
+            selected
+              ? '#D9F1E3'
+              : '#E1F4E9',
           borderColor:
-            '#CAE9D7',
+            selected
+              ? theme.colors.primary
+              : '#CAE9D7',
+          borderWidth:
+            selected
+              ? 1.5
+              : 1,
           opacity:
             pressed
               ? 0.9
@@ -197,27 +207,28 @@ const styles =
     card: {
       flex: 1,
       minWidth: 0,
-      aspectRatio: 1,
+      aspectRatio: 4 / 3,
       borderRadius:
         radius.lg,
       borderWidth: 1,
-      padding: spacing[3],
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[2],
       overflow: 'hidden',
     },
     decor: {
       position: 'absolute',
-      width: 86,
-      height: 86,
-      borderRadius: 43,
-      right: -24,
-      top: -22,
+      width: 76,
+      height: 76,
+      borderRadius: 38,
+      right: -22,
+      top: -24,
     },
     iconWrap: {
       position: 'absolute',
       right: spacing[3],
       top: spacing[3],
-      width: 36,
-      height: 36,
+      width: 34,
+      height: 34,
       borderRadius:
         radius.md,
       alignItems:
@@ -227,14 +238,14 @@ const styles =
     },
     name: {
       marginTop:
-        spacing[4],
-      paddingRight: 30,
-      minHeight: 42,
+        spacing[2],
+      paddingRight: 28,
+      minHeight: 38,
     },
     footer: {
       marginTop: 'auto',
       paddingTop:
-        spacing[2],
+        spacing[1],
       borderTopWidth: 1,
       flexDirection: 'row',
       alignItems:

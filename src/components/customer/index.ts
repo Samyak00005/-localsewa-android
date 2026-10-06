@@ -1,6 +1,7 @@
 export * from './BookingCard';
 export * from './BookingStatusBadge';
 export * from './ChatMessageBubble';
+export * from './CustomerLocationChip';
 export * from './CustomerSearchBar';
 export * from './EmergencyServiceCard';
 export * from './HomeProviderCard';

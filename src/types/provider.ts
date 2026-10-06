@@ -26,6 +26,8 @@ export type Provider = {
   available: boolean;
   imageUrl?: string;
   imageUrls: string[];
+  profileImageUrl?: string;
+  businessImageUrls: string[];
   description?: string;
   services: ProviderService[];
   serviceCount: number;

@@ -39,6 +39,12 @@ export type CustomerStackParamList = {
 
   Notifications: undefined;
   NearbyServices: undefined;
+  ServiceCategoryProviders: {
+    categoryName: string;
+  };
+  ProviderSearchResults: {
+    query: string;
+  };
 
   ProviderDetails: {
     providerId: string;

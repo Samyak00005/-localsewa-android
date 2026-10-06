@@ -1,11 +1,19 @@
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 
 import { errorMessage } from '../../api/apiClient';
 import { useAuth } from '../../auth';
 import {
+  CustomerLocationChip,
   CustomerSearchBar,
   EmergencyServiceCard,
   HomeProviderCard,
@@ -52,6 +60,20 @@ const POPULAR_ORDER = [
 
 export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
   const { theme } = useAppTheme();
+
+  const { height: windowHeight } = useWindowDimensions();
+
+  const heroMinHeight = Math.min(
+    286,
+    Math.max(260, Math.round(windowHeight * 0.34)),
+  );
+
+  // Visual background only. This does NOT participate in layout,
+  // so the location, title, search, trust row and following sections
+  // keep the exact same positions as v1.10.33.
+  const heroBackgroundHeight = Math.round(
+    windowHeight * 0.4,
+  );
 
   const { user } = useAuth();
 
@@ -104,32 +126,15 @@ export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
   );
 
   const visibleProviders = useMemo(() => {
-    const query = search.trim().toLowerCase();
-
-    const sorted = [...providers].sort(
-      (a, b) =>
-        Number(b.available) - Number(a.available) ||
-        Number(b.verified) - Number(a.verified) ||
-        (b.rating ?? 0) - (a.rating ?? 0),
-    );
-
-    if (!query) {
-      return sorted.slice(0, 4);
-    }
-
-    return sorted
-      .filter(provider =>
-        [
-          provider.name,
-          provider.category,
-          provider.location,
-          ...provider.services.map(service => service.name),
-        ].some(value => value.toLowerCase().includes(query)),
+    return [...providers]
+      .sort(
+        (a, b) =>
+          Number(b.available) - Number(a.available) ||
+          Number(b.verified) - Number(a.verified) ||
+          (b.rating ?? 0) - (a.rating ?? 0),
       )
-      .slice(0, 20);
-  }, [providers, search]);
-
-  const searchActive = Boolean(search.trim());
+      .slice(0, 3);
+  }, [providers]);
 
   function openProvider(providerId: string) {
     stack?.navigate('ProviderDetails', { providerId });
@@ -141,6 +146,16 @@ export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
 
   function openLocation() {
     stack?.navigate('DefaultLocation');
+  }
+
+  function openSearchResults() {
+    const query = search.trim();
+
+    if (!query) {
+      return;
+    }
+
+    stack?.navigate('ProviderSearchResults', { query });
   }
 
   async function toggleSaved(provider: Provider) {
@@ -172,31 +187,22 @@ export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >
-      <View style={styles.hero}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Change service location"
+      <View
+        pointerEvents="none"
+        style={[
+          styles.heroBackground,
+          {
+            height:
+              heroBackgroundHeight,
+          },
+        ]}
+      />
+
+      <View style={[styles.hero, { minHeight: heroMinHeight }]}>
+        <CustomerLocationChip
+          label={locationLabel}
           onPress={openLocation}
-          style={({ pressed }) => [
-            styles.locationPill,
-            {
-              opacity: pressed ? 0.85 : 1,
-            },
-          ]}
-        >
-          <AppIcon name="mapPin" size={iconSize.xs} color="#FFFFFF" />
-
-          <AppText
-            variant="label"
-            color="#FFFFFF"
-            numberOfLines={1}
-            style={styles.locationText}
-          >
-            {locationLabel}
-          </AppText>
-
-          <AppIcon name="chevronDown" size={iconSize.xs} color="#FFFFFF" />
-        </Pressable>
+        />
 
         <AppText variant="display" color="#FFFFFF" style={styles.heroTitle}>
           Local services,{'\n'}without the hassle.
@@ -211,13 +217,14 @@ export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
         </View>
 
         <AppText variant="body" color="#ECFFF4" style={styles.heroDescription}>
-          Compare local professionals, request a service and manage every
-          booking from one simple place.
+          Compare local professionals, request services and manage bookings
+          in one place.
         </AppText>
 
         <CustomerSearchBar
           value={search}
           onChangeText={setSearch}
+          onSearch={openSearchResults}
           placeholder="What service do you need?"
           style={styles.heroSearch}
         />
@@ -229,9 +236,7 @@ export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
         </View>
       </View>
 
-      {!searchActive ? (
-        <>
-          <View
+      <View
             style={[
               styles.popularShell,
               {
@@ -254,7 +259,15 @@ export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
                       key={item.id}
                       name={item.name}
                       providerCount={item.providerCount}
-                      onPress={() => setSearch(item.name)}
+                      onPress={() =>
+                        stack?.navigate(
+                          'ServiceCategoryProviders',
+                          {
+                            categoryName:
+                              item.name,
+                          },
+                        )
+                      }
                     />
                   ))}
 
@@ -266,13 +279,11 @@ export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
             </View>
           </View>
 
-          <View style={styles.emergencyWrap}>
-            <EmergencyServiceCard
-              onPress={() => navigation.navigate('CustomerServices')}
-            />
-          </View>
-        </>
-      ) : null}
+      <View style={styles.emergencyWrap}>
+        <EmergencyServiceCard
+          onPress={() => navigation.navigate('CustomerServices')}
+        />
+      </View>
 
       <View style={styles.providersSection}>
         <View style={styles.locationOverline}>
@@ -289,14 +300,14 @@ export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
         </View>
 
         <SectionHeading
-          title={searchActive ? 'Search results' : 'Services near you'}
-          subtitle={
-            searchActive
-              ? `${visibleProviders.length} matching providers`
-              : 'Browse local providers and send a booking request'
-          }
+          title="Services near you"
+          subtitle="Browse local providers and send a booking request"
           action="See all"
-          onPress={() => stack?.navigate('NearbyServices')}
+          onPress={() =>
+            stack?.navigate(
+              'NearbyServices',
+            )
+          }
         />
 
         <View style={styles.providerList}>
@@ -329,17 +340,17 @@ export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
             ))
           ) : (
             <Card>
-              <AppText variant="title">No matching providers</AppText>
+              <AppText variant="title">No nearby providers yet</AppText>
 
               <AppText variant="bodySmall" muted style={styles.emptyText}>
-                Try a different service, provider name or area.
+                Try changing your location or browse All services.
               </AppText>
             </Card>
           )}
         </View>
       </View>
 
-      {!searchActive && (reviewsLoading || reviews.length > 0) ? (
+      {reviewsLoading || reviews.length > 0 ? (
         <View style={styles.reviewsSection}>
           <AppText variant="overline" color={theme.colors.accent}>
             REAL CUSTOMER REVIEWS
@@ -505,50 +516,44 @@ function choosePopularServices(
 const styles = StyleSheet.create({
   content: {
     paddingBottom: spacing[12],
+    position: 'relative',
+  },
+  heroBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: CUSTOMER_HOME_GREEN,
   },
   hero: {
-    backgroundColor: CUSTOMER_HOME_GREEN,
     paddingHorizontal: layout.screenHorizontal,
-    paddingTop: spacing[4],
-    paddingBottom: spacing[10],
-  },
-  locationPill: {
-    alignSelf: 'flex-start',
-    maxWidth: '88%',
-    minHeight: 36,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing[3],
-    backgroundColor: 'rgba(0,84,46,0.26)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.20)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[2],
-  },
-  locationText: {
-    flexShrink: 1,
+    paddingTop: 8,
+    paddingBottom: 16,
+    justifyContent: 'flex-start',
   },
   heroTitle: {
-    marginTop: spacing[6],
-    fontSize: 34,
-    lineHeight: 37,
-    letterSpacing: -0.5,
+    marginTop: 8,
+    fontSize: 29,
+    lineHeight: 31,
+    letterSpacing: -0.35,
   },
   trustLine: {
-    marginTop: spacing[3],
+    marginTop: 6,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing[2],
   },
   heroDescription: {
-    marginTop: spacing[5],
+    marginTop: 8,
     maxWidth: 340,
+    fontSize: 13.5,
+    lineHeight: 18,
   },
   heroSearch: {
-    marginTop: spacing[5],
+    marginTop: 10,
   },
   benefits: {
-    marginTop: spacing[4],
+    marginTop: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: spacing[2],
@@ -560,7 +565,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   popularShell: {
-    marginTop: -22,
+    marginTop: spacing[3],
     marginHorizontal: spacing[3],
     borderRadius: radius.sheet,
     paddingHorizontal: spacing[4],

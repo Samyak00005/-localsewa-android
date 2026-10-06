@@ -17,6 +17,8 @@ export * from './EditCustomerProfileScreen';
 export * from './HelpSupportScreen';
 export * from './PrivacyPolicyScreen';
 export * from './ProviderDetailsScreen';
+export * from './ProviderSearchResultsScreen';
+export * from './ServiceCategoryProvidersScreen';
 export * from './SetPasswordScreen';
 export * from './TermsConditionsScreen';
 export * from './VoiceCallPreviewScreen';

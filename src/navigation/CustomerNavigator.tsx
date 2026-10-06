@@ -18,6 +18,8 @@ import {
   HelpSupportScreen,
   PrivacyPolicyScreen,
   ProviderDetailsScreen,
+  ProviderSearchResultsScreen,
+  ServiceCategoryProvidersScreen,
   SetPasswordScreen,
   TermsConditionsScreen,
   VoiceCallPreviewScreen,
@@ -53,6 +55,20 @@ export function CustomerNavigator(): React.JSX.Element {
         name="NearbyServices"
         component={
           CustomerNearbyServicesScreen
+        }
+      />
+
+      <Stack.Screen
+        name="ServiceCategoryProviders"
+        component={
+          ServiceCategoryProvidersScreen
+        }
+      />
+
+      <Stack.Screen
+        name="ProviderSearchResults"
+        component={
+          ProviderSearchResultsScreen
         }
       />
 

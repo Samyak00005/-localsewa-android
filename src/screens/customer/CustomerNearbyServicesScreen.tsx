@@ -1,9 +1,15 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { errorMessage } from '../../api/apiClient';
 import {
+  CustomerLocationChip,
   CustomerSearchBar,
   HomeProviderCard,
   ProviderListSkeleton,
@@ -137,29 +143,15 @@ export function CustomerNearbyServicesScreen({
           Local providers around your saved service area.
         </AppText>
 
-        <View
-          style={[
-            styles.locationCard,
-            {
-              backgroundColor: theme.colors.secondary,
-            },
-          ]}
-        >
-          <AppText variant="overline" color={theme.colors.primary}>
-            SERVICE AREA
-          </AppText>
-
-          <AppText variant="label" numberOfLines={2} style={styles.locationValue}>
-            {locationLabel}
-          </AppText>
-
-          <Button
-            label="Change location"
-            variant="outline"
-            onPress={() => navigation.navigate('DefaultLocation')}
-            fullWidth
-          />
-        </View>
+        <CustomerLocationChip
+          label={locationLabel}
+          onPress={() =>
+            navigation.navigate(
+              'DefaultLocation',
+            )
+          }
+          style={styles.locationChip}
+        />
 
         <CustomerSearchBar
           value={search}
@@ -251,17 +243,11 @@ const styles = StyleSheet.create({
   subtitle: {
     marginTop: spacing[2],
   },
-  locationCard: {
-    marginTop: spacing[5],
-    borderRadius: 18,
-    padding: spacing[4],
-  },
-  locationValue: {
-    marginTop: spacing[1],
-    marginBottom: spacing[3],
+  locationChip: {
+    marginTop: spacing[4],
   },
   search: {
-    marginTop: spacing[4],
+    marginTop: spacing[3],
   },
   resultHeader: {
     marginTop: spacing[6],
