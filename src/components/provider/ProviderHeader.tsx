@@ -1,196 +1,133 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Image,
+  Pressable,
   StyleSheet,
   View,
 } from 'react-native';
-import {
-  SafeAreaView,
-} from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {
-  useAppShell,
-} from '../../app/AppShellProvider';
-import {
-  AppIcon,
-  iconSize,
-} from '../icons';
-import {
-  AppText,
-} from '../ui';
-import {
-  radius,
-  spacing,
-  useAppTheme,
-} from '../../theme';
+import { useNotifications } from '../../hooks/useNotifications';
+import { resolveNotificationTarget } from '../../utils/notificationRoute';
+import { spacing, useAppTheme } from '../../theme';
+import { AppIcon, iconSize } from '../icons';
+import { AppText } from '../ui';
+import { ProviderNotificationsModal } from './ProviderNotificationsModal';
 
-const logo =
-  require('../../assets/branding/localsewa-mark.png');
+const logo = require('../../assets/branding/localsewa-mark.png');
 
 export function ProviderHeader(): React.JSX.Element {
-  const {
-    providerTier,
-  } = useAppShell();
+  const { theme } = useAppTheme();
+  const { data } = useNotifications();
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
-  const {
-    theme,
-    mode,
-  } = useAppTheme();
-
-  const premium =
-    mode ===
-    'providerPremium';
+  const unreadProviderCount = useMemo(
+    () =>
+      (data?.notifications ?? []).filter(
+        item =>
+          !item.read &&
+          resolveNotificationTarget(item).workspace === 'provider',
+      ).length,
+    [data?.notifications],
+  );
 
   return (
-    <SafeAreaView
-      edges={[
-        'top',
-        'left',
-        'right',
-      ]}
-      style={[
-        styles.safeArea,
-        {
-          backgroundColor:
-            premium
-              ? theme.colors
-                  .premiumPrimaryDeep ??
-                theme.colors
-                  .primary
-              : theme.colors
-                  .primary,
-        },
-      ]}>
-      <View
-        style={
-          styles.header
-        }>
-        <Image
-          source={logo}
-          resizeMode="contain"
-          style={
-            styles.logo
-          }
-        />
+    <>
+      <SafeAreaView
+        edges={['top', 'left', 'right']}
+        style={[styles.safeArea, { backgroundColor: theme.colors.primary }]}
+      >
+        <View style={styles.header}>
+          <Image source={logo} resizeMode="contain" style={styles.logo} />
 
-        <View
-          style={
-            styles.workspace
-          }>
-          <AppText
-            variant="overline"
-            color={
-              premium
-                ? theme.colors
-                    .premiumGoldSoft ??
-                  '#F7E8BE'
-                : '#CDE0D8'
-            }
-            numberOfLines={1}>
-            PROVIDER WORKSPACE
-          </AppText>
+          <View style={styles.workspace}>
+            <AppText
+              variant="overline"
+              color="#CDE0D8"
+              numberOfLines={1}
+            >
+              PROVIDER WORKSPACE
+            </AppText>
+            <AppText variant="label" color="#FFFFFF" numberOfLines={1}>
+              Manage your local business
+            </AppText>
+          </View>
 
-          <AppText
-            variant="label"
-            color="#FFFFFF"
-            numberOfLines={1}>
-            Manage your local business
-          </AppText>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open provider notifications"
+            onPress={() => setNotificationsOpen(true)}
+            style={({ pressed }) => [
+              styles.bellButton,
+              {
+                backgroundColor: 'rgba(255,255,255,0.12)',
+                borderColor: 'rgba(255,255,255,0.18)',
+                opacity: pressed ? 0.74 : 1,
+              },
+            ]}
+          >
+            <AppIcon name="bell" size={iconSize.sm} color="#FFFFFF" />
+
+            {unreadProviderCount > 0 ? (
+              <View style={styles.unreadBadge}>
+                <AppText variant="caption" color="#FFFFFF">
+                  {unreadProviderCount > 9 ? '9+' : String(unreadProviderCount)}
+                </AppText>
+              </View>
+            ) : null}
+          </Pressable>
         </View>
+      </SafeAreaView>
 
-        <View
-          style={[
-            styles.tier,
-            {
-              backgroundColor:
-                premium
-                  ? theme.colors
-                      .premiumGoldSoft ??
-                    '#F7E8BE'
-                  : 'rgba(255,255,255,0.12)',
-              borderColor:
-                premium
-                  ? theme.colors
-                      .accent
-                  : 'rgba(255,255,255,0.18)',
-            },
-          ]}>
-          <AppIcon
-            name={
-              premium
-                ? 'sparkles'
-                : 'briefcase'
-            }
-            size={
-              iconSize.xs
-            }
-            color={
-              premium
-                ? theme.colors
-                    .premiumGoldStrong ??
-                  '#B88A2B'
-                : '#FFFFFF'
-            }
-          />
-
-          <AppText
-            variant="caption"
-            color={
-              premium
-                ? theme.colors
-                    .premiumGoldStrong ??
-                  '#B88A2B'
-                : '#FFFFFF'
-            }>
-            {providerTier ===
-            'LOCALSEWA_PLUS'
-              ? 'Localsewa+'
-              : 'Standard'}
-          </AppText>
-        </View>
-      </View>
-    </SafeAreaView>
+      <ProviderNotificationsModal
+        visible={notificationsOpen}
+        onClose={() => setNotificationsOpen(false)}
+      />
+    </>
   );
 }
 
-const styles =
-  StyleSheet.create({
-    safeArea: {
-      width: '100%',
-    },
-    header: {
-      minHeight: 66,
-      paddingHorizontal:
-        spacing[4],
-      flexDirection:
-        'row',
-      alignItems:
-        'center',
-      gap: spacing[3],
-    },
-    logo: {
-      width: 36,
-      height: 36,
-      borderRadius: 9,
-      flexShrink: 0,
-    },
-    workspace: {
-      flex: 1,
-      minWidth: 0,
-      gap: 1,
-    },
-    tier: {
-      minHeight: 32,
-      borderWidth: 1,
-      borderRadius:
-        radius.pill,
-      paddingHorizontal:
-        spacing[2],
-      flexDirection:
-        'row',
-      alignItems:
-        'center',
-      gap: 5,
-      flexShrink: 0,
-    },
-  });
+const styles = StyleSheet.create({
+  safeArea: {
+    width: '100%',
+  },
+  header: {
+    minHeight: 66,
+    paddingHorizontal: spacing[4],
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+  },
+  logo: {
+    width: 36,
+    height: 36,
+    borderRadius: 9,
+    flexShrink: 0,
+  },
+  workspace: {
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
+  },
+  bellButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  unreadBadge: {
+    position: 'absolute',
+    top: -3,
+    right: -3,
+    minWidth: 19,
+    height: 19,
+    paddingHorizontal: 4,
+    borderRadius: 10,
+    backgroundColor: '#D93B48',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

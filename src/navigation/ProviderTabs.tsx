@@ -40,7 +40,7 @@ const labels: Record<
   keyof ProviderTabParamList,
   string
 > = {
-  ProviderHome: 'Home',
+  ProviderHome: 'Dashboard',
   ProviderRequests: 'Requests',
   ProviderServices: 'Services',
   ProviderReviews: 'Reviews',
@@ -61,7 +61,6 @@ const icons: Record<
 export function ProviderTabs(): React.JSX.Element {
   const {
     theme,
-    mode,
   } = useAppTheme();
 
   const insets =
@@ -72,17 +71,6 @@ export function ProviderTabs(): React.JSX.Element {
       insets.bottom,
       8,
     );
-
-  const premium =
-    mode ===
-    'providerPremium';
-
-  const activeColor =
-    premium
-      ? theme.colors
-          .premiumGoldStrong ??
-        theme.colors.accent
-      : theme.colors.primary;
 
   return (
     <Tab.Navigator
@@ -95,30 +83,16 @@ export function ProviderTabs(): React.JSX.Element {
         ),
         tabBarHideOnKeyboard:
           true,
+        // Localsewa+ never replaces Provider navigation colors.
         tabBarActiveTintColor:
-          activeColor,
+          theme.colors.primary,
         tabBarInactiveTintColor:
-          premium
-            ? '#776E7E'
-            : theme.colors
-                .textMuted,
+          theme.colors.textMuted,
         tabBarStyle: {
           backgroundColor:
-            premium
-              ? theme.colors
-                  .premiumIvorySurface ??
-                theme.colors
-                  .surface
-              : theme.colors
-                  .surface,
+            theme.colors.surface,
           borderTopColor:
-            premium
-              ? theme.colors
-                  .premiumGoldSoft ??
-                theme.colors
-                  .border
-              : theme.colors
-                  .border,
+            theme.colors.border,
           height:
             58 +
             bottomInset,
@@ -150,9 +124,6 @@ export function ProviderTabs(): React.JSX.Element {
             color={color}
             focused={
               focused
-            }
-            premium={
-              premium
             }
           />
         ),
@@ -199,12 +170,10 @@ function ProviderTabIcon({
   name,
   color,
   focused,
-  premium,
 }: {
   name: AppIconName;
   color: string;
   focused: boolean;
-  premium: boolean;
 }): React.JSX.Element {
   const {
     theme,
@@ -217,12 +186,7 @@ function ProviderTabIcon({
         {
           backgroundColor:
             focused
-              ? premium
-                ? theme.colors
-                    .premiumGoldSoft ??
-                  '#F7E8BE'
-                : theme.colors
-                    .secondary
+              ? theme.colors.secondary
               : 'transparent',
         },
       ]}>

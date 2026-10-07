@@ -1,20 +1,38 @@
+export type ProviderMembership = {
+  status: string;
+  active: boolean;
+  plan?: string | null;
+  trialEndsAt?: string | null;
+  currentPeriodEnd?: string | null;
+};
+
+export type ProviderBusinessImage = {
+  id: number;
+  url: string;
+  sortOrder: number;
+  isCover: boolean;
+};
+
 export type ProviderWorkspaceProfile = {
+  id?: number;
   businessName: string;
   ownerName?: string;
   category?: string;
   location?: string;
   description?: string;
+  email?: string;
+  phone?: string;
+  whatsapp?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   profileImageUrl?: string;
-  businessImageUrl?: string;
-  available?: boolean;
-  verificationStatus?: string;
+  businessImages: ProviderBusinessImage[];
+  available: boolean;
   experienceYears?: number;
-  averageRating?: number | null;
+  averageRating: number | null;
   reviewCount: number;
-  completedJobs?: number;
-  serviceCount?: number;
-  homeService?: boolean;
-  shopService?: boolean;
+  profileCompletion?: number;
+  premium: ProviderMembership;
 };
 
 export type ProviderDashboardData = {
@@ -27,14 +45,20 @@ export type ProviderWorkspaceReview = {
   comment?: string;
   customerName?: string;
   serviceName?: string;
-  bookingCode?: string;
   createdAt?: string;
 };
 
 export type ProviderReviewsData = {
   reviews: ProviderWorkspaceReview[];
   averageRating: number | null;
-  totalReviews: number;
-  fiveStarCount: number;
-  distribution: Record<1 | 2 | 3 | 4 | 5, number>;
+};
+
+export type ProviderProfileUpdate = {
+  businessName: string;
+  ownerName?: string;
+  description?: string;
+  location?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  whatsapp?: string;
 };

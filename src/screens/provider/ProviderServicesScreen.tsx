@@ -4,7 +4,7 @@ import { useAppShell } from '../../app/AppShellProvider';
 import { WorkspacePlaceholderScreen } from '../shared/WorkspacePlaceholderScreen';
 
 export function ProviderServicesScreen(): React.JSX.Element {
-  const { providerTier } = useAppShell();
+  const { providerTier, providerPremiumVisuals } = useAppShell();
 
   return (
     <WorkspacePlaceholderScreen
@@ -12,6 +12,7 @@ export function ProviderServicesScreen(): React.JSX.Element {
       title="Services"
       description="Provider service management will use this route."
       premiumBadge={providerTier === 'LOCALSEWA_PLUS'}
+      premiumBadgeAccent={providerPremiumVisuals}
     />
   );
 }

@@ -57,6 +57,7 @@ import {
   CustomerTabParamList,
 } from '../../navigation/types';
 import {
+  customerPalette,
   layout,
   radius,
   shadows,
@@ -561,6 +562,14 @@ export function CustomerProfileScreen({
           </ProfileSection>
 
 
+          {canUseProvider ? (
+            <ProviderWorkspaceSwitchCard
+              onPress={() => {
+                enterProvider();
+              }}
+            />
+          ) : null}
+
           <ProfileSection
             title="App settings">
             <ProfileMenuRow
@@ -600,20 +609,6 @@ export function CustomerProfileScreen({
               }
             />
           </ProfileSection>
-
-          {canUseProvider ? (
-            <ProfileSection
-              title="Provider workspace">
-              <ProfileMenuRow
-                icon="briefcase"
-                title="Switch to Provider"
-                subtitle="Open your provider dashboard and service tools"
-                onPress={() => {
-                  enterProvider();
-                }}
-              />
-            </ProfileSection>
-          ) : null}
 
           <ProfileSection
             title="Help & legal">
@@ -1067,6 +1062,72 @@ function SummaryItem({
   );
 }
 
+function ProviderWorkspaceSwitchCard({
+  onPress,
+}: {
+  onPress: () => void;
+}): React.JSX.Element {
+  return (
+    <View style={styles.section}>
+      <AppText
+        variant="overline"
+        color="#66776E">
+        PROVIDER WORKSPACE
+      </AppText>
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Switch to Provider workspace"
+        onPress={onPress}
+        style={({pressed}) => [
+          styles.providerSwitchCard,
+          {
+            opacity: pressed ? 0.92 : 1,
+            transform: [
+              {scale: pressed ? 0.995 : 1},
+            ],
+          },
+        ]}>
+        <View style={styles.providerSwitchBubbleTop} />
+        <View style={styles.providerSwitchBubbleBottom} />
+        <View style={styles.providerSwitchRing} />
+
+        <View style={styles.providerSwitchRow}>
+          <View style={styles.providerSwitchIcon}>
+            <AppIcon
+              name="briefcase"
+              size={iconSize.sm}
+              color={customerPalette.primary}
+            />
+          </View>
+
+          <View style={styles.providerSwitchCopy}>
+            <AppText
+              variant="label"
+              color="#FFFFFF">
+              Switch to Provider
+            </AppText>
+
+            <AppText
+              variant="caption"
+              color="rgba(255,255,255,0.82)"
+              numberOfLines={2}
+              style={styles.providerSwitchSubtitle}>
+              Open your provider dashboard and service tools
+            </AppText>
+          </View>
+
+          <AppIcon
+            name="chevronRight"
+            size={iconSize.sm}
+            color="#FFFFFF"
+          />
+        </View>
+      </Pressable>
+    </View>
+  );
+}
+
 function ProfileSection({
   title,
   children,
@@ -1361,6 +1422,78 @@ const styles =
       marginTop:
         spacing[6],
       gap: spacing[2],
+    },
+    providerSwitchCard: {
+      minHeight: 84,
+      borderRadius:
+        radius.xl,
+      backgroundColor:
+        customerPalette.primary,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor:
+        'rgba(255,255,255,0.14)',
+    },
+    providerSwitchBubbleTop: {
+      position: 'absolute',
+      width: 150,
+      height: 150,
+      borderRadius: 75,
+      right: -58,
+      top: -92,
+      backgroundColor:
+        'rgba(255,255,255,0.07)',
+    },
+    providerSwitchBubbleBottom: {
+      position: 'absolute',
+      width: 190,
+      height: 190,
+      borderRadius: 95,
+      right: 8,
+      bottom: -148,
+      backgroundColor:
+        'rgba(255,255,255,0.055)',
+    },
+    providerSwitchRing: {
+      position: 'absolute',
+      width: 104,
+      height: 104,
+      borderRadius: 52,
+      right: 22,
+      bottom: -38,
+      borderWidth: 1,
+      borderColor:
+        'rgba(255,255,255,0.15)',
+      backgroundColor:
+        'rgba(7,75,41,0.06)',
+    },
+    providerSwitchRow: {
+      minHeight: 84,
+      paddingHorizontal:
+        spacing[3],
+      paddingVertical:
+        spacing[3],
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[3],
+    },
+    providerSwitchIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor:
+        'rgba(255,255,255,0.92)',
+      alignItems: 'center',
+      justifyContent:
+        'center',
+    },
+    providerSwitchCopy: {
+      flex: 1,
+      minWidth: 0,
+    },
+    providerSwitchSubtitle: {
+      marginTop:
+        spacing[1],
     },
     sectionShell: {
       borderWidth: 1,

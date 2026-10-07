@@ -4,14 +4,15 @@ import { useAppShell } from '../../app/AppShellProvider';
 import { WorkspacePlaceholderScreen } from '../shared/WorkspacePlaceholderScreen';
 
 export function ProviderHomeScreen(): React.JSX.Element {
-  const { providerTier } = useAppShell();
+  const { providerTier, providerPremiumVisuals } = useAppShell();
 
   return (
     <WorkspacePlaceholderScreen
       eyebrow="PROVIDER"
-      title="Home"
-      description="Provider dashboard will be designed on this route."
+      title="Dashboard"
+      description="Provider dashboard will use this route in the next major Provider milestone."
       premiumBadge={providerTier === 'LOCALSEWA_PLUS'}
+      premiumBadgeAccent={providerPremiumVisuals}
     />
   );
 }

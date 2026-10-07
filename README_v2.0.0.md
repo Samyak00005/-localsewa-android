@@ -1,257 +1,173 @@
-# Localsewa Android v2.0.0 — Provider Workspace Foundation
+# Localsewa Android v2.0.0 — Provider Profile / Reviews / Header / Bottom Navbar
 
-## Base
+## Baseline
 
-Apply over:
+- Built from the reconstructed and verified **v1.10.45 Provider Gallery Width Hotfix** baseline.
+- Android version updated to `versionCode 20000` / `versionName 2.0.0`.
+- This is a full source build. No new npm dependency was added.
+- Customer screens/components were not changed for this Provider milestone.
 
-`v1.10.45 — Provider Gallery Width Hotfix`
+## Scope completed
 
-This is the first Provider-role milestone after the Customer-role UI pass.
+### 1. Provider Header
 
-The Android app remains an independent React Native + TypeScript application.
-No WebView is introduced.
+- Provider-specific dark emerald header.
+- Localsewa mark at left.
+- `PROVIDER WORKSPACE` indication.
+- Standard / Plus badge driven by the real Localsewa+ membership endpoint.
+- Real notification bell using the existing authenticated notification feed.
+- Provider notification sheet is read-only for this milestone and supports marking an item read.
+- No Provider hamburger/sidebar added.
 
-No npm install is required.
+### 2. Provider Bottom Navbar
 
-## Scope
+Final Provider tabs are now:
 
-This milestone intentionally implements the lightweight Provider foundation
-first:
-
-1. Provider header
-2. Provider bottom navigation
-3. Provider Profile
-4. Provider Reviews
-
-The following existing Provider tab routes remain placeholders for the next
-milestones:
-
-- Home / Dashboard
-- Requests
-- Services
-
-This avoids prematurely designing the major operational pages before the
-Provider visual language is approved.
-
-## Provider bottom navigation
-
-Final primary Provider tabs:
-
-- Home
+- Dashboard
 - Requests
 - Services
 - Reviews
 - Profile
 
-This matches the Provider navigation plan.
+The existing shared Lucide icon system is used with one consistent icon size and active-state treatment.
 
-The bottom bar now follows the same safe-area behavior as the polished Customer
-bar while using Provider theme tokens.
+Dashboard, Requests and Services remain lightweight route foundations in this build. Their major functionality is intentionally scheduled after the Profile/Reviews foundation.
 
-Standard Provider uses the existing dark forest Provider palette.
+### 3. Provider Profile
 
-Localsewa+ continues to use the same route tree. It is not a third role.
-
-## Provider header
-
-New shared header:
-
-- Localsewa mark
-- `PROVIDER WORKSPACE`
-- `Manage your local business`
-- Standard / Localsewa+ workspace tier pill
-
-Standard uses Provider dark forest green.
-
-Premium mode automatically uses premium theme tokens and a gold tier treatment.
-
-No hamburger/drawer is added.
-
-Provider Notifications are deliberately not faked in this build; notification
-routing will be connected during the Requests/communication phase.
-
-## Provider Profile
-
-The placeholder Profile is replaced with a real Provider workspace page.
-
-### Data source
-
-`GET /api/provider/dashboard`
-
-The parser tolerates common backend nesting patterns while never inventing
-provider data.
-
-Displayed when returned by the backend:
-
-- business/provider name
-- profile image
-- category
-- location
-- availability
-- rating
-- review count
-- experience
-- About/business description
-
-Auth account name/photo is only used as a safe identity fallback if the
-provider dashboard omits those fields.
-
-### Workspace options
-
-Functional now:
-
-- Services -> Provider Services tab
-- Reviews -> Provider Reviews tab
-- Switch to Customer -> existing workspace transition flow
-- Sign out
-
-Shown as explicit next-phase entries:
-
-- Localsewa+ membership management
-- Account security Provider-stack connection
-- Help & Support Provider-stack connection
-
-These entries do not pretend the missing Provider secondary routes are already
-complete.
-
-## Provider Reviews
-
-The placeholder Reviews page is replaced with a real read-only feedback page.
-
-### Data source
-
-`GET /api/provider/reviews`
-
-Displayed:
-
-- average rating
-- total reviews
-- 5-star count
-- 5-to-1 rating distribution
-- recent customer feedback
-- customer name when supplied
-- service name when supplied
-- rating
-- comment
-- booking code when supplied
-- date when supplied
-
-No fake reviews are inserted.
-
-If there are no reviews, a real empty state is shown.
-
-Pull-to-refresh and retry/error states are included.
-
-## New files
-
-- `src/types/providerWorkspace.ts`
-- `src/api/providerWorkspaceApi.ts`
-- `src/hooks/useProviderWorkspace.ts`
-- `src/components/provider/ProviderHeader.tsx`
-- `src/components/provider/index.ts`
-
-## Replaced files
-
-- `src/navigation/ProviderTabs.tsx`
-- `src/screens/provider/ProviderProfileScreen.tsx`
-- `src/screens/provider/ProviderReviewsScreen.tsx`
-- `src/screens/provider/index.ts`
-- `android/app/build.gradle`
-
-## Backend routes used
+Connected to real Provider backend contracts:
 
 - `GET /api/provider/dashboard`
+- `PUT /api/provider/profile`
+- `PATCH /api/provider/availability`
+- `GET /api/provider/premium`
+
+The screen uses the real `data.provider` dashboard payload, including available fields such as:
+
+- business name
+- owner name
+- category
+- location/service area
+- description
+- profile image
+- business gallery
+- rating / review count
+- availability
+- membership entitlement
+
+Implemented:
+
+- Provider identity/business card.
+- Real profile photo display.
+- Category and service area.
+- Rating, review count and experience when the dashboard supplies it.
+- Real availability switch with optimistic UI and rollback on API failure.
+- About section.
+- Real business-gallery display with cover indication and full-screen viewer.
+- Real edit-business-profile bottom sheet for business name, owner name, business email and About.
+- Edit saves through `PUT /api/provider/profile` and preserves the existing verified location coordinates and WhatsApp value without exposing WhatsApp in the UI.
+- Current service area is read-only in this editor so this build does not bypass the backend's verified location flow.
+- Standard / Localsewa+ state is driven by the real membership API.
+- My Services and Reviews workspace shortcuts.
+- Existing Provider → Customer workspace-transition popup is preserved.
+- Sign out.
+
+Business/profile photo upload and gallery mutation are not enabled in this first Provider build. Existing backend photos are displayed only.
+
+### 4. Provider Reviews
+
+Connected to:
+
 - `GET /api/provider/reviews`
 
-Both are authenticated Provider routes in the current Hostinger backend.
+The real existing web/backend contract supplies a `reviews` array with fields used by the Provider workspace such as:
 
-No new backend endpoint is invented.
+- `id`
+- `customer`
+- `service`
+- `rating`
+- `comment`
+- `created_at`
 
-## Android version
+Implemented:
 
-- versionCode: 20000
-- versionName: 2.0.0
+- Overall rating computed from the returned real review list.
+- Total review count from the returned list.
+- Customer/service/rating/comment/date cards.
+- Loading skeletons.
+- Pull-to-refresh.
+- Error + retry state.
+- Empty state.
+- Read-only behavior.
 
-## Install
+Rating-distribution, reply and report actions are deliberately not invented because the currently inspected Provider review contract does not provide those capabilities.
 
-Apply over v1.10.45.
+## Localsewa+ behavior
 
-No npm install.
+`GET /api/provider/premium` is consumed through its real `membership` field.
 
-No Kotlin/native source changes are included, so normal Android Studio Run is
-enough.
+- `TRIAL` / `ACTIVE` plus authoritative `active=true` enables premium Provider theme/chrome.
+- Expired access falls back to Standard Provider UI.
+- Localsewa+ does **not** create a separate navigation tree.
 
-## QA
+## Existing role switching preserved
 
-### Provider workspace entry
+Customer → Provider and Provider → Customer still use the existing transition modal before the workspace changes.
 
-Switch Customer -> Provider.
+Provider transition copy remains:
 
-Confirm:
+- `SWITCHING WORKSPACE`
+- `Provider mode`
+- `Preparing your business workspace…`
 
-- existing Switching Workspace popup appears first
-- Provider header appears
-- Provider bottom navbar appears
+Customer transition copy remains:
 
-### Header
+- `SWITCHING WORKSPACE`
+- `Customer mode`
+- `Preparing your customer workspace…`
 
-Check:
+## Main changed/new files
 
-- Localsewa logo
-- Provider workspace copy
-- Standard tier
-- no hamburger
-- premium theme still has an intentional visual path
+- `android/app/build.gradle`
+- `src/api/providerWorkspaceApi.ts`
+- `src/app/AppShellProvider.tsx`
+- `src/components/provider/ProviderHeader.tsx`
+- `src/components/provider/ProviderNotificationsModal.tsx`
+- `src/components/provider/index.ts`
+- `src/hooks/useProviderWorkspace.ts`
+- `src/navigation/ProviderTabs.tsx`
+- `src/screens/provider/ProviderHomeScreen.tsx`
+- `src/screens/provider/ProviderProfileScreen.tsx`
+- `src/screens/provider/ProviderReviewsScreen.tsx`
+- `src/types/providerWorkspace.ts`
 
-### Navbar
+## Android Studio GUI test checklist
 
-Confirm:
+Use an Android emulator/virtual device only.
 
-- Home
-- Requests
-- Services
-- Reviews
-- Profile
-- active state follows selected tab
-- Android bottom safe area is respected
+1. Open this project in Android Studio.
+2. Let Gradle sync complete.
+3. Select the existing Android emulator from Device Manager.
+4. Run the app from the Android Studio Run button.
+5. Sign in with an account that has the Provider role.
+6. Switch Customer → Provider and confirm the existing workspace transition popup appears first.
+7. Confirm the Provider header shows the Provider workspace, correct Standard/Plus state and notification bell.
+8. Confirm bottom tabs read `Dashboard | Requests | Services | Reviews | Profile`.
+9. Open Profile and verify real business name/category/location/photos/review count load from the account.
+10. Toggle availability and reopen/refresh Profile to verify persistence.
+11. Edit business name/About (and other supported edit fields), save, refresh, and verify persistence.
+12. Open a business photo and close the full-screen viewer.
+13. Open Reviews and verify real customer reviews, pull-to-refresh, empty/error behavior as applicable.
+14. Switch Provider → Customer and confirm the transition popup appears before the Customer workspace.
+15. Regression-check Customer Home, Services, Bookings and Profile. Their UI source was not changed by this build.
 
-### Profile
+## Verification completed before packaging
 
-Check:
+- Reconstructed v1.10.45 was used as the source baseline.
+- Provider API usage was cross-checked against the existing Provider web source/backend route inventory rather than guessed endpoints.
+- All changed TypeScript/TSX files passed syntax transpilation checks.
+- Provider icon literals were checked against the existing shared AppIcon registry.
+- No file under `src/screens/customer` or `src/components/customer` differs from v1.10.45.
+- ZIP integrity is checked after packaging.
 
-- real dashboard/profile data where available
-- circular profile image
-- category/location
-- availability
-- Rating / Reviews / Experience
-- About
-- Services row opens Services tab
-- Reviews row opens Reviews tab
-- Switch to Customer shows transition popup and switches workspace
-- Sign out works
-
-### Reviews
-
-Check:
-
-- summary loads from real Provider reviews API
-- distribution bars render
-- customer review cards render
-- pull-to-refresh works
-- empty state works for zero reviews
-- backend/network error has Retry
-
-## Next Provider milestone
-
-After visual approval of this foundation:
-
-`v2.1.0 — Provider Services`
-
-Then:
-
-`v2.2.0 — Provider Dashboard`
-`v2.3.0 — Provider Requests`
-`v2.4.0 — Provider Request Details & Lifecycle`
-
-Localsewa+ entitlement UI and shared Provider secondary settings will follow
-after the core operational workflow is stable.
+A live authenticated emulator/backend end-to-end run is still the acceptance gate on the user's Android Studio environment.

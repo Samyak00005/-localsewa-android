@@ -15,7 +15,12 @@ import type {
   WorkspaceSwitchTarget,
 } from '../components/navigation/WorkspaceSwitchModal';
 import { useAppTheme } from '../theme';
+import { useProviderMembership } from '../hooks/useProviderWorkspace';
 import { ProviderTier } from '../types/roles';
+import {
+  ProviderThemePreference,
+  providerThemePreferenceStorage,
+} from './providerThemePreference';
 
 export type AppArea = 'auth' | 'customer' | 'provider';
 
@@ -23,6 +28,9 @@ type AppShellContextValue = {
   area: AppArea;
   providerTier: ProviderTier;
   canUseProvider: boolean;
+  providerThemePreference: ProviderThemePreference;
+  providerPremiumVisuals: boolean;
+  setProviderThemePreference: (preference: ProviderThemePreference) => void;
   enterCustomer: () => void;
   enterProvider: () => boolean;
 };
@@ -31,6 +39,9 @@ const AppShellContext = createContext<AppShellContextValue>({
   area: 'auth',
   providerTier: 'STANDARD',
   canUseProvider: false,
+  providerThemePreference: 'premium',
+  providerPremiumVisuals: false,
+  setProviderThemePreference: () => undefined,
   enterCustomer: () => undefined,
   enterProvider: () => false,
 });
@@ -46,6 +57,8 @@ export function AppShellProvider({
 }: PropsWithChildren): React.JSX.Element {
   const { user, restoring } = useAuth();
   const [area, setArea] = useState<AppArea>('auth');
+  const [providerThemePreference, setProviderThemePreferenceState] =
+    useState<ProviderThemePreference>('premium');
 
   const [
     switchTarget,
@@ -55,15 +68,45 @@ export function AppShellProvider({
       null,
     );
 
-  // Premium entitlement is not connected in v1.6.0.
-  // Authenticated Providers use STANDARD until subscription integration.
-  const providerTier: ProviderTier = 'STANDARD';
-
   const { setMode } = useAppTheme();
 
   const canUseProvider = hasRole(user?.roles, 'PROVIDER');
-
   const canUseCustomer = hasRole(user?.roles, 'CUSTOMER');
+
+  const { data: providerMembership } = useProviderMembership(canUseProvider);
+
+  const providerTier: ProviderTier = providerMembership?.active
+    ? 'LOCALSEWA_PLUS'
+    : 'STANDARD';
+
+  const providerPremiumVisuals =
+    providerTier === 'LOCALSEWA_PLUS' && providerThemePreference === 'premium';
+
+  useEffect(() => {
+    let active = true;
+    const userId = user?.id;
+
+    setProviderThemePreferenceState('premium');
+
+    if (!userId) {
+      return () => {
+        active = false;
+      };
+    }
+
+    providerThemePreferenceStorage
+      .read(userId)
+      .then(preference => {
+        if (active && preference) {
+          setProviderThemePreferenceState(preference);
+        }
+      })
+      .catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     if (restoring) {
@@ -133,18 +176,31 @@ export function AppShellProvider({
 
   useEffect(() => {
     if (area === 'provider') {
-      setMode('providerStandard');
+      setMode(
+        providerPremiumVisuals ? 'providerPremium' : 'providerStandard',
+      );
       return;
     }
 
     setMode('customer');
-  }, [area, setMode]);
+  }, [area, providerPremiumVisuals, setMode]);
 
   const value = useMemo<AppShellContextValue>(
     () => ({
       area,
       providerTier,
       canUseProvider,
+      providerThemePreference,
+      providerPremiumVisuals,
+      setProviderThemePreference: preference => {
+        setProviderThemePreferenceState(preference);
+
+        if (user?.id) {
+          providerThemePreferenceStorage
+            .save(user.id, preference)
+            .catch(() => undefined);
+        }
+      },
 
       enterCustomer: () => {
         if (
@@ -184,6 +240,8 @@ export function AppShellProvider({
       area,
       canUseProvider,
       providerTier,
+      providerThemePreference,
+      providerPremiumVisuals,
       switchTarget,
       user,
     ],

@@ -11,6 +11,7 @@ type WorkspacePlaceholderScreenProps = {
   description: string;
   children?: ReactNode;
   premiumBadge?: boolean;
+  premiumBadgeAccent?: boolean;
 };
 
 export function WorkspacePlaceholderScreen({
@@ -19,9 +20,9 @@ export function WorkspacePlaceholderScreen({
   description,
   children,
   premiumBadge = false,
+  premiumBadgeAccent = false,
 }: WorkspacePlaceholderScreenProps): React.JSX.Element {
-  const { theme, mode } = useAppTheme();
-  const premium = mode === 'providerPremium';
+  const { theme } = useAppTheme();
 
   return (
     <SafeAreaView
@@ -36,7 +37,7 @@ export function WorkspacePlaceholderScreen({
           <View style={styles.headingCopy}>
             <AppText
               variant="overline"
-              color={premium ? theme.colors.accent : theme.colors.primary}
+              color={theme.colors.primary}
               style={styles.eyebrow}
             >
               {eyebrow}
@@ -44,31 +45,22 @@ export function WorkspacePlaceholderScreen({
             <AppText variant="h1">{title}</AppText>
           </View>
 
-          {premiumBadge ? <Badge variant="premium">LOCALSEWA+</Badge> : null}
+          {premiumBadge ? (
+            <Badge variant={premiumBadgeAccent ? 'premium' : 'default'}>
+              LOCALSEWA+
+            </Badge>
+          ) : null}
         </View>
 
         <AppText variant="body" muted style={styles.description}>
           {description}
         </AppText>
 
-        <Card
-          style={[
-            styles.placeholderCard,
-            premium && {
-              backgroundColor:
-                theme.colors.premiumIvorySurface ?? theme.colors.surface,
-              borderColor: theme.colors.accent,
-            },
-          ]}
-        >
+        <Card style={styles.placeholderCard}>
           <View
             style={[
               styles.mark,
-              {
-                backgroundColor: premium
-                  ? theme.colors.secondary
-                  : theme.colors.primary,
-              },
+              { backgroundColor: theme.colors.primary },
             ]}
           />
           <AppText variant="title">App shell ready</AppText>

@@ -1,550 +1,245 @@
 import {
-  API_ORIGIN,
-  apiRequest,
-} from './apiClient';
-import {
+  ProviderBusinessImage,
   ProviderDashboardData,
+  ProviderMembership,
+  ProviderProfileUpdate,
   ProviderReviewsData,
-  ProviderWorkspaceProfile,
   ProviderWorkspaceReview,
 } from '../types/providerWorkspace';
+import { API_ORIGIN, ApiError, apiRequest } from './apiClient';
 
-type ApiRecord =
-  Record<string, unknown>;
+type ApiRecord = Record<string, unknown>;
 
-function isRecord(
-  value: unknown,
-): value is ApiRecord {
-  return (
-    typeof value ===
-      'object' &&
-    value !== null &&
-    !Array.isArray(
-      value,
-    )
-  );
+function isRecord(value: unknown): value is ApiRecord {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function text(
-  value: unknown,
-): string | undefined {
-  return typeof value ===
-    'string'
-    ? value.trim() ||
-        undefined
-    : undefined;
+function text(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const normalized = value.trim();
+  return normalized || undefined;
 }
 
-function number(
-  value: unknown,
-): number | undefined {
-  const parsed =
-    typeof value ===
-    'number'
-      ? value
-      : Number(value);
-
-  return Number.isFinite(
-    parsed,
-  )
-    ? parsed
-    : undefined;
+function number(value: unknown): number | undefined {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }
 
-function boolean(
-  value: unknown,
-): boolean | undefined {
-  if (
-    value === true ||
-    value === 1 ||
-    value === '1'
-  ) {
+function boolean(value: unknown, fallback = false): boolean {
+  if (value === true || value === 1 || value === '1') {
     return true;
   }
 
-  if (
-    value === false ||
-    value === 0 ||
-    value === '0'
-  ) {
+  if (value === false || value === 0 || value === '0') {
     return false;
   }
 
-  return undefined;
+  return fallback;
 }
 
-function mediaUrl(
-  value: unknown,
-): string | undefined {
-  const path =
-    text(value);
+function mediaUrl(value: unknown): string | undefined {
+  const path = text(value);
 
   if (!path) {
     return undefined;
   }
 
-  if (
-    /^https?:\/\//i.test(
-      path,
-    )
-  ) {
+  if (/^https?:\/\//i.test(path)) {
     return path;
   }
 
-  return `${API_ORIGIN}/${path.replace(
-    /^\/+/,
-    '',
-  )}`;
+  return `${API_ORIGIN}/${path.replace(/^\/+/, '')}`;
 }
 
-function record(
-  value: unknown,
-): ApiRecord {
-  return isRecord(value)
-    ? value
-    : {};
-}
+function normalizeMembership(value: unknown): ProviderMembership {
+  const membership = isRecord(value) ? value : {};
+  const status = (text(membership.status) ?? 'NONE').toUpperCase();
+  const serverActive = boolean(membership.active, false);
+  const trialEndsAt = text(membership.trialEndsAt) ?? null;
+  const currentPeriodEnd = text(membership.currentPeriodEnd) ?? null;
 
-function firstRecord(
-  ...values: unknown[]
-): ApiRecord {
-  for (const value of values) {
-    if (isRecord(value)) {
-      return value;
+  let active = serverActive && (status === 'TRIAL' || status === 'ACTIVE');
+  const accessEnd = status === 'TRIAL' ? trialEndsAt : currentPeriodEnd;
+
+  if (active && accessEnd) {
+    const normalizedDate = /^\d{4}-\d{2}-\d{2} \d/.test(accessEnd)
+      ? `${accessEnd.replace(' ', 'T')}+05:30`
+      : accessEnd;
+    const expiry = new Date(normalizedDate).getTime();
+
+    if (!Number.isFinite(expiry) || expiry <= Date.now()) {
+      active = false;
     }
   }
 
-  return {};
+  return {
+    status,
+    active,
+    plan: text(membership.plan) ?? null,
+    trialEndsAt,
+    currentPeriodEnd,
+  };
 }
 
-function categoryName(
-  value: unknown,
-): string | undefined {
-  if (
-    typeof value ===
-    'string'
-  ) {
-    return (
-      value.trim() ||
-      undefined
-    );
+function parseBusinessImages(value: unknown): ProviderBusinessImage[] {
+  if (!Array.isArray(value)) {
+    return [];
   }
 
-  if (isRecord(value)) {
-    return (
-      text(value.name) ??
-      text(
-        value.category_name,
-      )
-    );
+  return value
+    .filter((item): item is ApiRecord => isRecord(item))
+    .map((item, index) => {
+      const url = mediaUrl(item.url);
+      const id = number(item.id);
+
+      if (!url || id == null) {
+        return null;
+      }
+
+      return {
+        id,
+        url,
+        sortOrder: number(item.sortOrder) ?? index,
+        isCover: boolean(item.isCover, false),
+      } satisfies ProviderBusinessImage;
+    })
+    .filter((item): item is ProviderBusinessImage => item !== null)
+    .sort((first, second) => {
+      if (first.isCover !== second.isCover) {
+        return first.isCover ? -1 : 1;
+      }
+
+      return first.sortOrder - second.sortOrder;
+    });
+}
+
+function parseDashboard(result: ApiRecord): ProviderDashboardData {
+  // Current web Provider workspace consumes data.provider from this endpoint.
+  const provider = result.provider;
+
+  if (!isRecord(provider)) {
+    throw new ApiError('Provider dashboard data is unavailable.');
   }
 
-  return undefined;
-}
-
-function parseDashboard(
-  result: ApiRecord,
-): ProviderDashboardData {
-  const dashboard =
-    record(
-      result.dashboard,
-    );
-
-  const profile =
-    firstRecord(
-      result.provider,
-      result.profile,
-      dashboard.provider,
-      dashboard.profile,
-    );
-
-  const stats =
-    firstRecord(
-      result.stats,
-      dashboard.stats,
-      profile.stats,
-    );
-
-  const provider: ProviderWorkspaceProfile = {
-    businessName:
-      text(
-        profile.business_name,
-      ) ??
-      text(profile.name) ??
-      text(
-        dashboard.business_name,
-      ) ??
-      'Provider',
-    ownerName:
-      text(
-        profile.owner_name,
-      ) ??
-      text(
-        profile.full_name,
-      ) ??
-      text(
-        dashboard.owner_name,
-      ),
-    category:
-      categoryName(
-        profile.category,
-      ) ??
-      text(
-        profile.category_name,
-      ) ??
-      categoryName(
-        dashboard.category,
-      ) ??
-      text(
-        dashboard.category_name,
-      ),
-    location:
-      text(
-        profile.location,
-      ) ??
-      text(
-        dashboard.location,
-      ),
-    description:
-      text(
-        profile.business_description,
-      ) ??
-      text(
-        profile.description,
-      ) ??
-      text(
-        dashboard.business_description,
-      ),
-    profileImageUrl:
-      mediaUrl(
-        profile.profile_image,
-      ) ??
-      mediaUrl(
-        profile.owner_image,
-      ),
-    businessImageUrl:
-      mediaUrl(
-        profile.business_image,
-      ) ??
-      mediaUrl(
-        dashboard.business_image,
-      ),
-    available:
-      boolean(
-        profile.available_now,
-      ) ??
-      boolean(
-        profile.available,
-      ) ??
-      boolean(
-        dashboard.available_now,
-      ),
-    verificationStatus:
-      text(
-        profile.verification_status,
-      ) ??
-      text(
-        dashboard.verification_status,
-      ),
-    experienceYears:
-      number(
-        profile.experience_years,
-      ) ??
-      number(
-        profile.experience,
-      ) ??
-      number(
-        dashboard.experience_years,
-      ),
-    averageRating:
-      number(
-        profile.average_rating,
-      ) ??
-      number(
-        profile.rating,
-      ) ??
-      number(
-        stats.average_rating,
-      ) ??
-      null,
-    reviewCount:
-      number(
-        profile.total_reviews,
-      ) ??
-      number(
-        profile.review_count,
-      ) ??
-      number(
-        stats.total_reviews,
-      ) ??
-      0,
-    completedJobs:
-      number(
-        profile.total_completed_jobs,
-      ) ??
-      number(
-        stats.completed_jobs,
-      ) ??
-      number(
-        stats.total_completed_jobs,
-      ),
-    serviceCount:
-      number(
-        stats.service_count,
-      ) ??
-      number(
-        profile.service_count,
-      ),
-    homeService:
-      boolean(
-        profile.home_service,
-      ),
-    shopService:
-      boolean(
-        profile.shop_service,
-      ),
-  };
+  const rawReviewCount = Math.max(0, number(provider.reviews) ?? 0);
+  const rawRating = number(provider.rating);
 
   return {
-    profile: provider,
-  };
-}
-
-function parseReview(
-  value: ApiRecord,
-  index: number,
-): ProviderWorkspaceReview {
-  return {
-    id:
-      String(
-        value.id ??
-          value.review_id ??
-          `review-${index}`,
-      ),
-    rating:
-      Math.max(
-        1,
-        Math.min(
-          5,
-          number(
-            value.rating,
-          ) ?? 0,
-        ),
-      ),
-    comment:
-      text(
-        value.comment,
-      ) ??
-      text(
-        value.review,
-      ),
-    customerName:
-      text(
-        value.customer_name,
-      ) ??
-      text(
-        value.reviewer_name,
-      ) ??
-      text(
-        value.customer,
-      ),
-    serviceName:
-      text(
-        value.service_name,
-      ) ??
-      text(
-        value.service,
-      ),
-    bookingCode:
-      text(
-        value.booking_code,
-      ),
-    createdAt:
-      text(
-        value.created_at,
-      ) ??
-      text(
-        value.date,
-      ),
-  };
-}
-
-function parseReviews(
-  result: ApiRecord,
-): ProviderReviewsData {
-  const source =
-    Array.isArray(
-      result.reviews,
-    )
-      ? result.reviews
-      : Array.isArray(
-            result.items,
-          )
-        ? result.items
-        : Array.isArray(
-              result.review_items,
-            )
-          ? result.review_items
-          : [];
-
-  const reviews =
-    source
-      .filter(
-        (
-          value,
-        ): value is ApiRecord =>
-          isRecord(value),
-      )
-      .map(
-        (
-          value,
-          index,
-        ) =>
-          parseReview(
-            value,
-            index,
-          ),
-      )
-      .filter(
-        value =>
-          value.rating >=
-            1 &&
-          value.rating <=
-            5,
-      );
-
-  const summary =
-    firstRecord(
-      result.summary,
-      result.stats,
-    );
-
-  const totalReviews =
-    number(
-      summary.total_reviews,
-    ) ??
-    number(
-      result.total_reviews,
-    ) ??
-    reviews.length;
-
-  const calculatedAverage =
-    reviews.length
-      ? reviews.reduce(
-          (
-            total,
-            review,
-          ) =>
-            total +
-            review.rating,
-          0,
-        ) /
-        reviews.length
-      : null;
-
-  const averageRating =
-    number(
-      summary.average_rating,
-    ) ??
-    number(
-      result.average_rating,
-    ) ??
-    calculatedAverage;
-
-  const distribution: Record<
-    1 | 2 | 3 | 4 | 5,
-    number
-  > = {
-    1: 0,
-    2: 0,
-    3: 0,
-    4: 0,
-    5: 0,
-  };
-
-  reviews.forEach(
-    review => {
-      const key =
-        Math.round(
-          review.rating,
-        ) as
-          | 1
-          | 2
-          | 3
-          | 4
-          | 5;
-
-      distribution[key] +=
-        1;
+    profile: {
+      id: number(provider.id),
+      businessName: text(provider.businessName) ?? 'Provider',
+      ownerName: text(provider.ownerName),
+      category: text(provider.category),
+      location: text(provider.location),
+      description: text(provider.description),
+      email: text(provider.email),
+      phone: text(provider.phone),
+      whatsapp: text(provider.whatsapp),
+      latitude: number(provider.latitude) ?? null,
+      longitude: number(provider.longitude) ?? null,
+      profileImageUrl: mediaUrl(provider.profileImage),
+      businessImages: parseBusinessImages(provider.businessImages),
+      available: boolean(provider.available, false),
+      experienceYears:
+        number(provider.experienceYears) ?? number(provider.experience),
+      averageRating:
+        rawReviewCount > 0 && rawRating != null
+          ? Math.max(0, Math.min(5, rawRating))
+          : null,
+      reviewCount: rawReviewCount,
+      profileCompletion: number(provider.profileCompletion),
+      premium: normalizeMembership(provider.premium),
     },
-  );
+  };
+}
 
-  const fiveStarCount =
-    number(
-      summary.five_star_count,
-    ) ??
-    number(
-      result.five_star_count,
-    ) ??
-    distribution[5];
+function parseReview(value: ApiRecord): ProviderWorkspaceReview | null {
+  const id = value.id;
+  const rating = number(value.rating);
+
+  if (id == null || rating == null || rating < 1 || rating > 5) {
+    return null;
+  }
+
+  return {
+    id: String(id),
+    rating,
+    comment: text(value.comment),
+    customerName: text(value.customer),
+    serviceName: text(value.service),
+    createdAt: text(value.created_at),
+  };
+}
+
+function parseReviews(result: ApiRecord): ProviderReviewsData {
+  // Current web Provider reviews page consumes data.reviews from this endpoint.
+  const reviews = Array.isArray(result.reviews)
+    ? result.reviews
+        .filter((item): item is ApiRecord => isRecord(item))
+        .map(parseReview)
+        .filter((item): item is ProviderWorkspaceReview => item !== null)
+    : [];
+
+  const averageRating = reviews.length
+    ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+    : null;
 
   return {
     reviews,
-    averageRating:
-      averageRating ==
-      null
-        ? null
-        : Math.max(
-            0,
-            Math.min(
-              5,
-              averageRating,
-            ),
-          ),
-    totalReviews:
-      Math.max(
-        0,
-        totalReviews,
-      ),
-    fiveStarCount:
-      Math.max(
-        0,
-        fiveStarCount,
-      ),
-    distribution,
+    averageRating,
   };
 }
 
 export const providerWorkspaceApi = {
-  async dashboard(
-    token: string,
-  ): Promise<ProviderDashboardData> {
-    const result =
-      await apiRequest<ApiRecord>(
-        '/api/provider/dashboard',
-        {
-          token,
-        },
-      );
+  async dashboard(token: string): Promise<ProviderDashboardData> {
+    const result = await apiRequest<ApiRecord>('/api/provider/dashboard', {
+      token,
+    });
 
-    return parseDashboard(
-      result,
-    );
+    return parseDashboard(result);
   },
 
-  async reviews(
-    token: string,
-  ): Promise<ProviderReviewsData> {
-    const result =
-      await apiRequest<ApiRecord>(
-        '/api/provider/reviews',
-        {
-          token,
-        },
-      );
+  async reviews(token: string): Promise<ProviderReviewsData> {
+    const result = await apiRequest<ApiRecord>('/api/provider/reviews', {
+      token,
+    });
 
-    return parseReviews(
-      result,
-    );
+    return parseReviews(result);
+  },
+
+  async membership(token: string): Promise<ProviderMembership> {
+    const result = await apiRequest<ApiRecord>('/api/provider/premium', {
+      token,
+    });
+
+    return normalizeMembership(result.membership);
+  },
+
+
+  async updateProfile(token: string, profile: ProviderProfileUpdate): Promise<void> {
+    await apiRequest<ApiRecord>('/api/provider/profile', {
+      method: 'PUT',
+      token,
+      body: {
+        business_name: profile.businessName,
+        owner_name: profile.ownerName,
+        business_description: profile.description,
+        location: profile.location,
+        latitude: profile.latitude,
+        longitude: profile.longitude,
+        whatsapp: profile.whatsapp,
+      },
+    });
+  },
+
+  async setAvailability(token: string, available: boolean): Promise<void> {
+    await apiRequest('/api/provider/availability', {
+      method: 'PATCH',
+      token,
+      body: { available },
+    });
   },
 };

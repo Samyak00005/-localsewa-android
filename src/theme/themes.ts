@@ -1,7 +1,7 @@
 import {
   customerPalette,
+  localsewaPlusPalette,
   premiumExtras,
-  providerPremiumPalette,
   providerStandardPalette,
   sharedColors,
   statusColors,
@@ -18,6 +18,8 @@ type BrandPalette = {
 };
 
 type ThemeColors = BrandPalette & {
+  primaryPressed?: string;
+  subtle?: string;
   surface: string;
   surfaceMuted: string;
   border: string;
@@ -29,6 +31,11 @@ type ThemeColors = BrandPalette & {
   warning: string;
   error: string;
   info: string;
+  premiumText?: string;
+  premiumBackground?: string;
+  premiumPrimary?: string;
+  premiumSecondary?: string;
+  premiumAccent?: string;
   premiumPrimaryDeep?: string;
   premiumSecondaryDeep?: string;
   premiumGoldStrong?: string;
@@ -67,6 +74,8 @@ export const providerStandardTheme: AppTheme = {
   mode: 'providerStandard',
   colors: {
     ...providerStandardPalette,
+    primaryPressed: providerStandardPalette.pressed,
+    subtle: providerStandardPalette.subtle,
     ...semanticColors,
   },
 };
@@ -74,8 +83,16 @@ export const providerStandardTheme: AppTheme = {
 export const providerPremiumTheme: AppTheme = {
   mode: 'providerPremium',
   colors: {
-    ...providerPremiumPalette,
+    // Localsewa+ is an entitlement layer over the same Provider UI.
+    ...providerStandardPalette,
+    primaryPressed: providerStandardPalette.pressed,
+    subtle: providerStandardPalette.subtle,
     ...semanticColors,
+    premiumText: localsewaPlusPalette.text,
+    premiumBackground: localsewaPlusPalette.background,
+    premiumPrimary: localsewaPlusPalette.primary,
+    premiumSecondary: localsewaPlusPalette.secondary,
+    premiumAccent: localsewaPlusPalette.accent,
     premiumPrimaryDeep: premiumExtras.primaryDeep,
     premiumSecondaryDeep: premiumExtras.secondaryDeep,
     premiumGoldStrong: premiumExtras.goldStrong,
