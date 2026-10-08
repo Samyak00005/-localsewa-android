@@ -111,5 +111,10 @@ export type ProviderStackParamList = {
   ProviderVoiceCallPreview: {
     bookingId: number;
   };
+  ProviderAccountSecurity: undefined;
+  ProviderAccountDeletion: undefined;
+  ProviderHelpSupport: undefined;
+  ProviderTermsConditions: undefined;
+  ProviderPrivacyPolicy: undefined;
 };
 

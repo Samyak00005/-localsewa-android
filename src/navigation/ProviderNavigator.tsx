@@ -2,8 +2,13 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
 import {
+  ProviderAccountDeletionScreen,
+  ProviderAccountSecurityScreen,
   ProviderBookingChatScreen,
+  ProviderHelpSupportScreen,
+  ProviderPrivacyPolicyScreen,
   ProviderRequestDetailsScreen,
+  ProviderTermsConditionsScreen,
   ProviderVoiceCallPreviewScreen,
 } from '../screens/provider';
 import { ProviderTabs } from './ProviderTabs';
@@ -32,6 +37,26 @@ export function ProviderNavigator(): React.JSX.Element {
         name="ProviderVoiceCallPreview"
         component={ProviderVoiceCallPreviewScreen}
         options={{ animation: 'fade' }}
+      />
+      <Stack.Screen
+        name="ProviderAccountSecurity"
+        component={ProviderAccountSecurityScreen}
+      />
+      <Stack.Screen
+        name="ProviderAccountDeletion"
+        component={ProviderAccountDeletionScreen}
+      />
+      <Stack.Screen
+        name="ProviderHelpSupport"
+        component={ProviderHelpSupportScreen}
+      />
+      <Stack.Screen
+        name="ProviderTermsConditions"
+        component={ProviderTermsConditionsScreen}
+      />
+      <Stack.Screen
+        name="ProviderPrivacyPolicy"
+        component={ProviderPrivacyPolicyScreen}
       />
     </Stack.Navigator>
   );

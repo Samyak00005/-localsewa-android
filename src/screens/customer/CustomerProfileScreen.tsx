@@ -22,6 +22,7 @@ import {
   errorMessage,
 } from '../../api/apiClient';
 import {
+  ProfileLogoutAction,
   ProfileMenuRow,
 } from '../../components/account';
 import {
@@ -669,73 +670,11 @@ export function CustomerProfileScreen({
               </AlertBanner>
             </View>
           ) : null}
-
-          <View
-            style={
-              styles.accountActions
-            }>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{
-                busy: signingOut,
-              }}
-              disabled={signingOut}
+          <View style={styles.accountActions}>
+            <ProfileLogoutAction
+              loading={signingOut}
               onPress={signOut}
-              style={({pressed}) => [
-                styles.logoutAction,
-                {
-                  backgroundColor:
-                    theme.colors.surfaceMuted,
-                  borderColor:
-                    theme.colors.border,
-                  opacity:
-                    signingOut
-                      ? 0.55
-                      : pressed
-                        ? 0.78
-                        : 1,
-                },
-              ]}>
-              <View
-                style={[
-                  styles.logoutIcon,
-                  {
-                    backgroundColor:
-                      theme.colors.surface,
-                  },
-                ]}>
-                <AppIcon
-                  name="logOut"
-                  size={
-                    iconSize.sm
-                  }
-                  color={
-                    theme.colors.textSecondary
-                  }
-                />
-              </View>
-
-              <View
-                style={
-                  styles.logoutCopy
-                }>
-                <AppText
-                  variant="label">
-                  {signingOut
-                    ? 'Logging out…'
-                    : 'Log out'}
-                </AppText>
-
-                <AppText
-                  variant="caption"
-                  muted
-                  style={
-                    styles.logoutSubtitle
-                  }>
-                  Sign out from this device
-                </AppText>
-              </View>
-            </Pressable>
+            />
           </View>
         </>
       )}

@@ -1,4 +1,5 @@
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -18,8 +19,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { errorMessage } from '../../api/apiClient';
 import { useAppShell } from '../../app/AppShellProvider';
 import { useAuth } from '../../auth';
+import { ProfileLogoutAction } from '../../components/account';
 import { AppIcon, AppIconName, iconSize } from '../../components/icons';
-import { useProviderOverlayBlur } from '../../components/provider';
+import {
+  ProviderNotificationsModal,
+  useProviderOverlayBlur,
+} from '../../components/provider';
 import {
   AlertBanner,
   AppSwitch,
@@ -38,7 +43,10 @@ import {
   useProviderDashboard,
   useProviderProfileUpdate,
 } from '../../hooks/useProviderWorkspace';
-import { ProviderTabParamList } from '../../navigation/types';
+import {
+  ProviderStackParamList,
+  ProviderTabParamList,
+} from '../../navigation/types';
 import { pickProfilePhoto } from '../../native/profilePhotoPicker';
 import {
   ProviderBusinessImage,
@@ -90,10 +98,12 @@ export function ProviderProfileScreen({
   const [businessImageOrder, setBusinessImageOrder] = useState<number[]>([]);
   const [profilePhotoOpen, setProfilePhotoOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const premium = providerTier === 'LOCALSEWA_PLUS';
   const profile = data?.profile;
   const displayName = profile?.businessName || user?.full_name || 'Provider';
+  const stack = navigation.getParent<NativeStackNavigationProp<ProviderStackParamList>>();
 
   useEffect(() => {
     const action = route.params?.action;
@@ -482,6 +492,67 @@ export function ProviderProfileScreen({
               />
             </ProviderSection>
 
+            <ProviderSection title="Account & settings">
+              <ProviderMenuRow
+                icon="shieldCheck"
+                title="Account security"
+                subtitle="Password, sessions and account deletion"
+                onPress={() => stack?.navigate('ProviderAccountSecurity')}
+              />
+            </ProviderSection>
+
+            <ProviderSection title="App settings">
+              <ProviderMenuRow
+                icon="fileText"
+                title="App language"
+                subtitle="Language used across Localsewa"
+                onPress={() =>
+                  Alert.alert(
+                    'App language',
+                    'English is currently selected for the app.',
+                  )
+                }
+              />
+              <ProviderMenuRow
+                icon="sparkles"
+                title="App theme"
+                subtitle="Appearance used across the app"
+                onPress={() =>
+                  Alert.alert(
+                    'App theme',
+                    'Light theme is currently selected. Localsewa+ workspace accents are controlled separately above.',
+                  )
+                }
+              />
+              <ProviderMenuRow
+                icon="bell"
+                title="Notifications"
+                subtitle="View Provider booking and workspace updates"
+                onPress={() => setNotificationsOpen(true)}
+              />
+            </ProviderSection>
+
+            <ProviderSection title="Help & legal">
+              <ProviderMenuRow
+                icon="help"
+                title="Help & Support"
+                subtitle="Get help with your Provider account and requests"
+                onPress={() => stack?.navigate('ProviderHelpSupport')}
+              />
+              <ProviderMenuRow
+                icon="fileText"
+                title="Terms & Conditions"
+                subtitle="Read the Localsewa Provider terms overview"
+                onPress={() => stack?.navigate('ProviderTermsConditions')}
+              />
+              <ProviderMenuRow
+                icon="shield"
+                title="Privacy Policy"
+                subtitle="Review how Localsewa handles account and booking data"
+                onPress={() => stack?.navigate('ProviderPrivacyPolicy')}
+              />
+            </ProviderSection>
+
             <View style={styles.roleSection}>
               <AppText variant="overline" muted>
                 WORKSPACE
@@ -489,18 +560,19 @@ export function ProviderProfileScreen({
               <ProviderWorkspaceSwitchButton onPress={enterCustomer} />
             </View>
 
-            <Button
-              label="Sign out"
-              variant="destructive"
-              icon="logOut"
+            <ProfileLogoutAction
               loading={logoutBusy}
               onPress={signOut}
-              fullWidth
             />
           </>
         ) : null}
       </ScrollView>
       </View>
+
+      <ProviderNotificationsModal
+        visible={notificationsOpen}
+        onClose={() => setNotificationsOpen(false)}
+      />
 
       {profile ? (
         <ProviderProfileEditModal
