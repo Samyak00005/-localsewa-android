@@ -3,6 +3,7 @@ import React from 'react';
 
 import {
   ProviderBookingChatScreen,
+  ProviderRequestDetailsScreen,
   ProviderVoiceCallPreviewScreen,
 } from '../screens/provider';
 import { ProviderTabs } from './ProviderTabs';
@@ -19,6 +20,10 @@ export function ProviderNavigator(): React.JSX.Element {
       }}
     >
       <Stack.Screen name="ProviderTabs" component={ProviderTabs} />
+      <Stack.Screen
+        name="ProviderRequestDetails"
+        component={ProviderRequestDetailsScreen}
+      />
       <Stack.Screen
         name="ProviderBookingChat"
         component={ProviderBookingChatScreen}

@@ -1001,7 +1001,7 @@ const styles = StyleSheet.create({
   statCard: {
     width: '48%',
     minHeight: 94,
-    borderRadius: PROVIDER_SURFACE_RADIUS,
+    borderRadius: 22,
     padding: spacing[3],
   },
   statMetricRow: {

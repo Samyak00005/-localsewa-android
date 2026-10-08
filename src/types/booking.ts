@@ -48,5 +48,6 @@ export type Booking = {
   chatEnabled: boolean;
 
   customerName: string | null;
+  customerImage?: string;
   note: string | null;
 };

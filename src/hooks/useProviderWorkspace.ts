@@ -117,6 +117,36 @@ export function useProviderBookings() {
   });
 }
 
+export function useProviderBookingStatusUpdate() {
+  const { token, user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      bookingId,
+      status,
+      reason,
+    }: {
+      bookingId: number;
+      status: import('../types/booking').BookingStatus;
+      reason?: string;
+    }) => {
+      if (!token) {
+        throw new Error('Your provider session is unavailable. Sign in again.');
+      }
+
+      await bookingApi.updateStatus(bookingId, status, token, reason);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: bookingsKey(user?.id) }),
+        queryClient.invalidateQueries({ queryKey: requestCountKey(user?.id) }),
+        queryClient.invalidateQueries({ queryKey: dashboardKey(user?.id) }),
+      ]);
+    },
+  });
+}
+
 
 export function useProviderServices() {
   const { token, user } = useAuth();

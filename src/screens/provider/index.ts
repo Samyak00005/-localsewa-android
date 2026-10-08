@@ -5,3 +5,5 @@ export * from './ProviderReviewsScreen';
 export * from './ProviderServicesScreen';
 export * from './ProviderBookingChatScreen';
 export * from './ProviderVoiceCallPreviewScreen';
+
+export * from './ProviderRequestDetailsScreen';

@@ -2,6 +2,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -9,6 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { errorMessage } from '../../api/apiClient';
 import { isAmbiguousChatSendError } from '../../api/chatApi';
@@ -34,11 +36,63 @@ type Props = NativeStackScreenProps<
   'ProviderBookingChat'
 >;
 
+function chatDateKey(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+
+  if (match) {
+    return `${match[1]}-${match[2]}-${match[3]}`;
+  }
+
+  const parsed = new Date(value);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return value.slice(0, 10);
+  }
+
+  return [
+    parsed.getFullYear(),
+    String(parsed.getMonth() + 1).padStart(2, '0'),
+    String(parsed.getDate()).padStart(2, '0'),
+  ].join('-');
+}
+
+function chatDateLabel(value: string): string {
+  const key = chatDateKey(value);
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(key);
+
+  if (!match) {
+    return key;
+  }
+
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  const month = Number(match[2]);
+  const year = Number(match[1]);
+  const currentYear = new Date().getFullYear();
+
+  return `${Number(match[3])} ${months[month - 1] ?? match[2]}${
+    year === currentYear ? '' : ` ${year}`
+  }`;
+}
+
 export function ProviderBookingChatScreen({
   navigation,
   route,
 }: Props): React.JSX.Element {
   const { theme } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList<ChatMessage>>(null);
   const bookingId = route.params.bookingId;
   const { data: bookings = [] } = useProviderBookings();
@@ -54,12 +108,28 @@ export function ProviderBookingChatScreen({
   const [draft, setDraft] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
   const [deliveryUncertain, setDeliveryUncertain] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   const messages = data?.messages ?? [];
   const counterpartName =
     data?.counterpart?.name || booking?.customerName || 'Customer';
-  const counterpartImage = data?.counterpart?.imageUrl;
+  const counterpartImage =
+    data?.counterpart?.imageUrl || booking?.customerImage;
   const chatAllowed = booking?.chatEnabled ?? true;
+
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardVisible(true);
+    });
+    const hide = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (!messages.length) {
@@ -136,6 +206,25 @@ export function ProviderBookingChatScreen({
             },
           ]}
         >
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            onPress={() => navigation.goBack()}
+            style={({ pressed }) => [
+              styles.backButton,
+              {
+                backgroundColor: theme.colors.surfaceMuted,
+                opacity: pressed ? 0.72 : 1,
+              },
+            ]}
+          >
+            <AppIcon
+              name="chevronLeft"
+              size={iconSize.sm}
+              color={theme.colors.primary}
+            />
+          </Pressable>
+
           <Avatar
             source={counterpartImage ? { uri: counterpartImage } : undefined}
             initials={counterpartName}
@@ -237,7 +326,21 @@ export function ProviderBookingChatScreen({
               ref={listRef}
               data={messages}
               keyExtractor={item => String(item.id)}
-              renderItem={({ item }) => <ChatMessageBubble item={item} />}
+              renderItem={({ item, index }) => {
+                const previous = index > 0 ? messages[index - 1] : null;
+                const showDate =
+                  !previous ||
+                  chatDateKey(previous.createdAt) !== chatDateKey(item.createdAt);
+
+                return (
+                  <>
+                    {showDate ? (
+                      <ChatDateSeparator label={chatDateLabel(item.createdAt)} />
+                    ) : null}
+                    <ChatMessageBubble item={item} />
+                  </>
+                );
+              }}
               style={styles.list}
               contentContainerStyle={[
                 styles.listContent,
@@ -280,6 +383,9 @@ export function ProviderBookingChatScreen({
                 {
                   borderTopColor: theme.colors.border,
                   backgroundColor: theme.colors.surface,
+                  paddingBottom: keyboardVisible
+                    ? spacing[2]
+                    : Math.max(insets.bottom, spacing[2]),
                 },
               ]}
             >
@@ -317,8 +423,8 @@ export function ProviderBookingChatScreen({
                       send.isPending || deliveryUncertain || !draft.trim()
                         ? 0.42
                         : pressed
-                          ? 0.76
-                          : 1,
+                        ? 0.76
+                        : 1,
                   },
                 ]}
               >
@@ -328,6 +434,24 @@ export function ProviderBookingChatScreen({
           </>
         )}
       </KeyboardAvoidingView>
+    </View>
+  );
+}
+
+function ChatDateSeparator({
+  label,
+}: {
+  label: string;
+}): React.JSX.Element {
+  const { theme } = useAppTheme();
+
+  return (
+    <View style={styles.dateSeparator}>
+      <View style={[styles.dateLine, { backgroundColor: theme.colors.border }]} />
+      <AppText variant="caption" muted style={styles.dateLabel}>
+        {label}
+      </AppText>
+      <View style={[styles.dateLine, { backgroundColor: theme.colors.border }]} />
     </View>
   );
 }
@@ -344,6 +468,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing[3],
+  },
+  backButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   callButton: {
     width: 42,
@@ -372,7 +503,11 @@ const styles = StyleSheet.create({
   stateText: { marginTop: spacing[2], textAlign: 'center' },
   loading: { flex: 1, padding: layout.screenHorizontal, paddingTop: spacing[6] },
   rightSkeleton: { alignSelf: 'flex-end', marginVertical: spacing[3] },
-  bannerWrap: { paddingHorizontal: layout.screenHorizontal, paddingTop: spacing[3], gap: spacing[2] },
+  bannerWrap: {
+    paddingHorizontal: layout.screenHorizontal,
+    paddingTop: spacing[3],
+    gap: spacing[2],
+  },
   list: { flex: 1 },
   listContent: {
     paddingHorizontal: layout.screenHorizontal,
@@ -387,10 +522,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  dateSeparator: {
+    marginVertical: spacing[4],
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[3],
+  },
+  dateLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+  },
+  dateLabel: {
+    flexShrink: 0,
+  },
   composer: {
     borderTopWidth: 1,
     paddingHorizontal: layout.screenHorizontal,
-    paddingVertical: spacing[2],
+    paddingTop: spacing[2],
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: spacing[2],

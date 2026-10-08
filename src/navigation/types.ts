@@ -102,6 +102,9 @@ export type ProviderStackParamList = {
   ProviderTabs:
     | NavigatorScreenParams<ProviderTabParamList>
     | undefined;
+  ProviderRequestDetails: {
+    bookingId: number;
+  };
   ProviderBookingChat: {
     bookingId: number;
   };

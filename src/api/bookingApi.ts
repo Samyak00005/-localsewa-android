@@ -66,6 +66,11 @@ function bookingStatus(value: unknown): BookingStatus {
 }
 
 export function parseBooking(value: ApiBooking): Booking {
+  const customer =
+    value.customer && typeof value.customer === 'object' && !Array.isArray(value.customer)
+      ? (value.customer as ApiBooking)
+      : null;
+
   return {
     id: Number(value.id),
     bookingCode: text(value.booking_code, `#${String(value.id ?? '')}`),
@@ -106,7 +111,21 @@ export function parseBooking(value: ApiBooking): Booking {
     canCancel: Boolean(value.canCancel),
     chatEnabled: Boolean(value.chatEnabled),
 
-    customerName: nullableText(value.customerName),
+    customerName: nullableText(
+      value.customerName ??
+        value.customer_name ??
+        customer?.name ??
+        customer?.full_name,
+    ),
+    customerImage: mediaUrl(
+      value.customerImage ??
+        value.customer_image ??
+        value.customerProfileImage ??
+        value.customer_profile_image ??
+        customer?.profileImage ??
+        customer?.profile_image ??
+        customer?.image,
+    ),
     note: nullableText(value.note),
   };
 }
@@ -202,6 +221,24 @@ export const bookingApi = {
       bookingId:
         Number.isInteger(bookingId) && bookingId > 0 ? bookingId : null,
     };
+  },
+
+
+  async updateStatus(
+    bookingId: number,
+    status: BookingStatus,
+    token: string,
+    reason?: string,
+  ): Promise<void> {
+    await apiRequest(`/api/bookings/${bookingId}/status`, {
+      method: 'PATCH',
+      token,
+      body: {
+        status: status.toUpperCase(),
+        reason: reason?.trim() || undefined,
+      },
+      retryGet: false,
+    });
   },
 
   async cancel(bookingId: number, token: string): Promise<void> {
