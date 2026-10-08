@@ -82,8 +82,8 @@ android {
         applicationId "com.localsewaapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 20017
-        versionName "2.0.17"
+        versionCode 20102
+        versionName "2.1.2"
     }
     signingConfigs {
         debug {

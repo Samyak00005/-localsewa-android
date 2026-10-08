@@ -32,6 +32,7 @@ import {
   useSavedProviders,
   useSaveProvider,
 } from '../../hooks/useCustomerData';
+import { useManualRefresh } from '../../hooks/useManualRefresh';
 import {
   CustomerStackParamList,
   CustomerTabParamList,
@@ -82,13 +83,11 @@ export function CustomerServicesScreen({
     data: categories = [],
     isLoading: categoriesLoading,
     refetch: refetchCategories,
-    isRefetching: categoriesRefetching,
   } = useCategories();
 
   const {
     data: savedProviders = [],
     refetch: refetchSaved,
-    isRefetching: savedRefetching,
   } = useSavedProviders();
 
   const saveProvider =
@@ -279,8 +278,7 @@ export function CustomerServicesScreen({
     ]);
   }
 
-  const customerServicesRefreshing =
-    isRefetching || categoriesRefetching || savedRefetching;
+  const pullRefresh = useManualRefresh(refreshCustomerServices);
 
   return (
     <ScrollView
@@ -297,8 +295,8 @@ export function CustomerServicesScreen({
       }
       refreshControl={
         <RefreshControl
-          refreshing={customerServicesRefreshing}
-          onRefresh={refreshCustomerServices}
+          refreshing={pullRefresh.refreshing}
+          onRefresh={pullRefresh.onRefresh}
           tintColor={theme.colors.primary}
           colors={[theme.colors.primary]}
           progressBackgroundColor={theme.colors.surface}

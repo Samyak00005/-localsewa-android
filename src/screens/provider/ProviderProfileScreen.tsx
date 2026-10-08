@@ -30,6 +30,7 @@ import {
   Input,
   Skeleton,
 } from '../../components/ui';
+import { useManualRefresh } from '../../hooks/useManualRefresh';
 import {
   useProviderAvailability,
   useProviderBusinessImageDelete,
@@ -56,6 +57,7 @@ import {
 type Props = BottomTabScreenProps<ProviderTabParamList, 'ProviderProfile'>;
 
 export function ProviderProfileScreen({
+  route,
   navigation,
 }: Props): React.JSX.Element {
   const { theme } = useAppTheme();
@@ -73,6 +75,9 @@ export function ProviderProfileScreen({
     refetch,
     isRefetching,
   } = useProviderDashboard();
+  const pullRefresh = useManualRefresh(async () => {
+    await refetch();
+  });
   const availability = useProviderAvailability();
   const businessImageUpload = useProviderBusinessImageUpload();
   const businessImageDelete = useProviderBusinessImageDelete();
@@ -89,6 +94,22 @@ export function ProviderProfileScreen({
   const premium = providerTier === 'LOCALSEWA_PLUS';
   const profile = data?.profile;
   const displayName = profile?.businessName || user?.full_name || 'Provider';
+
+  useEffect(() => {
+    const action = route.params?.action;
+
+    if (!action || !profile) {
+      return;
+    }
+
+    if (action === 'managePhotos') {
+      openBusinessMedia();
+    } else if (action === 'edit') {
+      setEditOpen(true);
+    }
+
+    navigation.setParams({ action: undefined });
+  }, [navigation, profile, route.params?.action]);
 
   useEffect(() => {
     const imageIds = profile?.businessImages.map(image => image.id) ?? [];
@@ -212,8 +233,8 @@ export function ProviderProfileScreen({
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={() => refetch()}
+            refreshing={pullRefresh.refreshing}
+            onRefresh={pullRefresh.onRefresh}
             tintColor={theme.colors.primary}
           />
         }

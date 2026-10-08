@@ -36,8 +36,33 @@ export type ProviderWorkspaceProfile = {
   premium: ProviderMembership;
 };
 
+export type ProviderDashboardStats = {
+  todayRequests: number;
+  pendingRequests: number;
+  completedJobs: number;
+  totalReviews: number;
+};
+
+export type ProviderDashboardRequest = {
+  id: number;
+  serviceName: string;
+  customerName?: string;
+  location?: string;
+  status: string;
+  date?: string;
+  time?: string;
+  chatEnabled: boolean;
+};
+
 export type ProviderDashboardData = {
   profile: ProviderWorkspaceProfile;
+  stats: ProviderDashboardStats;
+  services: ProviderWorkspaceService[];
+  requests: ProviderDashboardRequest[];
+};
+
+export type ProviderRequestCountData = {
+  pendingCount: number;
 };
 
 

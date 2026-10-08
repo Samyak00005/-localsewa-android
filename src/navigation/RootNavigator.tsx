@@ -15,7 +15,7 @@ import {
 import { useAppTheme } from '../theme';
 import { AuthNavigator } from './AuthNavigator';
 import { CustomerNavigator } from './CustomerNavigator';
-import { ProviderTabs } from './ProviderTabs';
+import { ProviderNavigator } from './ProviderNavigator';
 import { linking } from './linking';
 import { RootStackParamList } from './types';
 
@@ -58,7 +58,7 @@ export function RootNavigator(): React.JSX.Element {
         }}
       >
         {area === 'provider' ? (
-          <RootStack.Screen name="Provider" component={ProviderTabs} />
+          <RootStack.Screen name="Provider" component={ProviderNavigator} />
         ) : area === 'customer' ? (
           <RootStack.Screen name="Customer" component={CustomerNavigator} />
         ) : (

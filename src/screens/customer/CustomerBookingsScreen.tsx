@@ -24,6 +24,7 @@ import {
   useCancelBooking,
   useCustomerBookings,
 } from '../../hooks/useCustomerData';
+import { useManualRefresh } from '../../hooks/useManualRefresh';
 import {
   CustomerStackParamList,
   CustomerTabParamList,
@@ -85,6 +86,10 @@ export function CustomerBookingsScreen({
   } = useCustomerBookings();
 
   const cancel = useCancelBooking();
+
+  const pullRefresh = useManualRefresh(async () => {
+    await refetch();
+  });
 
   const stack =
     navigation.getParent<NativeStackNavigationProp<CustomerStackParamList>>();
@@ -205,8 +210,8 @@ export function CustomerBookingsScreen({
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
-          refreshing={isRefetching}
-          onRefresh={() => refetch()}
+          refreshing={pullRefresh.refreshing}
+          onRefresh={pullRefresh.onRefresh}
           tintColor={theme.colors.primary}
           colors={[theme.colors.primary]}
           progressBackgroundColor={theme.colors.surface}

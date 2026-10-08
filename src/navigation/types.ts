@@ -89,7 +89,24 @@ export type CustomerTabParamList = {
 export type ProviderTabParamList = {
   ProviderHome: undefined;
   ProviderRequests: undefined;
-  ProviderServices: undefined;
+  ProviderServices:
+    | { action?: 'add' }
+    | undefined;
   ProviderReviews: undefined;
-  ProviderProfile: undefined;
+  ProviderProfile:
+    | { action?: 'managePhotos' | 'edit' }
+    | undefined;
 };
+
+export type ProviderStackParamList = {
+  ProviderTabs:
+    | NavigatorScreenParams<ProviderTabParamList>
+    | undefined;
+  ProviderBookingChat: {
+    bookingId: number;
+  };
+  ProviderVoiceCallPreview: {
+    bookingId: number;
+  };
+};
+

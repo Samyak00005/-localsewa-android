@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Modal,
@@ -21,6 +22,7 @@ import {
   Skeleton,
 } from '../../components/ui';
 import { useCategories } from '../../hooks/useCustomerData';
+import { useManualRefresh } from '../../hooks/useManualRefresh';
 import {
   useCreateProviderService,
   useDeleteProviderService,
@@ -33,12 +35,18 @@ import {
   ProviderServiceInput,
   ProviderWorkspaceService,
 } from '../../types/providerWorkspace';
+import { ProviderTabParamList } from '../../navigation/types';
 import { layout, radius, spacing, useAppTheme } from '../../theme';
 
 const PROVIDER_SURFACE_RADIUS = 28;
 const MAX_SERVICE_PRICE = 1_000_000;
 
-export function ProviderServicesScreen(): React.JSX.Element {
+type Props = BottomTabScreenProps<ProviderTabParamList, 'ProviderServices'>;
+
+export function ProviderServicesScreen({
+  route,
+  navigation,
+}: Props): React.JSX.Element {
   const { theme } = useAppTheme();
   const { providerTier } = useAppShell();
   const premium = providerTier === 'LOCALSEWA_PLUS';
@@ -77,6 +85,20 @@ export function ProviderServicesScreen(): React.JSX.Element {
   const [formError, setFormError] = useState<string | null>(null);
   const [pageError, setPageError] = useState<string | null>(null);
   const [categoryOpen, setCategoryOpen] = useState(false);
+
+  useEffect(() => {
+    if (route.params?.action !== 'add') {
+      return;
+    }
+
+    setEditingService(null);
+    setServiceName('');
+    setServicePrice('');
+    setServiceDescription('');
+    setFormError(null);
+    setEditorOpen(true);
+    navigation.setParams({ action: undefined });
+  }, [navigation, route.params?.action]);
 
   const services = serviceData?.services ?? [];
   const profile = dashboard?.profile;
@@ -224,6 +246,8 @@ export function ProviderServicesScreen(): React.JSX.Element {
     ]);
   }
 
+  const pullRefresh = useManualRefresh(refresh);
+
   return (
     <>
       <ScrollView
@@ -232,8 +256,8 @@ export function ProviderServicesScreen(): React.JSX.Element {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={refreshBusy}
-            onRefresh={refresh}
+            refreshing={pullRefresh.refreshing}
+            onRefresh={pullRefresh.onRefresh}
             tintColor={theme.colors.primary}
             colors={[theme.colors.primary]}
             progressBackgroundColor={theme.colors.surface}

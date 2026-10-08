@@ -40,6 +40,7 @@ import {
   useSaveProvider,
 } from '../../hooks/useCustomerData';
 import { useHomeReviews } from '../../hooks/useHomeReviews';
+import { useManualRefresh } from '../../hooks/useManualRefresh';
 import {
   CustomerStackParamList,
   CustomerTabParamList,
@@ -84,7 +85,6 @@ export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
   const {
     data: profile,
     refetch: refetchProfile,
-    isRefetching: profileRefetching,
   } = useCustomerProfile();
 
   const [search, setSearch] = useState('');
@@ -110,13 +110,11 @@ export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
   const {
     data: categories = [],
     refetch: refetchCategories,
-    isRefetching: categoriesRefetching,
   } = useCategories();
 
   const {
     data: savedProviders = [],
     refetch: refetchSaved,
-    isRefetching: savedRefetching,
   } = useSavedProviders();
 
   const saveProvider = useSaveProvider();
@@ -127,7 +125,6 @@ export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
     data: reviews = [],
     isLoading: reviewsLoading,
     refetch: refetchReviews,
-    isRefetching: reviewsRefetching,
   } = useHomeReviews();
 
   const locationLabel =
@@ -206,12 +203,7 @@ export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
     ]);
   }
 
-  const homeRefreshing =
-    profileRefetching ||
-    providersRefetching ||
-    categoriesRefetching ||
-    savedRefetching ||
-    reviewsRefetching;
+  const pullRefresh = useManualRefresh(refreshCustomerHome);
 
   return (
     <ScrollView
@@ -223,8 +215,8 @@ export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
       keyboardShouldPersistTaps="handled"
       refreshControl={
         <RefreshControl
-          refreshing={homeRefreshing}
-          onRefresh={refreshCustomerHome}
+          refreshing={pullRefresh.refreshing}
+          onRefresh={pullRefresh.onRefresh}
           tintColor={theme.colors.primary}
           colors={[theme.colors.primary]}
           progressBackgroundColor={theme.colors.surface}

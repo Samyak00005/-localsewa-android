@@ -50,6 +50,7 @@ import {
   useUpdateCustomerProfile,
   useUploadProfileImage,
 } from '../../hooks/useAccount';
+import { useManualRefresh } from '../../hooks/useManualRefresh';
 import {
   pickProfilePhoto,
 } from '../../native/profilePhotoPicker';
@@ -97,6 +98,10 @@ export function CustomerProfileScreen({
     refetch,
     isRefetching,
   } = useCustomerProfile();
+
+  const pullRefresh = useManualRefresh(async () => {
+    await refetch();
+  });
 
   const updateProfile =
     useUpdateCustomerProfile();
@@ -285,8 +290,8 @@ export function CustomerProfileScreen({
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
-          refreshing={isRefetching}
-          onRefresh={() => refetch()}
+          refreshing={pullRefresh.refreshing}
+          onRefresh={pullRefresh.onRefresh}
           tintColor={theme.colors.primary}
           colors={[theme.colors.primary]}
           progressBackgroundColor={theme.colors.surface}

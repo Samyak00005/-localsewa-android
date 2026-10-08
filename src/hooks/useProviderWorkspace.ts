@@ -4,6 +4,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 
+import { bookingApi } from '../api/bookingApi';
 import { providerWorkspaceApi } from '../api/providerWorkspaceApi';
 import { useAuth } from '../auth';
 import type {
@@ -30,6 +31,16 @@ const reviewsKey = (userId: number | string | undefined) => [
 
 const membershipKey = (userId: number | string | undefined) => [
   'provider-membership',
+  userId ?? 'guest',
+] as const;
+
+const requestCountKey = (userId: number | string | undefined) => [
+  'provider-request-count',
+  userId ?? 'guest',
+] as const;
+
+const bookingsKey = (userId: number | string | undefined) => [
+  'provider-bookings',
   userId ?? 'guest',
 ] as const;
 
@@ -67,6 +78,42 @@ export function useProviderDashboard() {
     },
     enabled: Boolean(token && user?.id),
     staleTime: 30_000,
+  });
+}
+
+export function useProviderRequestCount() {
+  const { token, user } = useAuth();
+
+  return useQuery({
+    queryKey: requestCountKey(user?.id),
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Your provider session is unavailable. Sign in again.');
+      }
+
+      return providerWorkspaceApi.requestCount(token);
+    },
+    enabled: Boolean(token && user?.id),
+    staleTime: 10_000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
+  });
+}
+
+export function useProviderBookings() {
+  const { token, user } = useAuth();
+
+  return useQuery({
+    queryKey: bookingsKey(user?.id),
+    queryFn: () => {
+      if (!token) {
+        throw new Error('Your provider session is unavailable. Sign in again.');
+      }
+
+      return bookingApi.listProvider(token);
+    },
+    enabled: Boolean(token && user?.id),
+    staleTime: 20_000,
   });
 }
 

@@ -37,6 +37,7 @@ import {
   useRemoveSavedProvider,
   useSavedProviders,
 } from '../../hooks/useCustomerData';
+import { useManualRefresh } from '../../hooks/useManualRefresh';
 import {
   CustomerStackParamList,
   CustomerTabParamList,
@@ -77,6 +78,10 @@ export function CustomerSavedScreen({
     refetch,
     isRefetching,
   } = useSavedProviders();
+
+  const pullRefresh = useManualRefresh(async () => {
+    await refetch();
+  });
 
   const removeSaved =
     useRemoveSavedProvider();
@@ -149,8 +154,8 @@ export function CustomerSavedScreen({
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
-          refreshing={isRefetching}
-          onRefresh={() => refetch()}
+          refreshing={pullRefresh.refreshing}
+          onRefresh={pullRefresh.onRefresh}
           tintColor={theme.colors.primary}
           colors={[theme.colors.primary]}
           progressBackgroundColor={theme.colors.surface}

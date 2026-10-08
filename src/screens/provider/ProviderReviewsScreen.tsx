@@ -16,6 +16,7 @@ import {
   Card,
   Skeleton,
 } from '../../components/ui';
+import { useManualRefresh } from '../../hooks/useManualRefresh';
 import { useProviderReviews } from '../../hooks/useProviderWorkspace';
 import { ProviderWorkspaceReview } from '../../types/providerWorkspace';
 import { layout, radius, spacing, useAppTheme } from '../../theme';
@@ -25,6 +26,9 @@ const PROVIDER_SURFACE_RADIUS = 28;
 export function ProviderReviewsScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
   const { data, isLoading, error, refetch, isRefetching } = useProviderReviews();
+  const pullRefresh = useManualRefresh(async () => {
+    await refetch();
+  });
 
   return (
     <ScrollView
@@ -33,8 +37,8 @@ export function ProviderReviewsScreen(): React.JSX.Element {
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
-          refreshing={isRefetching}
-          onRefresh={() => refetch()}
+          refreshing={pullRefresh.refreshing}
+          onRefresh={pullRefresh.onRefresh}
           tintColor={theme.colors.primary}
         />
       }

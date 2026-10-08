@@ -125,6 +125,19 @@ export const bookingApi = {
       : [];
   },
 
+  async listProvider(token: string): Promise<Booking[]> {
+    const result = await apiRequest<{
+      success: true;
+      bookings: ApiBooking[];
+    }>('/api/bookings?scope=provider', { token });
+
+    return Array.isArray(result.bookings)
+      ? result.bookings
+          .map(parseBooking)
+          .filter(booking => Number.isInteger(booking.id) && booking.id > 0)
+      : [];
+  },
+
   async create(
     input: CreateBookingInput,
     token: string,
