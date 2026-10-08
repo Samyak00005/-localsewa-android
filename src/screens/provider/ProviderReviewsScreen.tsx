@@ -55,44 +55,60 @@ export function ProviderReviewsScreen(): React.JSX.Element {
         <>
           <Card style={styles.summaryCard}>
             <View style={styles.summaryMainRow}>
-              <View
-                style={[
-                  styles.summaryIcon,
-                  { backgroundColor: theme.colors.secondary },
-                ]}
-              >
-                <AppIcon
-                  name="star"
-                  size={iconSize.lg}
-                  color={customerPalette.accent}
-                />
-              </View>
-
-              <View style={styles.summaryCopy}>
-                <AppText variant="caption" muted>
-                  Overall rating
-                </AppText>
-
-                <View style={styles.ratingValueRow}>
-                  <AppText variant="display" color={theme.colors.primary}>
-                    {data.averageRating == null
-                      ? 'New'
-                      : data.averageRating.toFixed(1)}
-                  </AppText>
-                  {data.averageRating != null ? (
-                    <AppText variant="bodySmall" muted style={styles.outOfFive}>
-                      / 5
-                    </AppText>
-                  ) : null}
+              <View style={styles.summaryRatingGroup}>
+                <View
+                  style={[
+                    styles.summaryIcon,
+                    { backgroundColor: theme.colors.secondary },
+                  ]}
+                >
+                  <AppIcon
+                    name="star"
+                    size={iconSize.lg}
+                    color={customerPalette.accent}
+                  />
                 </View>
 
-                {data.averageRating != null ? (
-                  <StarRow rating={data.averageRating} />
-                ) : (
-                  <AppText variant="bodySmall" muted style={styles.smallGap}>
-                    Your rating will appear after the first review.
+                <View style={styles.summaryCopy}>
+                  <AppText variant="caption" muted>
+                    Overall rating
                   </AppText>
-                )}
+
+                  <View style={styles.ratingValueRow}>
+                    <AppText variant="display" color={theme.colors.primary}>
+                      {data.averageRating == null
+                        ? 'New'
+                        : data.averageRating.toFixed(1)}
+                    </AppText>
+                    {data.averageRating != null ? (
+                      <AppText variant="bodySmall" muted style={styles.outOfFive}>
+                        / 5
+                      </AppText>
+                    ) : null}
+                  </View>
+
+                  {data.averageRating != null ? (
+                    <StarRow rating={data.averageRating} />
+                  ) : (
+                    <AppText variant="bodySmall" muted style={styles.smallGap}>
+                      Your rating will appear after the first review.
+                    </AppText>
+                  )}
+                </View>
+              </View>
+
+              <View
+                style={[
+                  styles.summaryReviewStat,
+                  { backgroundColor: theme.colors.surfaceMuted },
+                ]}
+              >
+                <AppText variant="h2" color={theme.colors.primary}>
+                  {data.reviews.length}
+                </AppText>
+                <AppText variant="overline" muted>
+                  {data.reviews.length === 1 ? 'REVIEW' : 'REVIEWS'}
+                </AppText>
               </View>
             </View>
 
@@ -103,11 +119,7 @@ export function ProviderReviewsScreen(): React.JSX.Element {
               ]}
             >
               <AppText variant="bodySmall" muted>
-                Total reviews
-              </AppText>
-              <AppText variant="label" color={theme.colors.primary}>
-                {data.reviews.length}{' '}
-                {data.reviews.length === 1 ? 'review' : 'reviews'}
+                Customer ratings from completed services
               </AppText>
             </View>
           </Card>
@@ -196,12 +208,19 @@ function ReviewCard({
         </View>
       </View>
 
-      <AppText variant="bodySmall" style={styles.comment}>
-        {review.comment || 'Rating submitted without a written comment.'}
-      </AppText>
+      {review.comment ? (
+        <AppText variant="bodySmall" style={styles.comment}>
+          {review.comment}
+        </AppText>
+      ) : null}
 
       {review.createdAt ? (
-        <View style={styles.dateRow}>
+        <View
+          style={[
+            styles.dateRow,
+            !review.comment && styles.dateRowWithoutComment,
+          ]}
+        >
           <AppIcon
             name="calendar"
             size={iconSize.xs}
@@ -284,7 +303,15 @@ const styles = StyleSheet.create({
   summaryMainRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing[4],
+    justifyContent: 'space-between',
+    gap: spacing[3],
+  },
+  summaryRatingGroup: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[3],
   },
   summaryIcon: {
     width: 60,
@@ -294,6 +321,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   summaryCopy: { flex: 1, minWidth: 0 },
+  summaryReviewStat: {
+    minWidth: 76,
+    minHeight: 72,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing[2],
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 1,
+  },
   ratingValueRow: {
     marginTop: spacing[1],
     flexDirection: 'row',
@@ -346,6 +382,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing[1],
+  },
+  dateRowWithoutComment: {
+    marginTop: spacing[2],
   },
   emptyCard: {
     minHeight: 260,

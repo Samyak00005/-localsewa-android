@@ -1,5 +1,5 @@
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -82,12 +82,47 @@ export function ProviderProfileScreen({
   const [actionError, setActionError] = useState<string | null>(null);
   const [businessMediaOpen, setBusinessMediaOpen] = useState(false);
   const [selectedBusinessImageId, setSelectedBusinessImageId] = useState<number | null>(null);
+  const [businessImageOrder, setBusinessImageOrder] = useState<number[]>([]);
   const [profilePhotoOpen, setProfilePhotoOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
   const premium = providerTier === 'LOCALSEWA_PLUS';
   const profile = data?.profile;
   const displayName = profile?.businessName || user?.full_name || 'Provider';
+
+  useEffect(() => {
+    const imageIds = profile?.businessImages.map(image => image.id) ?? [];
+
+    setBusinessImageOrder(current => {
+      const retained = current.filter(id => imageIds.includes(id));
+      const added = imageIds.filter(id => !retained.includes(id));
+      const next = [...retained, ...added];
+
+      if (next.length === current.length && next.every((id, index) => id === current[index])) {
+        return current;
+      }
+
+      return next;
+    });
+  }, [profile?.businessImages]);
+
+  const orderedBusinessImages = useMemo(() => {
+    const images = profile?.businessImages ?? [];
+
+    if (!businessImageOrder.length) {
+      return images;
+    }
+
+    const byId = new Map(images.map(image => [image.id, image]));
+    const ordered = businessImageOrder
+      .map(id => byId.get(id))
+      .filter((image): image is ProviderBusinessImage => Boolean(image));
+    const remaining = images.filter(
+      image => !businessImageOrder.includes(image.id),
+    );
+
+    return [...ordered, ...remaining];
+  }, [businessImageOrder, profile?.businessImages]);
 
   async function updateAvailability(value: boolean) {
     setActionError(null);
@@ -133,7 +168,7 @@ export function ProviderProfileScreen({
 
   function openBusinessMedia(imageId?: number) {
     const selected =
-      imageId ?? profile?.businessImages[0]?.id ?? null;
+      imageId ?? orderedBusinessImages[0]?.id ?? null;
 
     setSelectedBusinessImageId(selected);
     setBusinessMediaOpen(true);
@@ -203,7 +238,7 @@ export function ProviderProfileScreen({
           <>
             <Card style={styles.identityCard}>
               <BusinessGallery
-                images={profile.businessImages}
+                images={orderedBusinessImages}
                 onOpen={openBusinessMedia}
                 onAdd={addBusinessPhoto}
                 adding={businessImageUpload.isPending}
@@ -464,11 +499,12 @@ export function ProviderProfileScreen({
         <>
           <BusinessMediaManager
             visible={businessMediaOpen}
-            images={profile.businessImages}
+            images={orderedBusinessImages}
             selectedId={selectedBusinessImageId}
             adding={businessImageUpload.isPending}
             deleting={businessImageDelete.isPending}
             onSelect={setSelectedBusinessImageId}
+            onReorder={setBusinessImageOrder}
             onAdd={addBusinessPhoto}
             onDelete={deleteBusinessPhoto}
             onClose={() => setBusinessMediaOpen(false)}
@@ -968,6 +1004,7 @@ function BusinessMediaManager({
   adding,
   deleting,
   onSelect,
+  onReorder,
   onAdd,
   onDelete,
   onClose,
@@ -978,6 +1015,7 @@ function BusinessMediaManager({
   adding: boolean;
   deleting: boolean;
   onSelect: (imageId: number | null) => void;
+  onReorder: (imageIds: number[]) => void;
   onAdd: () => void;
   onDelete: (imageId: number) => Promise<void>;
   onClose: () => void;
@@ -1021,21 +1059,28 @@ function BusinessMediaManager({
     return () => cancelAnimationFrame(frame);
   }, [selectedIndex, stageWidth, visible]);
 
-  function selectRelative(delta: -1 | 1) {
-    if (busy || selectedIndex < 0) {
+  function moveSelected(delta: -1 | 1) {
+    if (busy || !selected || selectedIndex < 0) {
       return;
     }
 
-    const nextIndex = Math.max(0, Math.min(images.length - 1, selectedIndex + delta));
-    const next = images[nextIndex];
-    if (!next || nextIndex === selectedIndex) {
+    const targetIndex = selectedIndex + delta;
+    if (targetIndex < 0 || targetIndex >= images.length) {
       return;
     }
 
-    onSelect(next.id);
-    galleryRef.current?.scrollToOffset({
-      offset: nextIndex * stageWidth,
-      animated: true,
+    const reordered = [...images];
+    const [moving] = reordered.splice(selectedIndex, 1);
+    reordered.splice(targetIndex, 0, moving);
+
+    onReorder(reordered.map(image => image.id));
+    onSelect(selected.id);
+
+    requestAnimationFrame(() => {
+      galleryRef.current?.scrollToOffset({
+        offset: targetIndex * stageWidth,
+        animated: true,
+      });
     });
   }
 
@@ -1045,8 +1090,8 @@ function BusinessMediaManager({
     }
 
     Alert.alert(
-      'Delete business photo?',
-      'This photo will be removed from your Provider profile.',
+      'Delete this business photo?',
+      'Are you sure you want to delete this photo? This action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -1128,7 +1173,12 @@ function BusinessMediaManager({
                 }
               }}
               renderItem={({ item }) => (
-                <View style={{ width: stageWidth, flex: 1 }}>
+                <View
+                  style={[
+                    styles.mediaImagePage,
+                    { width: stageWidth },
+                  ]}
+                >
                   <Image
                     source={{ uri: item.url }}
                     resizeMode="contain"
@@ -1239,13 +1289,13 @@ function BusinessMediaManager({
               icon="chevronLeft"
               label="Move left"
               disabled={busy || selectedIndex <= 0}
-              onPress={() => selectRelative(-1)}
+              onPress={() => moveSelected(-1)}
             />
             <MediaActionButton
               icon="chevronRight"
               label="Move right"
               disabled={busy || selectedIndex < 0 || selectedIndex >= images.length - 1}
-              onPress={() => selectRelative(1)}
+              onPress={() => moveSelected(1)}
             />
             <MediaActionButton
               icon="trash"
@@ -1721,9 +1771,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
+  mediaImagePage: {
+    flex: 1,
+    borderRadius: radius.lg,
+    overflow: 'hidden',
+  },
   mediaMainImage: {
     width: '100%',
     height: '100%',
+    borderRadius: radius.lg,
   },
   mediaEmptyStage: {
     alignItems: 'center',

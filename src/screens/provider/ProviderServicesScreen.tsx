@@ -262,29 +262,45 @@ export function ProviderServicesScreen(): React.JSX.Element {
           <>
             <Card style={styles.categoryCard}>
               <View style={styles.categoryTop}>
-                <View
-                  style={[
-                    styles.categoryIcon,
-                    { backgroundColor: theme.colors.secondary },
-                  ]}
-                >
-                  <AppIcon
-                    name="briefcase"
-                    size={iconSize.md}
-                    color={theme.colors.primary}
-                    strokeWidth={2.2}
-                  />
+                <View style={styles.categoryIdentity}>
+                  <View
+                    style={[
+                      styles.categoryIcon,
+                      { backgroundColor: theme.colors.secondary },
+                    ]}
+                  >
+                    <AppIcon
+                      name="briefcase"
+                      size={iconSize.md}
+                      color={theme.colors.primary}
+                      strokeWidth={2.2}
+                    />
+                  </View>
+
+                  <View style={styles.flex}>
+                    <AppText
+                      variant="overline"
+                      color={theme.colors.primary}
+                    >
+                      BUSINESS CATEGORY
+                    </AppText>
+                    <AppText variant="h2" style={styles.categoryName}>
+                      {profile?.category || 'Category not assigned'}
+                    </AppText>
+                  </View>
                 </View>
 
-                <View style={styles.flex}>
-                  <AppText
-                    variant="overline"
-                    color={theme.colors.primary}
-                  >
-                    BUSINESS CATEGORY
+                <View
+                  style={[
+                    styles.categoryStat,
+                    { backgroundColor: theme.colors.surfaceMuted },
+                  ]}
+                >
+                  <AppText variant="h3" color={theme.colors.primary}>
+                    {services.length}
                   </AppText>
-                  <AppText variant="h2" style={styles.categoryName}>
-                    {profile?.category || 'Category not assigned'}
+                  <AppText variant="overline" muted>
+                    SERVICES
                   </AppText>
                 </View>
               </View>
@@ -451,13 +467,13 @@ function ServiceCard({
         </View>
 
         <View style={styles.flex}>
-          <AppText variant="title" numberOfLines={2}>
+          <AppText variant="title" numberOfLines={2} style={styles.serviceName}>
             {service.name}
           </AppText>
           <AppText
             variant="label"
             color={theme.colors.primary}
-            style={styles.price}
+            style={[styles.price, styles.servicePriceText]}
           >
             Starting {formatPrice(service.price)}
           </AppText>
@@ -469,7 +485,7 @@ function ServiceCard({
           variant="bodySmall"
           muted
           numberOfLines={2}
-          style={styles.serviceDescription}
+          style={[styles.serviceDescription, styles.serviceDescriptionText]}
         >
           {service.description}
         </AppText>
@@ -494,7 +510,7 @@ function ServiceCard({
             size={iconSize.xs}
             color={theme.colors.primary}
           />
-          <AppText variant="label" color={theme.colors.primary}>
+          <AppText variant="label" color={theme.colors.primary} style={styles.serviceActionText}>
             Edit
           </AppText>
         </Pressable>
@@ -519,7 +535,7 @@ function ServiceCard({
           ]}
         >
           <AppIcon name="trash" size={iconSize.xs} color={theme.colors.error} />
-          <AppText variant="label" color={theme.colors.error}>
+          <AppText variant="label" color={theme.colors.error} style={styles.serviceActionText}>
             {deleting ? 'Removing…' : 'Remove'}
           </AppText>
         </Pressable>
@@ -828,6 +844,14 @@ const styles = StyleSheet.create({
   categoryTop: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing[3],
+  },
+  categoryIdentity: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing[3],
   },
   categoryIcon: {
@@ -838,6 +862,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   categoryName: { marginTop: spacing[1] },
+  categoryStat: {
+    minWidth: 72,
+    minHeight: 68,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing[2],
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 1,
+  },
   categoryFooter: {
     marginTop: spacing[3],
     paddingTop: spacing[3],
@@ -867,10 +900,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   addButton: { borderRadius: radius.pill, minHeight: 48 },
-  serviceList: { gap: spacing[3] },
+  serviceList: { gap: spacing[2] },
   serviceCard: {
     borderRadius: PROVIDER_SURFACE_RADIUS,
-    padding: spacing[3],
+    paddingHorizontal: spacing[3],
+    paddingTop: spacing[3],
     paddingBottom: 0,
     overflow: 'hidden',
   },
@@ -880,27 +914,43 @@ const styles = StyleSheet.create({
     gap: spacing[2],
   },
   serviceIcon: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  price: { marginTop: spacing[1] },
-  serviceDescription: { marginTop: spacing[2], lineHeight: 18 },
+  serviceName: {
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  price: { marginTop: 2 },
+  servicePriceText: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  serviceDescription: { marginTop: spacing[2], lineHeight: 17 },
+  serviceDescriptionText: {
+    fontSize: 12.5,
+    lineHeight: 17,
+  },
   serviceActions: {
-    marginTop: spacing[3],
+    marginTop: spacing[2],
     marginHorizontal: -spacing[3],
     borderTopWidth: 1,
     flexDirection: 'row',
   },
   serviceAction: {
     flex: 1,
-    minHeight: 44,
+    minHeight: 40,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing[2],
+  },
+  serviceActionText: {
+    fontSize: 12,
+    lineHeight: 16,
   },
   actionDivider: {
     width: 1,
