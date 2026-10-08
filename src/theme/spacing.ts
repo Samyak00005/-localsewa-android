@@ -20,4 +20,5 @@ export const layout = {
   sectionGap: 24,
   majorSectionGap: 32,
   minTouchTarget: 48,
+  bottomSheetMargin: 12,
 } as const;

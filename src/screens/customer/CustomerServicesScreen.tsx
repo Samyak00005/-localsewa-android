@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   View,
@@ -80,10 +81,14 @@ export function CustomerServicesScreen({
   const {
     data: categories = [],
     isLoading: categoriesLoading,
+    refetch: refetchCategories,
+    isRefetching: categoriesRefetching,
   } = useCategories();
 
   const {
     data: savedProviders = [],
+    refetch: refetchSaved,
+    isRefetching: savedRefetching,
   } = useSavedProviders();
 
   const saveProvider =
@@ -266,6 +271,17 @@ export function CustomerServicesScreen({
     }
   }
 
+  async function refreshCustomerServices() {
+    await Promise.all([
+      refetch(),
+      refetchCategories(),
+      refetchSaved(),
+    ]);
+  }
+
+  const customerServicesRefreshing =
+    isRefetching || categoriesRefetching || savedRefetching;
+
   return (
     <ScrollView
       style={{
@@ -278,6 +294,15 @@ export function CustomerServicesScreen({
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={
         false
+      }
+      refreshControl={
+        <RefreshControl
+          refreshing={customerServicesRefreshing}
+          onRefresh={refreshCustomerServices}
+          tintColor={theme.colors.primary}
+          colors={[theme.colors.primary]}
+          progressBackgroundColor={theme.colors.surface}
+        />
       }>
       <View style={styles.intro}>
         <AppText variant="h1">

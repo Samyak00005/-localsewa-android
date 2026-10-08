@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import {
   Alert,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   useWindowDimensions,
@@ -80,7 +81,11 @@ export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
   const stack =
     navigation.getParent<NativeStackNavigationProp<CustomerStackParamList>>();
 
-  const { data: profile } = useCustomerProfile();
+  const {
+    data: profile,
+    refetch: refetchProfile,
+    isRefetching: profileRefetching,
+  } = useCustomerProfile();
 
   const [search, setSearch] = useState('');
 
@@ -102,15 +107,28 @@ export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
     limit: 150,
   });
 
-  const { data: categories = [] } = useCategories();
+  const {
+    data: categories = [],
+    refetch: refetchCategories,
+    isRefetching: categoriesRefetching,
+  } = useCategories();
 
-  const { data: savedProviders = [] } = useSavedProviders();
+  const {
+    data: savedProviders = [],
+    refetch: refetchSaved,
+    isRefetching: savedRefetching,
+  } = useSavedProviders();
 
   const saveProvider = useSaveProvider();
 
   const removeSaved = useRemoveSavedProvider();
 
-  const { data: reviews = [], isLoading: reviewsLoading } = useHomeReviews();
+  const {
+    data: reviews = [],
+    isLoading: reviewsLoading,
+    refetch: refetchReviews,
+    isRefetching: reviewsRefetching,
+  } = useHomeReviews();
 
   const locationLabel =
     profile?.location ?? user?.location ?? 'Set your service location';
@@ -178,6 +196,23 @@ export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
     }
   }
 
+  async function refreshCustomerHome() {
+    await Promise.all([
+      refetchProfile(),
+      refetchProviders(),
+      refetchCategories(),
+      refetchSaved(),
+      refetchReviews(),
+    ]);
+  }
+
+  const homeRefreshing =
+    profileRefetching ||
+    providersRefetching ||
+    categoriesRefetching ||
+    savedRefetching ||
+    reviewsRefetching;
+
   return (
     <ScrollView
       style={{
@@ -186,6 +221,15 @@ export function CustomerHomeScreen({ navigation }: Props): React.JSX.Element {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
+      refreshControl={
+        <RefreshControl
+          refreshing={homeRefreshing}
+          onRefresh={refreshCustomerHome}
+          tintColor={theme.colors.primary}
+          colors={[theme.colors.primary]}
+          progressBackgroundColor={theme.colors.surface}
+        />
+      }
     >
       <View
         pointerEvents="none"

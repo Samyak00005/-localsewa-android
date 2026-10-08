@@ -15,7 +15,7 @@ import {
   useNotifications,
 } from '../../hooks/useNotifications';
 import { resolveNotificationTarget } from '../../utils/notificationRoute';
-import { radius, spacing, useAppTheme } from '../../theme';
+import { layout, radius, spacing, useAppTheme } from '../../theme';
 import { AppIcon, iconSize } from '../icons';
 import { NotificationRow } from '../customer/NotificationRow';
 import { AlertBanner, AppText, Skeleton } from '../ui';
@@ -178,14 +178,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
     backgroundColor: 'rgba(5, 17, 13, 0.42)',
+    paddingHorizontal: layout.bottomSheetMargin,
+    paddingBottom: layout.bottomSheetMargin,
   },
   sheet: {
+    width: '100%',
     maxHeight: '86%',
     minHeight: '54%',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    borderRadius: 28,
     borderWidth: 1,
     paddingTop: spacing[5],
+    overflow: 'hidden',
   },
   headingRow: {
     flexDirection: 'row',

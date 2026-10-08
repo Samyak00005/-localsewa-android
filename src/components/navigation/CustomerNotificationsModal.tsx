@@ -45,6 +45,7 @@ import {
   resolveNotificationTarget,
 } from '../../utils/notificationRoute';
 import {
+  layout,
   radius,
   shadows,
   spacing,
@@ -764,8 +765,8 @@ const styles =
       alignItems: 'center',
       justifyContent:
         'flex-end',
-      paddingHorizontal: 8,
-      paddingBottom: 8,
+      paddingHorizontal: layout.bottomSheetMargin,
+      paddingBottom: layout.bottomSheetMargin,
     },
     sheet: {
       width: '100%',

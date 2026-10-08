@@ -15,6 +15,7 @@ export type ProviderBusinessImage = {
 
 export type ProviderWorkspaceProfile = {
   id?: number;
+  categoryId?: number;
   businessName: string;
   ownerName?: string;
   category?: string;
@@ -39,11 +40,31 @@ export type ProviderDashboardData = {
   profile: ProviderWorkspaceProfile;
 };
 
+
+export type ProviderWorkspaceService = {
+  id: number;
+  name: string;
+  description?: string;
+  price: number;
+  active: boolean;
+};
+
+export type ProviderServicesData = {
+  services: ProviderWorkspaceService[];
+};
+
+export type ProviderServiceInput = {
+  name: string;
+  description?: string;
+  price: number;
+};
+
 export type ProviderWorkspaceReview = {
   id: string;
   rating: number;
   comment?: string;
   customerName?: string;
+  customerImage?: string;
   serviceName?: string;
   createdAt?: string;
 };

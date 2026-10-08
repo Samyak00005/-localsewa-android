@@ -17,6 +17,7 @@ import {
 } from '../components/icons';
 import {
   ProviderHeader,
+  ProviderOverlayBlurProvider,
 } from '../components/provider';
 import {
   ProviderHomeScreen,
@@ -73,6 +74,7 @@ export function ProviderTabs(): React.JSX.Element {
     );
 
   return (
+    <ProviderOverlayBlurProvider>
     <Tab.Navigator
       screenOptions={({
         route,
@@ -163,6 +165,7 @@ export function ProviderTabs(): React.JSX.Element {
         }
       />
     </Tab.Navigator>
+    </ProviderOverlayBlurProvider>
   );
 }
 

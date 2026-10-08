@@ -166,7 +166,11 @@ function ReviewCard({
   return (
     <Card style={styles.reviewCard}>
       <View style={styles.reviewTop}>
-        <Avatar initials={customerName} size="sm" />
+        <Avatar
+          source={review.customerImage ? { uri: review.customerImage } : undefined}
+          initials={customerName}
+          size="sm"
+        />
 
         <View style={styles.flex}>
           <AppText variant="label" numberOfLines={1}>
@@ -272,9 +276,10 @@ const styles = StyleSheet.create({
   },
   errorBlock: { gap: spacing[3] },
   summaryCard: {
-    minHeight: 178,
+    aspectRatio: 16 / 9,
     borderRadius: PROVIDER_SURFACE_RADIUS,
     padding: spacing[4],
+    justifyContent: 'space-between',
   },
   summaryMainRow: {
     flexDirection: 'row',

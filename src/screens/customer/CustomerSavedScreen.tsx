@@ -4,6 +4,7 @@ import React, {
 } from 'react';
 import {
   Alert,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   View,
@@ -145,7 +146,16 @@ export function CustomerSavedScreen({
       contentContainerStyle={
         styles.content
       }
-      showsVerticalScrollIndicator={false}>
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={() => refetch()}
+          tintColor={theme.colors.primary}
+          colors={[theme.colors.primary]}
+          progressBackgroundColor={theme.colors.surface}
+        />
+      }>
       <View
         style={
           styles.headingRow

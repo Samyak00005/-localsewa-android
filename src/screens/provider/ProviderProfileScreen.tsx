@@ -1,6 +1,8 @@
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import React, { useState } from 'react';
 import {
+  Alert,
+  FlatList,
   Image,
   Modal,
   Pressable,
@@ -8,19 +10,21 @@ import {
   ScrollView,
   StyleSheet,
   Switch,
+  useWindowDimensions,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { errorMessage } from '../../api/apiClient';
 import { useAppShell } from '../../app/AppShellProvider';
 import { useAuth } from '../../auth';
 import { AppIcon, AppIconName, iconSize } from '../../components/icons';
+import { useProviderOverlayBlur } from '../../components/provider';
 import {
   AlertBanner,
   AppSwitch,
   AppText,
   Avatar,
-  Badge,
   Button,
   Card,
   Input,
@@ -28,10 +32,13 @@ import {
 } from '../../components/ui';
 import {
   useProviderAvailability,
+  useProviderBusinessImageDelete,
+  useProviderBusinessImageUpload,
   useProviderDashboard,
   useProviderProfileUpdate,
 } from '../../hooks/useProviderWorkspace';
 import { ProviderTabParamList } from '../../navigation/types';
+import { pickProfilePhoto } from '../../native/profilePhotoPicker';
 import {
   ProviderBusinessImage,
   ProviderProfileUpdate,
@@ -67,11 +74,15 @@ export function ProviderProfileScreen({
     isRefetching,
   } = useProviderDashboard();
   const availability = useProviderAvailability();
+  const businessImageUpload = useProviderBusinessImageUpload();
+  const businessImageDelete = useProviderBusinessImageDelete();
   const profileUpdate = useProviderProfileUpdate();
 
   const [logoutBusy, setLogoutBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [viewerImage, setViewerImage] = useState<string | null>(null);
+  const [businessMediaOpen, setBusinessMediaOpen] = useState(false);
+  const [selectedBusinessImageId, setSelectedBusinessImageId] = useState<number | null>(null);
+  const [profilePhotoOpen, setProfilePhotoOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
   const premium = providerTier === 'LOCALSEWA_PLUS';
@@ -88,6 +99,60 @@ export function ProviderProfileScreen({
     }
   }
 
+  async function addBusinessPhoto() {
+    if (!profile || businessImageUpload.isPending) {
+      return;
+    }
+
+    if (profile.businessImages.length >= 5) {
+      Alert.alert(
+        'Business photos',
+        'You can add a maximum of 5 business photos.',
+      );
+      return;
+    }
+
+    setActionError(null);
+
+    try {
+      const image = await pickProfilePhoto();
+
+      if (!image) {
+        return;
+      }
+
+      await businessImageUpload.mutateAsync({
+        uri: image.uri,
+        name: image.name,
+        type: image.type,
+      });
+    } catch (uploadError) {
+      setActionError(errorMessage(uploadError));
+    }
+  }
+
+  function openBusinessMedia(imageId?: number) {
+    const selected =
+      imageId ?? profile?.businessImages[0]?.id ?? null;
+
+    setSelectedBusinessImageId(selected);
+    setBusinessMediaOpen(true);
+  }
+
+  async function deleteBusinessPhoto(imageId: number) {
+    setActionError(null);
+
+    try {
+      const images = await businessImageDelete.mutateAsync(imageId);
+      setSelectedBusinessImageId(images[0]?.id ?? null);
+    } catch (mutationError) {
+      setActionError(errorMessage(mutationError));
+    }
+  }
+
+  const mediaOverlayOpen = businessMediaOpen || profilePhotoOpen;
+  useProviderOverlayBlur(mediaOverlayOpen);
+
   async function signOut() {
     setActionError(null);
     setLogoutBusy(true);
@@ -103,8 +168,11 @@ export function ProviderProfileScreen({
 
   return (
     <>
-      <ScrollView
+      <View
         style={[styles.screen, { backgroundColor: theme.colors.background }]}
+      >
+      <ScrollView
+        style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -136,7 +204,9 @@ export function ProviderProfileScreen({
             <Card style={styles.identityCard}>
               <BusinessGallery
                 images={profile.businessImages}
-                onOpen={setViewerImage}
+                onOpen={openBusinessMedia}
+                onAdd={addBusinessPhoto}
+                adding={businessImageUpload.isPending}
               />
 
               <View style={styles.profileBody}>
@@ -148,14 +218,9 @@ export function ProviderProfileScreen({
                     ]}
                   >
                     <Pressable
-                      accessibilityRole={profile.profileImageUrl ? 'button' : undefined}
-                      accessibilityLabel="Provider profile photo"
-                      disabled={!profile.profileImageUrl}
-                      onPress={() =>
-                        profile.profileImageUrl
-                          ? setViewerImage(profile.profileImageUrl)
-                          : undefined
-                      }
+                      accessibilityRole="button"
+                      accessibilityLabel="Manage provider profile photo"
+                      onPress={() => setProfilePhotoOpen(true)}
                     >
                       {profile.profileImageUrl ? (
                         <Image
@@ -174,9 +239,6 @@ export function ProviderProfileScreen({
                         {displayName}
                       </AppText>
 
-                      <Badge variant={profile.available ? 'success' : 'default'}>
-                        {profile.available ? 'AVAILABLE' : 'UNAVAILABLE'}
-                      </Badge>
                     </View>
 
                     {profile.category ? (
@@ -356,6 +418,12 @@ export function ProviderProfileScreen({
                 subtitle="Read customer feedback from completed services"
                 onPress={() => navigation.navigate('ProviderReviews')}
               />
+              <ProviderMenuRow
+                icon="camera"
+                title="Manage photos"
+                subtitle="Add, move or remove business photos"
+                onPress={() => openBusinessMedia()}
+              />
             </ProviderSection>
 
             <View style={styles.roleSection}>
@@ -376,6 +444,7 @@ export function ProviderProfileScreen({
           </>
         ) : null}
       </ScrollView>
+      </View>
 
       {profile ? (
         <ProviderProfileEditModal
@@ -391,7 +460,27 @@ export function ProviderProfileScreen({
         />
       ) : null}
 
-      <PhotoViewer uri={viewerImage} onClose={() => setViewerImage(null)} />
+      {profile ? (
+        <>
+          <BusinessMediaManager
+            visible={businessMediaOpen}
+            images={profile.businessImages}
+            selectedId={selectedBusinessImageId}
+            adding={businessImageUpload.isPending}
+            deleting={businessImageDelete.isPending}
+            onSelect={setSelectedBusinessImageId}
+            onAdd={addBusinessPhoto}
+            onDelete={deleteBusinessPhoto}
+            onClose={() => setBusinessMediaOpen(false)}
+          />
+
+          <ProfilePhotoManager
+            visible={profilePhotoOpen}
+            uri={profile.profileImageUrl ?? null}
+            onClose={() => setProfilePhotoOpen(false)}
+          />
+        </>
+      ) : null}
     </>
   );
 }
@@ -568,9 +657,13 @@ function ProviderProfileEditModal({
 function BusinessGallery({
   images,
   onOpen,
+  onAdd,
+  adding,
 }: {
   images: ProviderBusinessImage[];
-  onOpen: (uri: string) => void;
+  onOpen: (imageId: number) => void;
+  onAdd: () => void;
+  adding: boolean;
 }): React.JSX.Element {
   const { theme } = useAppTheme();
   const [galleryIndex, setGalleryIndex] = useState(0);
@@ -596,8 +689,27 @@ function BusinessGallery({
           No business photos yet
         </AppText>
         <AppText variant="bodySmall" muted style={styles.galleryEmptyCopy}>
-          Existing business photos will appear here when the backend returns them.
+          Add work and business photos to help customers understand your services.
         </AppText>
+        <Pressable
+          accessibilityRole="button"
+          disabled={adding}
+          onPress={onAdd}
+          style={({ pressed }) => [
+            styles.galleryAddEmpty,
+            {
+              backgroundColor: pressed
+                ? theme.colors.primaryPressed ?? theme.colors.primary
+                : theme.colors.primary,
+              opacity: adding ? 0.55 : 1,
+            },
+          ]}
+        >
+          <AppIcon name="camera" size={iconSize.xs} color="#FFFFFF" />
+          <AppText variant="label" color="#FFFFFF">
+            {adding ? 'Adding…' : 'Add photos'}
+          </AppText>
+        </Pressable>
       </View>
     );
   }
@@ -638,7 +750,7 @@ function BusinessGallery({
             key={image.id}
             accessibilityRole="button"
             accessibilityLabel={`Open business photo ${index + 1}`}
-            onPress={() => onOpen(image.url)}
+            onPress={() => onOpen(image.id)}
             style={({ pressed }) => [
               { width: galleryWidth },
               { opacity: pressed ? 0.9 : 1 },
@@ -650,24 +762,27 @@ function BusinessGallery({
               style={styles.galleryImage}
             />
 
-            {image.isCover ? (
-              <View style={styles.coverBadge}>
-                <AppText variant="caption" color="#FFFFFF">
-                  Cover
-                </AppText>
-              </View>
-            ) : null}
-
-            <View style={styles.galleryOpenBadge}>
-              <AppIcon
-                name="externalLink"
-                size={iconSize.xs}
-                color="#FFFFFF"
-              />
-            </View>
           </Pressable>
         ))}
       </ScrollView>
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Add business photos"
+        disabled={adding || images.length >= 5}
+        onPress={onAdd}
+        style={({ pressed }) => [
+          styles.galleryAddBadge,
+          {
+            opacity: adding || images.length >= 5 ? 0.58 : pressed ? 0.82 : 1,
+          },
+        ]}
+      >
+        <AppIcon name="camera" size={iconSize.xs} color="#FFFFFF" />
+        <AppText variant="caption" color="#FFFFFF">
+          {adding ? 'Adding…' : images.length >= 5 ? '5 / 5 photos' : 'Add photos'}
+        </AppText>
+      </Pressable>
 
       {images.length > 1 ? (
         <View style={styles.galleryCount}>
@@ -835,45 +950,456 @@ function ProviderStat({
 
   return (
     <View style={styles.stat}>
-      <AppIcon name={icon} size={iconSize.sm} color={theme.colors.primary} />
-      <AppText variant="title" style={styles.statValue}>
-        {value}
-      </AppText>
-      <AppText variant="caption" muted>
+      <View style={styles.statMain}>
+        <AppIcon name={icon} size={iconSize.xs} color={theme.colors.primary} />
+        <AppText variant="label">{value}</AppText>
+      </View>
+      <AppText variant="caption" muted style={styles.statLabel}>
         {label}
       </AppText>
     </View>
   );
 }
 
-function PhotoViewer({
+function BusinessMediaManager({
+  visible,
+  images,
+  selectedId,
+  adding,
+  deleting,
+  onSelect,
+  onAdd,
+  onDelete,
+  onClose,
+}: {
+  visible: boolean;
+  images: ProviderBusinessImage[];
+  selectedId: number | null;
+  adding: boolean;
+  deleting: boolean;
+  onSelect: (imageId: number | null) => void;
+  onAdd: () => void;
+  onDelete: (imageId: number) => Promise<void>;
+  onClose: () => void;
+}): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
+  const galleryRef = React.useRef<FlatList<ProviderBusinessImage>>(null);
+  const stageWidth = Math.max(1, windowWidth - layout.screenHorizontal * 2);
+  const selected =
+    images.find(image => image.id === selectedId) ?? images[0] ?? null;
+  const selectedIndex = selected
+    ? Math.max(0, images.findIndex(image => image.id === selected.id))
+    : -1;
+  const busy = adding || deleting;
+
+  React.useEffect(() => {
+    if (!visible) {
+      return;
+    }
+
+    if (!selected && selectedId !== null) {
+      onSelect(images[0]?.id ?? null);
+    } else if (selected && selected.id !== selectedId) {
+      onSelect(selected.id);
+    }
+  }, [images, onSelect, selected, selectedId, visible]);
+
+  React.useEffect(() => {
+    if (!visible || selectedIndex < 0) {
+      return;
+    }
+
+    const frame = requestAnimationFrame(() => {
+      galleryRef.current?.scrollToOffset({
+        offset: selectedIndex * stageWidth,
+        animated: false,
+      });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [selectedIndex, stageWidth, visible]);
+
+  function selectRelative(delta: -1 | 1) {
+    if (busy || selectedIndex < 0) {
+      return;
+    }
+
+    const nextIndex = Math.max(0, Math.min(images.length - 1, selectedIndex + delta));
+    const next = images[nextIndex];
+    if (!next || nextIndex === selectedIndex) {
+      return;
+    }
+
+    onSelect(next.id);
+    galleryRef.current?.scrollToOffset({
+      offset: nextIndex * stageWidth,
+      animated: true,
+    });
+  }
+
+  function confirmDelete() {
+    if (!selected || busy) {
+      return;
+    }
+
+    Alert.alert(
+      'Delete business photo?',
+      'This photo will be removed from your Provider profile.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            void onDelete(selected.id);
+          },
+        },
+      ],
+    );
+  }
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+      onRequestClose={busy ? undefined : onClose}
+    >
+      <View style={styles.mediaOverlay}>
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={busy ? undefined : onClose}
+        />
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Close business photo manager"
+          disabled={busy}
+          onPress={onClose}
+          style={[
+            styles.mediaClose,
+            {
+              top: insets.top + 12,
+              right: layout.screenHorizontal,
+              opacity: busy ? 0.55 : 1,
+            },
+          ]}
+        >
+          <AppIcon name="x" size={iconSize.md} color="#FFFFFF" />
+        </Pressable>
+
+        <View
+          style={[
+            styles.mediaStage,
+            {
+              marginTop: insets.top + 72,
+              marginBottom: insets.bottom + 198,
+            },
+          ]}
+        >
+          {selected ? (
+            <FlatList
+              ref={galleryRef}
+              data={images}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={item => String(item.id)}
+              style={{ width: stageWidth, flex: 1 }}
+              getItemLayout={(_data, index) => ({
+                length: stageWidth,
+                offset: stageWidth * index,
+                index,
+              })}
+              onMomentumScrollEnd={event => {
+                const index = Math.max(
+                  0,
+                  Math.min(
+                    images.length - 1,
+                    Math.round(event.nativeEvent.contentOffset.x / stageWidth),
+                  ),
+                );
+                const image = images[index];
+                if (image && image.id !== selectedId) {
+                  onSelect(image.id);
+                }
+              }}
+              renderItem={({ item }) => (
+                <View style={{ width: stageWidth, flex: 1 }}>
+                  <Image
+                    source={{ uri: item.url }}
+                    resizeMode="contain"
+                    style={styles.mediaMainImage}
+                  />
+                </View>
+              )}
+            />
+          ) : (
+            <View style={styles.mediaEmptyStage}>
+              <AppIcon name="camera" size={iconSize.xl} color="#D7E3DF" />
+              <AppText variant="title" color="#FFFFFF" style={styles.mediaEmptyTitle}>
+                No business photos yet
+              </AppText>
+            </View>
+          )}
+        </View>
+
+        <View
+          style={[
+            styles.mediaTray,
+            {
+              bottom: insets.bottom + spacing[3],
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+            },
+          ]}
+        >
+          <View style={styles.mediaTrayTop}>
+            <View>
+              <AppText variant="title">Business photos</AppText>
+              <AppText variant="caption" muted style={styles.smallGap}>
+                {images.length} / 5 photos
+              </AppText>
+            </View>
+
+            <Pressable
+              accessibilityRole="button"
+              disabled={busy || images.length >= 5}
+              onPress={onAdd}
+              style={({ pressed }) => [
+                styles.mediaAddButton,
+                {
+                  backgroundColor: theme.colors.surfaceMuted,
+                  borderColor: theme.colors.border,
+                  opacity:
+                    busy || images.length >= 5 ? 0.45 : pressed ? 0.72 : 1,
+                },
+              ]}
+            >
+              <AppIcon name="plus" size={iconSize.xs} color={theme.colors.primary} />
+              <AppText variant="label" color={theme.colors.primary}>
+                {adding ? 'Adding…' : 'Add'}
+              </AppText>
+            </Pressable>
+          </View>
+
+          {images.length ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.mediaThumbs}
+            >
+              {images.map((image, index) => {
+                const active = image.id === selected?.id;
+
+                return (
+                  <Pressable
+                    key={image.id}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Select business photo ${index + 1}`}
+                    onPress={() => onSelect(image.id)}
+                    style={[
+                      styles.mediaThumb,
+                      {
+                        borderColor: active
+                          ? theme.colors.primary
+                          : theme.colors.border,
+                        borderWidth: active ? 2 : 1,
+                      },
+                    ]}
+                  >
+                    <Image source={{ uri: image.url }} style={styles.mediaThumbImage} />
+                    <View style={styles.mediaThumbNumber}>
+                      <AppText variant="caption" color="#FFFFFF">
+                        {index + 1}
+                      </AppText>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          ) : (
+            <View
+              style={[
+                styles.mediaEmptyThumbs,
+                { backgroundColor: theme.colors.surfaceMuted },
+              ]}
+            >
+              <AppText variant="caption" muted>
+                Add a photo to start your business gallery.
+              </AppText>
+            </View>
+          )}
+
+          <View style={styles.mediaActions}>
+            <MediaActionButton
+              icon="chevronLeft"
+              label="Move left"
+              disabled={busy || selectedIndex <= 0}
+              onPress={() => selectRelative(-1)}
+            />
+            <MediaActionButton
+              icon="chevronRight"
+              label="Move right"
+              disabled={busy || selectedIndex < 0 || selectedIndex >= images.length - 1}
+              onPress={() => selectRelative(1)}
+            />
+            <MediaActionButton
+              icon="trash"
+              label={deleting ? 'Deleting…' : 'Delete'}
+              danger
+              disabled={busy || !selected}
+              onPress={confirmDelete}
+            />
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function ProfilePhotoManager({
+  visible,
   uri,
   onClose,
 }: {
+  visible: boolean;
   uri: string | null;
   onClose: () => void;
 }): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const insets = useSafeAreaInsets();
+
+  function explainChange() {
+    Alert.alert(
+      'Change profile photo',
+      'Native profile-photo upload is temporarily paused until server-side metadata stripping is enforced for regular image uploads.',
+    );
+  }
+
+  function explainRemove() {
+    Alert.alert(
+      'Remove profile photo',
+      'The current backend does not expose a safe profile-photo removal endpoint yet.',
+    );
+  }
+
   return (
     <Modal
-      visible={Boolean(uri)}
+      visible={visible}
       transparent
       animationType="fade"
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      <View style={styles.viewerOverlay}>
+      <View style={styles.mediaOverlay}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-        {uri ? <Image source={{ uri }} style={styles.viewerImage} resizeMode="contain" /> : null}
+
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Close photo"
+          accessibilityLabel="Close profile photo"
           onPress={onClose}
-          style={styles.viewerClose}
+          style={[
+            styles.mediaClose,
+            {
+              top: insets.top + 12,
+              right: layout.screenHorizontal,
+            },
+          ]}
         >
           <AppIcon name="x" size={iconSize.md} color="#FFFFFF" />
         </Pressable>
+
+        <View
+          style={[
+            styles.profilePhotoStage,
+            {
+              marginTop: insets.top + 76,
+              marginBottom: insets.bottom + 126,
+            },
+          ]}
+        >
+          {uri ? (
+            <Image source={{ uri }} resizeMode="contain" style={styles.mediaMainImage} />
+          ) : (
+            <View style={styles.mediaEmptyStage}>
+              <AppIcon name="user" size={iconSize.xl} color="#D7E3DF" />
+              <AppText variant="title" color="#FFFFFF" style={styles.mediaEmptyTitle}>
+                No profile photo
+              </AppText>
+            </View>
+          )}
+        </View>
+
+        <View
+          style={[
+            styles.profilePhotoTray,
+            {
+              bottom: insets.bottom + spacing[3],
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+            },
+          ]}
+        >
+          <MediaActionButton
+            icon="camera"
+            label="Change photo"
+            onPress={explainChange}
+          />
+          <MediaActionButton
+            icon="trash"
+            label="Remove photo"
+            danger
+            onPress={explainRemove}
+          />
+        </View>
       </View>
     </Modal>
+  );
+}
+
+function MediaActionButton({
+  icon,
+  label,
+  danger = false,
+  disabled = false,
+  onPress,
+}: {
+  icon: AppIconName;
+  label: string;
+  danger?: boolean;
+  disabled?: boolean;
+  onPress: () => void;
+}): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const color = danger ? theme.colors.error : theme.colors.primary;
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.mediaAction,
+        {
+          backgroundColor: danger
+            ? 'rgba(198,45,40,0.08)'
+            : theme.colors.surfaceMuted,
+          borderColor: danger
+            ? 'rgba(198,45,40,0.18)'
+            : theme.colors.border,
+          opacity: disabled ? 0.45 : pressed ? 0.72 : 1,
+        },
+      ]}
+    >
+      <AppIcon name={icon} size={iconSize.xs} color={color} />
+      <AppText variant="label" color={color} numberOfLines={1}>
+        {label}
+      </AppText>
+    </Pressable>
   );
 }
 
@@ -890,11 +1416,12 @@ function ProfileSkeleton(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+  scroll: { flex: 1 },
   content: {
     paddingHorizontal: layout.screenHorizontal,
     paddingTop: spacing[4],
     paddingBottom: spacing[10],
-    gap: spacing[5],
+    gap: spacing[4],
   },
   errorBlock: { gap: spacing[3] },
   identityCard: {
@@ -903,24 +1430,24 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   profileBody: {
-    paddingTop: spacing[4],
+    paddingTop: spacing[3],
     paddingHorizontal: spacing[2],
-    paddingBottom: spacing[2],
+    paddingBottom: spacing[1],
   },
   identityRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: spacing[4],
+    gap: spacing[3],
   },
   profileAvatarFrame: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },
   profileAvatarPremiumFrame: {
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: localsewaPlusPalette.strongGold,
     backgroundColor: localsewaPlusPalette.premiumIvory,
   },
@@ -946,7 +1473,7 @@ const styles = StyleSheet.create({
   },
   flex: { flex: 1, minWidth: 0 },
   stats: {
-    marginTop: spacing[5],
+    marginTop: spacing[3],
     flexDirection: 'row',
     gap: spacing[2],
   },
@@ -954,9 +1481,16 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     alignItems: 'center',
-    paddingVertical: spacing[3],
+    paddingVertical: spacing[1],
   },
-  statValue: { marginTop: spacing[1] },
+  statMain: {
+    minHeight: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing[1],
+  },
+  statLabel: { marginTop: 1 },
   availabilityCard: {
     borderRadius: 28,
   },
@@ -968,11 +1502,11 @@ const styles = StyleSheet.create({
   },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
   about: {
-    marginTop: spacing[4],
-    paddingTop: spacing[4],
+    marginTop: spacing[2],
+    paddingTop: spacing[3],
     borderTopWidth: 1,
   },
-  aboutText: { marginTop: spacing[2], lineHeight: 21 },
+  aboutText: { marginTop: spacing[1], lineHeight: 20 },
   galleryFrame: {
     width: '100%',
     alignSelf: 'stretch',
@@ -983,25 +1517,18 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   galleryImage: { width: '100%', height: '100%' },
-  coverBadge: {
-    position: 'absolute',
-    top: spacing[2],
-    left: spacing[2],
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(14,48,36,0.88)',
-    paddingHorizontal: spacing[2],
-    paddingVertical: 3,
-  },
-  galleryOpenBadge: {
+  galleryAddBadge: {
     position: 'absolute',
     top: spacing[2],
     right: spacing[2],
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: 'rgba(8,31,22,0.56)',
+    minHeight: 34,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(8,31,22,0.78)',
+    paddingHorizontal: spacing[3],
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: spacing[1],
   },
   galleryCount: {
     position: 'absolute',
@@ -1027,6 +1554,16 @@ const styles = StyleSheet.create({
     marginTop: spacing[1],
     textAlign: 'center',
     maxWidth: 310,
+  },
+  galleryAddEmpty: {
+    minHeight: 42,
+    marginTop: spacing[4],
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing[4],
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing[2],
   },
   planCard: {
     borderRadius: 28,
@@ -1102,18 +1639,25 @@ const styles = StyleSheet.create({
     bottom: -104,
     backgroundColor: 'rgba(15,132,73,0.07)',
   },
-  editButton: { marginTop: spacing[4] },
+  editButton: {
+    marginTop: spacing[3],
+    minHeight: 52,
+    borderRadius: radius.pill,
+  },
   editOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
     backgroundColor: 'rgba(5, 17, 13, 0.42)',
+    paddingHorizontal: layout.bottomSheetMargin,
+    paddingBottom: layout.bottomSheetMargin,
   },
   editSheet: {
+    width: '100%',
     maxHeight: '88%',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    borderRadius: 28,
     borderWidth: 1,
     paddingTop: spacing[5],
+    overflow: 'hidden',
   },
   editHeading: {
     paddingHorizontal: spacing[4],
@@ -1147,22 +1691,130 @@ const styles = StyleSheet.create({
   },
   flexButton: { flex: 1 },
   skeletonStack: { gap: spacing[4] },
-  viewerOverlay: {
+  mediaOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.92)',
+    backgroundColor: 'rgba(5, 18, 34, 0.44)',
+  },
+  mediaClose: {
+    position: 'absolute',
+    zIndex: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(7,27,45,0.92)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  viewerImage: { width: '94%', height: '78%' },
-  viewerClose: {
-    position: 'absolute',
-    top: 50,
-    right: spacing[4],
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+  mediaStage: {
+    flex: 1,
+    marginHorizontal: layout.screenHorizontal,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  profilePhotoStage: {
+    flex: 1,
+    marginHorizontal: layout.screenHorizontal,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  mediaMainImage: {
+    width: '100%',
+    height: '100%',
+  },
+  mediaEmptyStage: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing[2],
+  },
+  mediaEmptyTitle: { marginTop: spacing[1] },
+  mediaTray: {
+    position: 'absolute',
+    left: layout.screenHorizontal,
+    right: layout.screenHorizontal,
+    borderWidth: 1,
+    borderRadius: 28,
+    padding: spacing[3],
+    gap: spacing[3],
+  },
+  mediaTrayTop: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    gap: spacing[3],
+  },
+  mediaThumbs: {
+    gap: spacing[2],
+    paddingRight: spacing[1],
+  },
+  mediaAddButton: {
+    minHeight: 38,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    paddingHorizontal: spacing[3],
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing[1],
+  },
+  mediaThumb: {
+    width: 58,
+    height: 58,
+    borderRadius: radius.md,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  mediaThumbImage: {
+    width: '100%',
+    height: '100%',
+  },
+  mediaThumbNumber: {
+    position: 'absolute',
+    right: 3,
+    bottom: 3,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    paddingHorizontal: 4,
+    backgroundColor: 'rgba(8,31,22,0.72)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mediaEmptyThumbs: {
+    minHeight: 58,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing[3],
+  },
+  mediaActions: {
+    flexDirection: 'row',
+    gap: spacing[2],
+  },
+  mediaAction: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 44,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    paddingHorizontal: spacing[2],
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing[1],
+  },
+  profilePhotoTray: {
+    position: 'absolute',
+    left: layout.screenHorizontal,
+    right: layout.screenHorizontal,
+    minHeight: 68,
+    borderWidth: 1,
+    borderRadius: 28,
+    padding: spacing[3],
+    flexDirection: 'row',
+    gap: spacing[2],
   },
 });

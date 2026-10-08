@@ -4,7 +4,10 @@ import {
   ProviderMembership,
   ProviderProfileUpdate,
   ProviderReviewsData,
+  ProviderServiceInput,
+  ProviderServicesData,
   ProviderWorkspaceReview,
+  ProviderWorkspaceService,
 } from '../types/providerWorkspace';
 import { API_ORIGIN, ApiError, apiRequest } from './apiClient';
 
@@ -131,6 +134,7 @@ function parseDashboard(result: ApiRecord): ProviderDashboardData {
     profile: {
       id: number(provider.id),
       businessName: text(provider.businessName) ?? 'Provider',
+      categoryId: number(provider.categoryId),
       ownerName: text(provider.ownerName),
       category: text(provider.category),
       location: text(provider.location),
@@ -156,6 +160,49 @@ function parseDashboard(result: ApiRecord): ProviderDashboardData {
   };
 }
 
+
+function parseService(value: ApiRecord): ProviderWorkspaceService | null {
+  const id = number(value.id);
+  const name = text(value.name);
+
+  if (id == null || !name) {
+    return null;
+  }
+
+  return {
+    id,
+    name,
+    description: text(value.description),
+    price: Math.max(0, number(value.price) ?? 0),
+    active: boolean(value.is_active ?? value.active, true),
+  };
+}
+
+function parseServices(result: ApiRecord): ProviderServicesData {
+  const services = Array.isArray(result.services)
+    ? result.services
+        .filter((item): item is ApiRecord => isRecord(item))
+        .map(parseService)
+        .filter((item): item is ProviderWorkspaceService => item !== null)
+    : [];
+
+  return { services };
+}
+
+function parseServiceResult(result: ApiRecord): ProviderWorkspaceService {
+  if (!isRecord(result.service)) {
+    throw new ApiError('Localsewa returned an invalid service response.');
+  }
+
+  const service = parseService(result.service);
+
+  if (!service) {
+    throw new ApiError('Localsewa returned an invalid service response.');
+  }
+
+  return service;
+}
+
 function parseReview(value: ApiRecord): ProviderWorkspaceReview | null {
   const id = value.id;
   const rating = number(value.rating);
@@ -164,13 +211,43 @@ function parseReview(value: ApiRecord): ProviderWorkspaceReview | null {
     return null;
   }
 
+  const customer = isRecord(value.customer) ? value.customer : null;
+  const service = isRecord(value.service) ? value.service : null;
+
+  const customerName =
+    text(
+      value.customer_name ??
+        value.customerName ??
+        (typeof value.customer === 'string' ? value.customer : undefined) ??
+        customer?.name ??
+        customer?.full_name,
+    ) || undefined;
+
+  const customerImage = mediaUrl(
+    value.customer_image ??
+      value.customerImage ??
+      value.profile_image ??
+      customer?.profile_image ??
+      customer?.profileImage ??
+      customer?.image,
+  );
+
+  const serviceName =
+    text(
+      value.service_name ??
+        value.serviceName ??
+        (typeof value.service === 'string' ? value.service : undefined) ??
+        service?.name,
+    ) || undefined;
+
   return {
     id: String(id),
     rating,
-    comment: text(value.comment),
-    customerName: text(value.customer),
-    serviceName: text(value.service),
-    createdAt: text(value.created_at),
+    comment: text(value.comment) || undefined,
+    customerName,
+    customerImage,
+    serviceName,
+    createdAt: text(value.created_at ?? value.createdAt) || undefined,
   };
 }
 
@@ -208,6 +285,127 @@ export const providerWorkspaceApi = {
     });
 
     return parseReviews(result);
+  },
+
+
+  async services(token: string): Promise<ProviderServicesData> {
+    const result = await apiRequest<ApiRecord>('/api/provider/services', {
+      token,
+    });
+
+    return parseServices(result);
+  },
+
+  async createService(
+    token: string,
+    input: ProviderServiceInput,
+  ): Promise<ProviderWorkspaceService> {
+    const result = await apiRequest<ApiRecord>('/api/provider/services', {
+      method: 'POST',
+      token,
+      body: {
+        name: input.name.trim(),
+        description: input.description?.trim() || null,
+        price: input.price,
+      },
+    });
+
+    return parseServiceResult(result);
+  },
+
+  async updateService(
+    token: string,
+    serviceId: number,
+    input: ProviderServiceInput,
+  ): Promise<ProviderWorkspaceService> {
+    const result = await apiRequest<ApiRecord>(
+      `/api/provider/services/${serviceId}`,
+      {
+        method: 'PUT',
+        token,
+        body: {
+          name: input.name.trim(),
+          description: input.description?.trim() || null,
+          price: input.price,
+        },
+      },
+    );
+
+    return parseServiceResult(result);
+  },
+
+  async deleteService(token: string, serviceId: number): Promise<void> {
+    await apiRequest<ApiRecord>(`/api/provider/services/${serviceId}`, {
+      method: 'DELETE',
+      token,
+    });
+  },
+
+  async updateCategory(token: string, categoryId: number): Promise<void> {
+    await apiRequest<ApiRecord>('/api/provider/category', {
+      method: 'PUT',
+      token,
+      body: { category_id: categoryId },
+    });
+  },
+
+  async uploadBusinessImage(
+    token: string,
+    image: {
+      uri: string;
+      name: string;
+      type: string;
+    },
+  ): Promise<ProviderBusinessImage[]> {
+    const form = new FormData();
+
+    form.append(
+      'image',
+      {
+        uri: image.uri,
+        name: image.name || 'business-photo.jpg',
+        type: image.type || 'image/jpeg',
+      } as any,
+    );
+
+    const result = await apiRequest<ApiRecord>('/api/provider/images', {
+      method: 'POST',
+      token,
+      body: form,
+      timeoutMs: 45_000,
+    });
+
+    return parseBusinessImages(result.images);
+  },
+
+  async setBusinessImageFirst(
+    token: string,
+    imageId: number,
+  ): Promise<ProviderBusinessImage[]> {
+    const result = await apiRequest<ApiRecord>(
+      `/api/provider/images/${imageId}/cover`,
+      {
+        method: 'PATCH',
+        token,
+      },
+    );
+
+    return parseBusinessImages(result.images);
+  },
+
+  async deleteBusinessImage(
+    token: string,
+    imageId: number,
+  ): Promise<ProviderBusinessImage[]> {
+    const result = await apiRequest<ApiRecord>(
+      `/api/provider/images/${imageId}`,
+      {
+        method: 'DELETE',
+        token,
+      },
+    );
+
+    return parseBusinessImages(result.images);
   },
 
   async membership(token: string): Promise<ProviderMembership> {

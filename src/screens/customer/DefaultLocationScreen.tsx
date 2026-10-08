@@ -38,6 +38,7 @@ import {
   CustomerStackParamList,
 } from '../../navigation/types';
 import {
+  layout,
   radius,
   shadows,
   spacing,
@@ -182,7 +183,7 @@ export function DefaultLocationScreen({
           {
             backgroundColor: theme.colors.surface,
             borderColor: theme.colors.border,
-            marginBottom: Math.max(insets.bottom, 8),
+            marginBottom: Math.max(insets.bottom, layout.bottomSheetMargin),
           },
           shadows.md,
         ]}
@@ -333,7 +334,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(7,24,17,0.42)',
     justifyContent: 'flex-end',
-    paddingHorizontal: 8,
+    paddingHorizontal: layout.bottomSheetMargin,
   },
   sheet: {
     width: '100%',
