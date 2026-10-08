@@ -204,6 +204,12 @@ export function useReviewBooking() {
         queryClient.invalidateQueries({
           queryKey: ['home-review-highlights'],
         }),
+        queryClient.invalidateQueries({
+          queryKey: ['provider-reviews'],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['provider-dashboard'],
+        }),
       ]);
     },
   });

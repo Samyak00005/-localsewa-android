@@ -1,4 +1,5 @@
-import React from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback } from 'react';
 import {
   RefreshControl,
   ScrollView,
@@ -29,6 +30,12 @@ export function ProviderReviewsScreen(): React.JSX.Element {
   const pullRefresh = useManualRefresh(async () => {
     await refetch();
   });
+
+  useFocusEffect(
+    useCallback(() => {
+      void refetch();
+    }, [refetch]),
+  );
 
   return (
     <ScrollView

@@ -387,7 +387,11 @@ export function useProviderProfileUpdate() {
       await providerWorkspaceApi.updateProfile(token, profile);
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: dashboardKey(user?.id) });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: dashboardKey(user?.id) }),
+        queryClient.invalidateQueries({ queryKey: ['providers'] }),
+        queryClient.invalidateQueries({ queryKey: ['provider'] }),
+      ]);
     },
   });
 }
@@ -428,7 +432,11 @@ export function useProviderAvailability() {
       }
     },
     onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: dashboardKey(user?.id) });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: dashboardKey(user?.id) }),
+        queryClient.invalidateQueries({ queryKey: ['providers'] }),
+        queryClient.invalidateQueries({ queryKey: ['provider'] }),
+      ]);
     },
   });
 }

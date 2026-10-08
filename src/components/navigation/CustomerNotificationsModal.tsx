@@ -172,7 +172,12 @@ export function CustomerNotificationsModal({
       }
 
       onClose();
-      enterProvider();
+      enterProvider(
+        target.route === 'ProviderRequestDetails' ||
+          target.route === 'ProviderBookingChat'
+          ? { route: target.route, bookingId: target.bookingId }
+          : { route: target.route },
+      );
       return;
     }
 

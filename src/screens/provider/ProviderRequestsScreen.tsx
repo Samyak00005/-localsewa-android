@@ -297,6 +297,11 @@ export function ProviderRequestsScreen({
   useFocusEffect(
     useCallback(() => {
       void refreshAll();
+      const timer = setInterval(() => {
+        void refreshAll();
+      }, 30_000);
+
+      return () => clearInterval(timer);
     }, [refreshAll]),
   );
 

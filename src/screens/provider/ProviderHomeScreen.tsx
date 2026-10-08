@@ -150,8 +150,23 @@ export function ProviderHomeScreen({
 
   useFocusEffect(
     useCallback(() => {
-      void refresh();
-    }, [refresh]),
+      const refreshLiveData = () => {
+        void Promise.all([
+          dashboardQuery.refetch(),
+          requestCountQuery.refetch(),
+          bookingsQuery.refetch(),
+        ]);
+      };
+
+      refreshLiveData();
+      const timer = setInterval(refreshLiveData, 30_000);
+
+      return () => clearInterval(timer);
+    }, [
+      bookingsQuery.refetch,
+      dashboardQuery.refetch,
+      requestCountQuery.refetch,
+    ]),
   );
 
   if (dashboardQuery.isLoading && !dashboard) {

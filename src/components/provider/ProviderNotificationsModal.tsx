@@ -11,12 +11,17 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
 
 import { errorMessage } from '../../api/apiClient';
 import {
   useMarkNotificationRead,
   useNotifications,
 } from '../../hooks/useNotifications';
+import { useProviderBookings } from '../../hooks/useProviderWorkspace';
+import { ProviderStackParamList, ProviderTabParamList } from '../../navigation/types';
 import { AppNotification } from '../../types/notification';
 import { resolveNotificationTarget } from '../../utils/notificationRoute';
 import {
@@ -49,6 +54,9 @@ export function ProviderNotificationsModal({
   onClose,
 }: Props): React.JSX.Element {
   const { theme } = useAppTheme();
+  const navigation = useNavigation<BottomTabNavigationProp<ProviderTabParamList>>();
+  const stack = navigation.getParent<NativeStackNavigationProp<ProviderStackParamList>>();
+  const { data: bookings = [] } = useProviderBookings();
 
   useEffect(() => {
     NativeModules.NotificationBackdrop?.setBlurred?.(visible);
@@ -95,10 +103,36 @@ export function ProviderNotificationsModal({
     if (!item.read) {
       try {
         await markRead.mutateAsync(item.id);
-      } catch (mutationError) {
-        setActionError(errorMessage(mutationError));
+      } catch {
+        // Navigation remains available even if read-state sync temporarily fails.
       }
     }
+
+    const target = resolveNotificationTarget(item);
+
+    if (target.workspace !== 'provider') {
+      return;
+    }
+
+    onClose();
+
+    if (target.route === 'ProviderHome' || target.route === 'ProviderRequests') {
+      navigation.navigate(target.route);
+      return;
+    }
+
+    if (target.route === 'ProviderBookingChat') {
+      const booking = bookings.find(value => value.id === target.bookingId);
+
+      if (booking?.chatEnabled) {
+        stack?.navigate('ProviderBookingChat', { bookingId: target.bookingId });
+      } else {
+        stack?.navigate('ProviderRequestDetails', { bookingId: target.bookingId });
+      }
+      return;
+    }
+
+    stack?.navigate('ProviderRequestDetails', { bookingId: target.bookingId });
   }
 
   async function readAllProviderNotifications() {

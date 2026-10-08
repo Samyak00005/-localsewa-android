@@ -43,6 +43,14 @@ export function useSendChatMessage(bookingId: number) {
     // does not consume an idempotency key for messages.
     retry: 0,
 
+    onMutate: async () => {
+      // Ignore any older foreground poll that was already in flight before send.
+      // The POST itself is still never retried automatically.
+      await queryClient.cancelQueries({
+        queryKey: ['booking-chat', bookingId],
+      });
+    },
+
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: ['booking-chat', bookingId],

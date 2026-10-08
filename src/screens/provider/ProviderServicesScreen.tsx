@@ -67,6 +67,7 @@ export function ProviderServicesScreen({
   } = useProviderDashboard();
   const {
     data: categories = [],
+    error: categoriesError,
     refetch: refetchCategories,
     isRefetching: categoriesRefetching,
   } = useCategories();
@@ -102,10 +103,11 @@ export function ProviderServicesScreen({
 
   const services = serviceData?.services ?? [];
   const profile = dashboard?.profile;
-  const loading = servicesLoading || dashboardLoading;
+  const loading = servicesLoading && !serviceData;
   const refreshBusy =
     servicesRefetching || dashboardRefetching || categoriesRefetching;
-  const requestError = servicesError ?? dashboardError;
+  const blockingError = servicesError && !serviceData ? servicesError : null;
+  const supportingError = dashboardError ?? categoriesError;
 
   const orderedServices = useMemo(
     () => [...services].sort((a, b) => a.name.localeCompare(b.name)),
@@ -268,12 +270,18 @@ export function ProviderServicesScreen({
           <AlertBanner variant="error">{pageError}</AlertBanner>
         ) : null}
 
+        {supportingError && serviceData ? (
+          <AlertBanner variant="warning">
+            Some business details could not refresh. Your service catalogue is still available.
+          </AlertBanner>
+        ) : null}
+
         {loading ? (
           <ServicesSkeleton />
-        ) : requestError ? (
+        ) : blockingError ? (
           <View style={styles.errorBlock}>
             <AlertBanner variant="error">
-              {errorMessage(requestError)}
+              {errorMessage(blockingError)}
             </AlertBanner>
             <Button
               label="Retry"
@@ -353,7 +361,12 @@ export function ProviderServicesScreen({
                   <Pressable
                     accessibilityRole="button"
                     onPress={() => setCategoryOpen(true)}
-                    disabled={updateCategory.isPending}
+                    disabled={
+                      updateCategory.isPending ||
+                      Boolean(dashboardError) ||
+                      Boolean(categoriesError) ||
+                      !profile
+                    }
                     style={({ pressed }) => [
                       styles.compactAction,
                       {

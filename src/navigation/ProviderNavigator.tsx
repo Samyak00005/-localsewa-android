@@ -1,6 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useEffect } from 'react';
 
+import { useAppShell } from '../app/AppShellProvider';
 import {
   ProviderAccountDeletionScreen,
   ProviderAccountSecurityScreen,
@@ -13,6 +14,7 @@ import {
 } from '../screens/provider';
 import { ProviderTabs } from './ProviderTabs';
 import { ProviderStackParamList } from './types';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 const Stack = createNativeStackNavigator<ProviderStackParamList>();
 
@@ -24,7 +26,7 @@ export function ProviderNavigator(): React.JSX.Element {
         animation: 'slide_from_right',
       }}
     >
-      <Stack.Screen name="ProviderTabs" component={ProviderTabs} />
+      <Stack.Screen name="ProviderTabs" component={ProviderTabsEntryScreen} />
       <Stack.Screen
         name="ProviderRequestDetails"
         component={ProviderRequestDetailsScreen}
@@ -60,4 +62,28 @@ export function ProviderNavigator(): React.JSX.Element {
       />
     </Stack.Navigator>
   );
+}
+
+function ProviderTabsEntryScreen({
+  navigation,
+}: NativeStackScreenProps<ProviderStackParamList, 'ProviderTabs'>): React.JSX.Element {
+  const { pendingProviderTarget, consumeProviderTarget } = useAppShell();
+
+  useEffect(() => {
+    if (!pendingProviderTarget) {
+      return;
+    }
+
+    const target = pendingProviderTarget;
+    consumeProviderTarget();
+
+    if (target.route === 'ProviderHome' || target.route === 'ProviderRequests') {
+      navigation.navigate('ProviderTabs', { screen: target.route });
+      return;
+    }
+
+    navigation.navigate(target.route, { bookingId: target.bookingId });
+  }, [consumeProviderTarget, navigation, pendingProviderTarget]);
+
+  return <ProviderTabs />;
 }

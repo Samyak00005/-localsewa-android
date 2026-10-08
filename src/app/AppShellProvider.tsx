@@ -24,6 +24,13 @@ import {
 
 export type AppArea = 'auth' | 'customer' | 'provider';
 
+export type ProviderEntryTarget =
+  | { route: 'ProviderHome' | 'ProviderRequests' }
+  | {
+      route: 'ProviderRequestDetails' | 'ProviderBookingChat';
+      bookingId: number;
+    };
+
 type AppShellContextValue = {
   area: AppArea;
   providerTier: ProviderTier;
@@ -31,8 +38,10 @@ type AppShellContextValue = {
   providerThemePreference: ProviderThemePreference;
   providerPremiumVisuals: boolean;
   setProviderThemePreference: (preference: ProviderThemePreference) => void;
+  pendingProviderTarget: ProviderEntryTarget | null;
+  consumeProviderTarget: () => void;
   enterCustomer: () => void;
-  enterProvider: () => boolean;
+  enterProvider: (target?: ProviderEntryTarget) => boolean;
 };
 
 const AppShellContext = createContext<AppShellContextValue>({
@@ -42,6 +51,8 @@ const AppShellContext = createContext<AppShellContextValue>({
   providerThemePreference: 'premium',
   providerPremiumVisuals: false,
   setProviderThemePreference: () => undefined,
+  pendingProviderTarget: null,
+  consumeProviderTarget: () => undefined,
   enterCustomer: () => undefined,
   enterProvider: () => false,
 });
@@ -59,6 +70,8 @@ export function AppShellProvider({
   const [area, setArea] = useState<AppArea>('auth');
   const [providerThemePreference, setProviderThemePreferenceState] =
     useState<ProviderThemePreference>('premium');
+  const [pendingProviderTarget, setPendingProviderTarget] =
+    useState<ProviderEntryTarget | null>(null);
 
   const [
     switchTarget,
@@ -117,6 +130,7 @@ export function AppShellProvider({
       setSwitchTarget(
         null,
       );
+      setPendingProviderTarget(null);
       setArea('auth');
       return;
     }
@@ -192,6 +206,8 @@ export function AppShellProvider({
       canUseProvider,
       providerThemePreference,
       providerPremiumVisuals,
+      pendingProviderTarget,
+      consumeProviderTarget: () => setPendingProviderTarget(null),
       setProviderThemePreference: preference => {
         setProviderThemePreferenceState(preference);
 
@@ -203,6 +219,7 @@ export function AppShellProvider({
       },
 
       enterCustomer: () => {
+        setPendingProviderTarget(null);
         if (
           user &&
           area !==
@@ -215,12 +232,16 @@ export function AppShellProvider({
         }
       },
 
-      enterProvider: () => {
+      enterProvider: target => {
         if (
           !user ||
           !canUseProvider
         ) {
           return false;
+        }
+
+        if (target) {
+          setPendingProviderTarget(target);
         }
 
         if (
@@ -242,6 +263,7 @@ export function AppShellProvider({
       providerTier,
       providerThemePreference,
       providerPremiumVisuals,
+      pendingProviderTarget,
       switchTarget,
       user,
     ],

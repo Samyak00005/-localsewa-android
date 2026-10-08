@@ -8,7 +8,12 @@ export type NotificationTarget =
     }
   | {
       workspace: 'provider';
-      route: 'ProviderHome';
+      route: 'ProviderHome' | 'ProviderRequests';
+    }
+  | {
+      workspace: 'provider';
+      route: 'ProviderRequestDetails' | 'ProviderBookingChat';
+      bookingId: number;
     }
   | {
       workspace: 'customer';
@@ -104,14 +109,37 @@ export function resolveNotificationTarget(
     type.startsWith('provider_') ||
     entityType.startsWith('provider');
 
+  const bookingId = bookingIdFromNotification(notification, params);
+
   if (providerTarget) {
+    if (bookingId) {
+      const chatTarget =
+        path.includes('chat') ||
+        type.includes('message') ||
+        type.includes('chat') ||
+        params.get('chat') === '1' ||
+        params.get('view')?.toLowerCase() === 'chat';
+
+      return {
+        workspace: 'provider',
+        route: chatTarget ? 'ProviderBookingChat' : 'ProviderRequestDetails',
+        bookingId,
+      };
+    }
+
+    if (path.includes('request') || type.includes('booking') || type.includes('request')) {
+      return {
+        workspace: 'provider',
+        route: 'ProviderRequests',
+      };
+    }
+
     return {
       workspace: 'provider',
       route: 'ProviderHome',
     };
   }
 
-  const bookingId = bookingIdFromNotification(notification, params);
 
   if (bookingId) {
     const chatTarget =
