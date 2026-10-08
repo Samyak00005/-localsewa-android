@@ -372,26 +372,26 @@ export function ProviderServicesScreen({
                 </AppText>
               </View>
 
-              <View
-                style={[
-                  styles.countChip,
-                  { backgroundColor: theme.colors.secondary },
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Add service"
+                onPress={openAddService}
+                style={({ pressed }) => [
+                  styles.catalogAddAction,
+                  {
+                    backgroundColor: pressed
+                      ? theme.colors.secondary
+                      : theme.colors.surface,
+                    borderColor: theme.colors.primary,
+                  },
                 ]}
               >
+                <AppIcon name="plus" size={iconSize.sm} color={theme.colors.primary} />
                 <AppText variant="label" color={theme.colors.primary}>
-                  {services.length} {services.length === 1 ? 'service' : 'services'}
+                  Add service
                 </AppText>
-              </View>
+              </Pressable>
             </View>
-
-            <Button
-              label="Add service"
-              icon="plus"
-              variant="outline"
-              onPress={openAddService}
-              fullWidth
-              style={styles.addButton}
-            />
 
             {orderedServices.length ? (
               <View style={styles.serviceList}>
@@ -916,14 +916,16 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     gap: spacing[3],
   },
-  countChip: {
-    minHeight: 32,
+  catalogAddAction: {
+    minHeight: 38,
     borderRadius: radius.pill,
+    borderWidth: 1,
     paddingHorizontal: spacing[3],
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: spacing[1],
   },
-  addButton: { borderRadius: radius.pill, minHeight: 48 },
   serviceList: { gap: spacing[2] },
   serviceCard: {
     borderRadius: PROVIDER_SURFACE_RADIUS,

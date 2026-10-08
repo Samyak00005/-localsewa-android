@@ -1794,13 +1794,13 @@ const styles = StyleSheet.create({
   },
   mediaImagePage: {
     flex: 1,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     overflow: 'hidden',
   },
   mediaMainImage: {
     width: '100%',
     height: '100%',
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
   },
   mediaEmptyStage: {
     alignItems: 'center',
