@@ -1,28 +1,47 @@
-import React, { useMemo, useState } from 'react';
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {
   Modal,
+  NativeModules,
   Pressable,
-  RefreshControl,
   ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { errorMessage } from '../../api/apiClient';
 import {
   useMarkNotificationRead,
   useNotifications,
 } from '../../hooks/useNotifications';
+import { AppNotification } from '../../types/notification';
 import { resolveNotificationTarget } from '../../utils/notificationRoute';
-import { layout, radius, spacing, useAppTheme } from '../../theme';
+import {
+  radius,
+  shadows,
+  spacing,
+  useAppTheme,
+} from '../../theme';
 import { AppIcon, iconSize } from '../icons';
-import { NotificationRow } from '../customer/NotificationRow';
-import { AlertBanner, AppText, Skeleton } from '../ui';
+import {
+  AlertBanner,
+  AppText,
+  Button,
+  Skeleton,
+} from '../ui';
 
 type Props = {
   visible: boolean;
   onClose: () => void;
+};
+
+type NotificationGroup = {
+  key: string;
+  label: string;
+  items: AppNotification[];
 };
 
 export function ProviderNotificationsModal({
@@ -30,9 +49,27 @@ export function ProviderNotificationsModal({
   onClose,
 }: Props): React.JSX.Element {
   const { theme } = useAppTheme();
-  const { data, isLoading, error, refetch, isRefetching } = useNotifications();
+
+  useEffect(() => {
+    NativeModules.NotificationBackdrop?.setBlurred?.(visible);
+
+    return () => {
+      NativeModules.NotificationBackdrop?.setBlurred?.(false);
+    };
+  }, [visible]);
+
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+  } = useNotifications();
+
   const markRead = useMarkNotificationRead();
+
   const [actionError, setActionError] = useState<string | null>(null);
+  const [markingAll, setMarkingAll] = useState(false);
 
   const notifications = useMemo(
     () =>
@@ -42,48 +79,89 @@ export function ProviderNotificationsModal({
     [data?.notifications],
   );
 
-  async function openItem(notificationId: number) {
-    const item = notifications.find(value => value.id === notificationId);
+  const groups = useMemo(
+    () => groupNotifications(notifications),
+    [notifications],
+  );
 
-    if (!item || item.read) {
+  const unreadCount = useMemo(
+    () => notifications.reduce((count, item) => count + (item.read ? 0 : 1), 0),
+    [notifications],
+  );
+
+  async function openNotification(item: AppNotification) {
+    setActionError(null);
+
+    if (!item.read) {
+      try {
+        await markRead.mutateAsync(item.id);
+      } catch (mutationError) {
+        setActionError(errorMessage(mutationError));
+      }
+    }
+  }
+
+  async function readAllProviderNotifications() {
+    const unread = notifications.filter(item => !item.read);
+
+    if (!unread.length || markingAll) {
       return;
     }
 
     setActionError(null);
+    setMarkingAll(true);
 
     try {
-      await markRead.mutateAsync(notificationId);
+      for (const item of unread) {
+        await markRead.mutateAsync(item.id);
+      }
     } catch (mutationError) {
       setActionError(errorMessage(mutationError));
+    } finally {
+      setMarkingAll(false);
     }
   }
 
   return (
     <Modal
-      visible={visible}
       transparent
+      visible={visible}
       animationType="fade"
       statusBarTranslucent
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <Pressable
+          style={StyleSheet.absoluteFillObject}
+          onPress={onClose}
+        />
 
-        <SafeAreaView
-          edges={['top', 'left', 'right', 'bottom']}
+        <View
           style={[
             styles.sheet,
             {
-              backgroundColor: theme.colors.background,
-              borderColor: theme.colors.border,
+              backgroundColor: theme.colors.surface,
             },
+            shadows.md,
           ]}
         >
-          <View style={styles.headingRow}>
+          <View
+            style={[
+              styles.header,
+              {
+                borderBottomColor: theme.colors.border,
+              },
+            ]}
+          >
             <View style={styles.headingCopy}>
-              <AppText variant="h2">Provider notifications</AppText>
-              <AppText variant="caption" muted style={styles.headingSubtitle}>
-                Booking and provider-workspace updates from Localsewa.
+              <AppText variant="h2">Notifications</AppText>
+
+              <AppText
+                variant="caption"
+                muted
+                style={styles.subtitle}
+              >
+                Provider booking and workspace updates appear automatically.
               </AppText>
             </View>
 
@@ -91,160 +169,381 @@ export function ProviderNotificationsModal({
               accessibilityRole="button"
               accessibilityLabel="Close notifications"
               onPress={onClose}
-              style={({ pressed }) => [
+              style={[
                 styles.closeButton,
                 {
-                  backgroundColor: theme.colors.surface,
-                  borderColor: theme.colors.border,
-                  opacity: pressed ? 0.72 : 1,
+                  backgroundColor: theme.colors.surfaceMuted,
                 },
               ]}
             >
               <AppIcon
                 name="x"
                 size={iconSize.sm}
-                color={theme.colors.text}
+                color={theme.colors.textMuted}
               />
             </Pressable>
           </View>
 
-          {actionError ? (
-            <AlertBanner variant="error">{actionError}</AlertBanner>
-          ) : null}
+          <View
+            style={[
+              styles.statusBar,
+              {
+                backgroundColor: '#F0F5F3',
+                borderBottomColor: theme.colors.border,
+              },
+            ]}
+          >
+            <AppText
+              variant="caption"
+              color={theme.colors.textSecondary}
+            >
+              {unreadCount > 0
+                ? `${unreadCount} unread`
+                : "You're all caught up"}
+            </AppText>
 
-          {error ? (
-            <AlertBanner variant="error">{errorMessage(error)}</AlertBanner>
+            {unreadCount > 0 ? (
+              <Pressable
+                accessibilityRole="button"
+                disabled={markingAll}
+                onPress={readAllProviderNotifications}
+              >
+                <AppText
+                  variant="label"
+                  color={theme.colors.primary}
+                >
+                  {markingAll ? 'Marking…' : 'Mark all read'}
+                </AppText>
+              </Pressable>
+            ) : null}
+          </View>
+
+          {actionError ? (
+            <View style={styles.banner}>
+              <AlertBanner variant="error">
+                {actionError}
+              </AlertBanner>
+            </View>
           ) : null}
 
           <ScrollView
-            style={styles.list}
-            contentContainerStyle={styles.listContent}
+            contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl
-                refreshing={isRefetching}
-                onRefresh={() => refetch()}
-                tintColor={theme.colors.primary}
-              />
-            }
           >
             {isLoading ? (
-              <View style={styles.skeletonList}>
-                <Skeleton height={82} radiusValue={18} />
-                <Skeleton height={82} radiusValue={18} />
-                <Skeleton height={82} radiusValue={18} />
-              </View>
-            ) : notifications.length ? (
-              <View style={styles.rows}>
-                {notifications.map(item => (
-                  <NotificationRow
-                    key={item.id}
-                    notification={item}
-                    onPress={() => openItem(item.id)}
-                  />
-                ))}
-              </View>
-            ) : (
-              <View style={styles.emptyState}>
+              [0, 1, 2, 3].map(value => (
                 <View
+                  key={value}
                   style={[
-                    styles.emptyIcon,
-                    { backgroundColor: theme.colors.secondary },
+                    styles.notificationCard,
+                    {
+                      borderColor: theme.colors.border,
+                    },
                   ]}
                 >
-                  <AppIcon
-                    name="bell"
-                    size={iconSize.lg}
-                    color={theme.colors.primary}
+                  <Skeleton width="56%" height={16} />
+                  <Skeleton
+                    width="92%"
+                    height={12}
+                    style={styles.skeletonGap}
                   />
                 </View>
-                <AppText variant="title" style={styles.emptyTitle}>
-                  No provider notifications
+              ))
+            ) : error ? (
+              <View style={styles.errorWrap}>
+                <AlertBanner variant="error">
+                  {errorMessage(error)}
+                </AlertBanner>
+
+                <Button
+                  label="Retry"
+                  loading={isRefetching}
+                  onPress={() => refetch()}
+                  fullWidth
+                />
+              </View>
+            ) : groups.length ? (
+              groups.map(group => (
+                <View key={group.key} style={styles.group}>
+                  <AppText
+                    variant="overline"
+                    color="#8A9AB0"
+                  >
+                    {group.label}
+                  </AppText>
+
+                  <View style={styles.groupList}>
+                    {group.items.map(item => (
+                      <ProviderNotificationPopupRow
+                        key={item.id}
+                        item={item}
+                        onPress={() => openNotification(item)}
+                      />
+                    ))}
+                  </View>
+                </View>
+              ))
+            ) : (
+              <View style={styles.empty}>
+                <AppText variant="title">
+                  No notifications yet
                 </AppText>
-                <AppText variant="bodySmall" muted style={styles.emptyCopy}>
-                  Provider booking and workspace updates will appear here.
+
+                <AppText
+                  variant="bodySmall"
+                  muted
+                  style={styles.subtitle}
+                >
+                  Provider booking and workspace activity will appear here.
                 </AppText>
               </View>
             )}
           </ScrollView>
-        </SafeAreaView>
+        </View>
       </View>
     </Modal>
   );
 }
 
+function ProviderNotificationPopupRow({
+  item,
+  onPress,
+}: {
+  item: AppNotification;
+  onPress: () => void | Promise<void>;
+}): React.JSX.Element {
+  const { theme } = useAppTheme();
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.notificationCard,
+        {
+          borderColor: item.read ? '#CEDBD5' : '#B8CCC3',
+          backgroundColor: '#EDF3F0',
+          opacity: pressed ? 0.84 : 1,
+        },
+      ]}
+    >
+      <View style={styles.notificationTitleRow}>
+        <AppText
+          variant="label"
+          numberOfLines={2}
+          style={styles.notificationTitle}
+        >
+          {item.title}
+        </AppText>
+
+        {!item.read ? (
+          <View
+            style={[
+              styles.notificationUnreadDot,
+              {
+                backgroundColor: '#214035',
+              },
+            ]}
+          />
+        ) : null}
+      </View>
+
+      <AppText
+        variant="caption"
+        color="#8492A8"
+        style={styles.notificationTime}
+      >
+        {formatTime(item.createdAt)}
+      </AppText>
+
+      {item.message ? (
+        <AppText
+          variant="bodySmall"
+          color={theme.colors.textSecondary}
+          style={styles.message}
+          numberOfLines={3}
+        >
+          {item.message}
+        </AppText>
+      ) : null}
+    </Pressable>
+  );
+}
+
+function groupNotifications(items: AppNotification[]): NotificationGroup[] {
+  const map = new Map<string, NotificationGroup>();
+
+  items.forEach(item => {
+    const date = parseDate(item.createdAt);
+
+    const key = Number.isNaN(date.getTime())
+      ? item.createdAt.slice(0, 10)
+      : [
+          date.getFullYear(),
+          String(date.getMonth() + 1).padStart(2, '0'),
+          String(date.getDate()).padStart(2, '0'),
+        ].join('-');
+
+    const existing = map.get(key);
+
+    if (existing) {
+      existing.items.push(item);
+      return;
+    }
+
+    map.set(key, {
+      key,
+      label: formatDateLabel(date, item.createdAt),
+      items: [item],
+    });
+  });
+
+  return Array.from(map.values());
+}
+
+function parseDate(value: string): Date {
+  return new Date(value);
+}
+
+function formatDateLabel(date: Date, fallback: string): string {
+  if (Number.isNaN(date.getTime())) {
+    return fallback.slice(0, 10).toUpperCase();
+  }
+
+  const months = [
+    'JAN',
+    'FEB',
+    'MAR',
+    'APR',
+    'MAY',
+    'JUN',
+    'JUL',
+    'AUG',
+    'SEP',
+    'OCT',
+    'NOV',
+    'DEC',
+  ];
+
+  return `${String(date.getDate()).padStart(2, '0')} ${months[date.getMonth()]} ${date.getFullYear()}`;
+}
+
+function formatTime(value: string): string {
+  const date = parseDate(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  const hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const suffix = hours >= 12 ? 'pm' : 'am';
+  const hour12 = hours % 12 || 12;
+
+  return `${hour12}:${minutes} ${suffix}`;
+}
+
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
+    backgroundColor: 'rgba(7,24,17,0.24)',
+    alignItems: 'center',
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(5, 17, 13, 0.42)',
-    paddingHorizontal: layout.bottomSheetMargin,
-    paddingBottom: layout.bottomSheetMargin,
+    paddingHorizontal: 8,
+    paddingBottom: 8,
   },
   sheet: {
     width: '100%',
-    maxHeight: '86%',
-    minHeight: '54%',
-    borderRadius: 28,
-    borderWidth: 1,
-    paddingTop: spacing[5],
+    maxWidth: 460,
+    height: '90%',
+    maxHeight: '90%',
+    borderRadius: 26,
     overflow: 'hidden',
   },
-  headingRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing[3],
+  header: {
+    minHeight: 82,
     paddingHorizontal: spacing[4],
-    paddingBottom: spacing[4],
+    paddingVertical: spacing[3],
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[3],
   },
   headingCopy: {
     flex: 1,
-    minWidth: 0,
   },
-  headingSubtitle: {
+  subtitle: {
     marginTop: spacing[1],
   },
   closeButton: {
     width: 44,
     height: 44,
-    borderRadius: radius.md,
-    borderWidth: 1,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  list: {
+  statusBar: {
+    minHeight: 42,
+    borderBottomWidth: 1,
+    paddingHorizontal: spacing[4],
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing[3],
+  },
+  banner: {
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[3],
+  },
+  content: {
+    paddingHorizontal: spacing[3],
+    paddingTop: spacing[3],
+    paddingBottom: spacing[5],
+  },
+  group: {
+    marginBottom: spacing[5],
+  },
+  groupList: {
+    gap: spacing[2],
+    marginTop: spacing[2],
+  },
+  notificationCard: {
+    minHeight: 76,
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+  },
+  notificationTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing[3],
+  },
+  notificationTitle: {
     flex: 1,
   },
-  listContent: {
-    paddingHorizontal: spacing[4],
-    paddingBottom: spacing[8],
+  notificationUnreadDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    marginTop: 5,
+    flexShrink: 0,
   },
-  rows: {
-    gap: spacing[3],
+  notificationTime: {
+    marginTop: 4,
   },
-  skeletonList: {
-    gap: spacing[3],
-  },
-  emptyState: {
-    minHeight: 300,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing[6],
-  },
-  emptyIcon: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyTitle: {
-    marginTop: spacing[4],
-    textAlign: 'center',
-  },
-  emptyCopy: {
+  message: {
     marginTop: spacing[2],
-    textAlign: 'center',
-    maxWidth: 300,
+  },
+  skeletonGap: {
+    marginTop: spacing[2],
+  },
+  errorWrap: {
+    gap: spacing[3],
+  },
+  empty: {
+    alignItems: 'center',
+    paddingVertical: spacing[10],
+    paddingHorizontal: spacing[4],
   },
 });
