@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 
-import { shadows, spacing, useAppTheme } from '../../theme';
+import { shadows, spacing, statusColors, useAppTheme } from '../../theme';
 import { Booking, BookingStatus } from '../../types/booking';
 import { AppIcon, AppIconName, iconSize } from '../icons';
 import { AppText } from '../ui';
@@ -439,7 +439,7 @@ function ClosedContent({
           value={booking.reason}
           background="#FFF4F3"
           border="#F5D0CC"
-          color="#B42318"
+          color={statusColors.error}
         />
       ) : null}
 
@@ -449,7 +449,7 @@ function ClosedContent({
           value={booking.reason}
           background="#FFF7ED"
           border="#F3D8B4"
-          color="#B45309"
+          color={statusColors.warning}
         />
       ) : null}
 

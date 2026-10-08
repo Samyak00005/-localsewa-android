@@ -69,7 +69,7 @@ export function ProviderHeader(): React.JSX.Element {
             <AppIcon name="bell" size={iconSize.sm} color="#FFFFFF" />
 
             {unreadProviderCount > 0 ? (
-              <View style={styles.unreadBadge}>
+              <View style={[styles.unreadBadge, { backgroundColor: theme.colors.error }]}>
                 <AppText variant="caption" color="#FFFFFF">
                   {unreadProviderCount > 9 ? '9+' : String(unreadProviderCount)}
                 </AppText>
@@ -126,7 +126,6 @@ const styles = StyleSheet.create({
     height: 19,
     paddingHorizontal: 4,
     borderRadius: 10,
-    backgroundColor: '#D93B48',
     alignItems: 'center',
     justifyContent: 'center',
   },

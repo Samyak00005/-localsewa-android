@@ -1189,7 +1189,7 @@ function BusinessMediaManager({
             />
           ) : (
             <View style={styles.mediaEmptyStage}>
-              <AppIcon name="camera" size={iconSize.xl} color="#D7E3DF" />
+              <AppIcon name="camera" size={iconSize.xl} color={theme.colors.secondary} />
               <AppText variant="title" color="#FFFFFF" style={styles.mediaEmptyTitle}>
                 No business photos yet
               </AppText>
@@ -1376,7 +1376,7 @@ function ProfilePhotoManager({
             <Image source={{ uri }} resizeMode="contain" style={styles.mediaMainImage} />
           ) : (
             <View style={styles.mediaEmptyStage}>
-              <AppIcon name="user" size={iconSize.xl} color="#D7E3DF" />
+              <AppIcon name="user" size={iconSize.xl} color={theme.colors.secondary} />
               <AppText variant="title" color="#FFFFFF" style={styles.mediaEmptyTitle}>
                 No profile photo
               </AppText>

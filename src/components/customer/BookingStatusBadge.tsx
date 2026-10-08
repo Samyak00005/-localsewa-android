@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { radius, spacing } from '../../theme';
+import { radius, spacing, statusColors } from '../../theme';
 import { BookingStatus } from '../../types/booking';
 import { AppText } from '../ui';
 
@@ -42,7 +42,7 @@ function palette(status: BookingStatus): {
     case 'accepted':
       return {
         background: '#E2ECFF',
-        text: '#2457C5',
+        text: statusColors.info,
       };
 
     case 'in_progress':
@@ -54,7 +54,7 @@ function palette(status: BookingStatus): {
     case 'completed':
       return {
         background: '#DCFCE7',
-        text: '#15803D',
+        text: statusColors.success,
       };
 
     case 'cancelled':
@@ -66,13 +66,13 @@ function palette(status: BookingStatus): {
     case 'rejected':
       return {
         background: '#FEE8E7',
-        text: '#B42318',
+        text: statusColors.error,
       };
 
     case 'not_completed':
       return {
         background: '#FFF0E1',
-        text: '#B45309',
+        text: statusColors.warning,
       };
   }
 }

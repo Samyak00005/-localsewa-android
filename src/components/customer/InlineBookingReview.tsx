@@ -51,7 +51,7 @@ export function InlineBookingReview({
           </AppText>
 
           <View style={styles.ratingValue}>
-            <AppIcon name="star" size={15} color="#F5A623" fill="#F5A623" />
+            <AppIcon name="star" size={15} color={theme.colors.rating} fill={theme.colors.rating} />
 
             <AppText variant="label" color="#B06A00">
               {rating}
@@ -146,7 +146,7 @@ export function InlineBookingReview({
               <AppIcon
                 name="star"
                 size={compact ? 21 : iconSize.lg}
-                color={selected ? '#F5A623' : '#B8C6D4'}
+                color={selected ? theme.colors.rating : '#B8C6D4'}
                 fill={selected ? '#FFF4D1' : 'none'}
               />
             </Pressable>

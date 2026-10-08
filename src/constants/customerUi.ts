@@ -1,1 +1,3 @@
-export const CUSTOMER_HOME_GREEN = '#18A35B';
+import { customerPalette } from '../theme/colors';
+
+export const CUSTOMER_HOME_GREEN = customerPalette.header;

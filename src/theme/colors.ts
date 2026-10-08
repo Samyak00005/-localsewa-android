@@ -13,7 +13,8 @@ export const statusColors = {
   success: '#15803D',
   warning: '#B45309',
   error: '#B42318',
-  info: '#1D4ED8',
+  info: '#2457C5',
+  rating: '#F5A623',
 } as const;
 
 /**
@@ -23,8 +24,10 @@ export const customerPalette = {
   text: '#102018',
   background: '#F7FAF8',
   primary: '#0F8449',
+  primaryDark: '#092C20',
   secondary: '#DCEFE4',
   accent: '#20A85A',
+  header: '#1AA25A',
 } as const;
 
 /**
@@ -34,11 +37,13 @@ export const customerPalette = {
  */
 export const providerStandardPalette = {
   text: '#101B1A',
-  background: '#F4F7F6',
-  primary: '#0E3024',
+  background: '#F0F5F3',
+  primary: '#145E3B',
+  primaryDark: '#0E3024',
   secondary: '#D7E3DF',
   accent: '#214035',
-  pressed: '#09271D',
+  pressed: '#0E3024',
+  header: '#145E3B',
   subtle: '#EEF4F1',
 } as const;
 
@@ -91,7 +96,7 @@ export const neutrals = {
 
 export const customerColors = {
   primary: customerPalette.primary,
-  primaryPressed: '#0B6D3C',
+  primaryPressed: customerPalette.primaryDark,
   accent: customerPalette.accent,
   soft: customerPalette.secondary,
   subtle: '#F3FBF6',

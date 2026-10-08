@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { radius, spacing, useAppTheme } from '../../theme';
+import { customerPalette, radius, spacing, useAppTheme } from '../../theme';
 import { AppNotification } from '../../types/notification';
 import { resolveNotificationTarget } from '../../utils/notificationRoute';
 import { AppIcon, AppIconName, iconSize } from '../icons';
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#20A85A',
+    backgroundColor: customerPalette.accent,
   },
   message: {
     marginTop: spacing[1],

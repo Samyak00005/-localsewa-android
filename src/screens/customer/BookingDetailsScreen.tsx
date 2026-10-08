@@ -31,7 +31,7 @@ import {
   useCustomerBookings,
 } from '../../hooks/useCustomerData';
 import { CustomerStackParamList } from '../../navigation/types';
-import { layout, radius, shadows, spacing, useAppTheme } from '../../theme';
+import { layout, radius, shadows, spacing, statusColors, useAppTheme } from '../../theme';
 import { Booking, BookingStatus } from '../../types/booking';
 
 type Props = NativeStackScreenProps<CustomerStackParamList, 'BookingDetails'>;
@@ -122,7 +122,7 @@ function statusMessage(status: BookingStatus): {
         body: 'You can use in-app chat or the call preview from this booking.',
         background: '#EEF4FF',
         border: '#D8E4FF',
-        color: '#2457C5',
+        color: statusColors.info,
       };
 
     case 'in_progress':
@@ -154,7 +154,7 @@ function statusMessage(status: BookingStatus): {
         title: 'Provider could not accept this request',
         background: '#FFF4F3',
         border: '#F5D0CC',
-        color: '#B42318',
+        color: statusColors.error,
       };
 
     case 'not_completed':
@@ -162,7 +162,7 @@ function statusMessage(status: BookingStatus): {
         title: 'Service was not completed',
         background: '#FFF7ED',
         border: '#F3D8B4',
-        color: '#B45309',
+        color: statusColors.warning,
       };
   }
 }
@@ -741,14 +741,14 @@ function ReasonCard({
           title: 'Provider reason',
           background: '#FFF4F3',
           border: '#F5D0CC',
-          color: '#B42318',
+          color: statusColors.error,
         }
       : status === 'not_completed'
       ? {
           title: 'Not completed reason',
           background: '#FFF7ED',
           border: '#F3D8B4',
-          color: '#B45309',
+          color: statusColors.warning,
         }
       : {
           title: 'Reason',

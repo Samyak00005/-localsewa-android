@@ -7,7 +7,7 @@ import { AppIcon, AppIconName, iconSize } from '../../components/icons';
 import { AppText, Avatar } from '../../components/ui';
 import { useCustomerBookings } from '../../hooks/useCustomerData';
 import { CustomerStackParamList } from '../../navigation/types';
-import { spacing } from '../../theme';
+import { customerPalette, spacing, statusColors } from '../../theme';
 
 type Props = NativeStackScreenProps<CustomerStackParamList, 'VoiceCallPreview'>;
 
@@ -137,7 +137,7 @@ function Control({
         <AppIcon
           name={icon}
           size={iconSize.lg}
-          color={active ? '#0E3024' : '#FFFFFF'}
+          color={active ? customerPalette.primaryDark : '#FFFFFF'}
         />
       </Pressable>
 
@@ -151,7 +151,7 @@ function Control({
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#0E3024',
+    backgroundColor: customerPalette.primaryDark,
     paddingHorizontal: spacing[6],
     justifyContent: 'space-between',
   },
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   endButton: {
-    backgroundColor: '#B42318',
+    backgroundColor: statusColors.error,
     width: 76,
     height: 76,
     borderRadius: 38,

@@ -15,6 +15,8 @@ type BrandPalette = {
   primary: string;
   secondary: string;
   accent: string;
+  primaryDark?: string;
+  header?: string;
 };
 
 type ThemeColors = BrandPalette & {
@@ -31,6 +33,7 @@ type ThemeColors = BrandPalette & {
   warning: string;
   error: string;
   info: string;
+  rating: string;
   premiumText?: string;
   premiumBackground?: string;
   premiumPrimary?: string;
@@ -60,6 +63,7 @@ const semanticColors = {
   warning: statusColors.warning,
   error: statusColors.error,
   info: statusColors.info,
+  rating: statusColors.rating,
 };
 
 export const customerTheme: AppTheme = {

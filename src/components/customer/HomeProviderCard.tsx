@@ -154,8 +154,8 @@ export function HomeProviderCard({
           <AppIcon
             name="star"
             size={14}
-            color="#F5A623"
-            fill={provider.rating == null ? 'none' : '#F5A623'}
+            color={theme.colors.rating}
+            fill={provider.rating == null ? 'none' : theme.colors.rating}
           />
 
           <AppText variant="label" color={theme.colors.text}>

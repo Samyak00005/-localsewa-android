@@ -18,7 +18,7 @@ import {
 } from '../../components/ui';
 import { useProviderReviews } from '../../hooks/useProviderWorkspace';
 import { ProviderWorkspaceReview } from '../../types/providerWorkspace';
-import { customerPalette, layout, radius, spacing, useAppTheme } from '../../theme';
+import { layout, radius, spacing, useAppTheme } from '../../theme';
 
 const PROVIDER_SURFACE_RADIUS = 28;
 
@@ -65,7 +65,7 @@ export function ProviderReviewsScreen(): React.JSX.Element {
                   <AppIcon
                     name="star"
                     size={iconSize.lg}
-                    color={customerPalette.accent}
+                    color={theme.colors.rating}
                   />
                 </View>
 
@@ -150,7 +150,7 @@ export function ProviderReviewsScreen(): React.JSX.Element {
                 <AppIcon
                   name="star"
                   size={iconSize.lg}
-                  color={customerPalette.accent}
+                  color={theme.colors.rating}
                 />
               </View>
               <AppText variant="title" style={styles.emptyTitle}>
@@ -199,8 +199,8 @@ function ReviewCard({
           <AppIcon
             name="star"
             size={iconSize.xs}
-            color={customerPalette.accent}
-            fill={customerPalette.accent}
+            color={theme.colors.rating}
+            fill={theme.colors.rating}
           />
           <AppText variant="label" color={theme.colors.primary}>
             {review.rating.toFixed(1)}
@@ -249,8 +249,8 @@ function StarRow({ rating }: { rating: number }): React.JSX.Element {
           key={value}
           name="star"
           size={iconSize.xs}
-          color={value <= rounded ? customerPalette.accent : theme.colors.border}
-          fill={value <= rounded ? customerPalette.accent : 'none'}
+          color={value <= rounded ? theme.colors.rating : theme.colors.border}
+          fill={value <= rounded ? theme.colors.rating : 'none'}
         />
       ))}
     </View>
