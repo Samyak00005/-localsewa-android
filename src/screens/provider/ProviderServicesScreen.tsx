@@ -295,7 +295,7 @@ export function ProviderServicesScreen({
                   >
                     <AppIcon
                       name="briefcase"
-                      size={iconSize.md}
+                      size={iconSize.lg}
                       color={theme.colors.primary}
                       strokeWidth={2.2}
                     />
@@ -310,6 +310,14 @@ export function ProviderServicesScreen({
                     </AppText>
                     <AppText variant="h2" style={styles.categoryName}>
                       {profile?.category || 'Category not assigned'}
+                    </AppText>
+                    <AppText
+                      variant="caption"
+                      muted
+                      numberOfLines={1}
+                      style={styles.categoryContext}
+                    >
+                      Visible in customer discovery
                     </AppText>
                   </View>
                 </View>
@@ -367,8 +375,13 @@ export function ProviderServicesScreen({
             <View style={styles.catalogHeader}>
               <View style={styles.flex}>
                 <AppText variant="h2">Services you provide</AppText>
-                <AppText variant="caption" muted style={styles.smallGap}>
-                  These services and starting prices are visible to customers.
+                <AppText
+                  variant="caption"
+                  muted
+                  numberOfLines={1}
+                  style={styles.smallGap}
+                >
+                  Services and prices customers see.
                 </AppText>
               </View>
 
@@ -388,7 +401,7 @@ export function ProviderServicesScreen({
               >
                 <AppIcon name="plus" size={iconSize.sm} color={theme.colors.primary} />
                 <AppText variant="label" color={theme.colors.primary}>
-                  Add service
+                  Add
                 </AppText>
               </Pressable>
             </View>
@@ -866,6 +879,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   categoryTop: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -879,16 +893,17 @@ const styles = StyleSheet.create({
     gap: spacing[3],
   },
   categoryIcon: {
-    width: 56,
-    height: 56,
+    width: 64,
+    height: 64,
     borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   categoryName: { marginTop: spacing[1] },
+  categoryContext: { marginTop: 3 },
   categoryStat: {
-    minWidth: 72,
-    minHeight: 68,
+    minWidth: 78,
+    minHeight: 78,
     borderRadius: radius.lg,
     paddingHorizontal: spacing[2],
     alignItems: 'center',
@@ -896,7 +911,7 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   categoryFooter: {
-    marginTop: spacing[3],
+    marginTop: spacing[2],
     paddingTop: spacing[3],
     borderTopWidth: 1,
     flexDirection: 'row',
